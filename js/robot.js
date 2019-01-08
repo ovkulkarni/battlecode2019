@@ -9,6 +9,7 @@ import { runProphet } from './prophet.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
+        this.visible_map = this.getVisibleRobotMap();
         switch (this.me.unit) {
             case SPECS.CASTLE:
                 return runCastle(this);

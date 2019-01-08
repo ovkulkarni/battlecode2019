@@ -8,27 +8,42 @@ export function exact_pred(fx, fy) {
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
 }
+export function on_path(path) {
+  let spath = path.map(a => a.toString());
+  return ((x, y) => path.includes([x, y].toString()));
+}
 
 export class Pathfinder {
-    constructor(m, pred) {
+    constructor(m, goal) {
         this.m = m;
         this.loc = [m.me.x, m.me.y];
-        this.pred = pred;
+        this.goal = goal;
         this.speed = SPECS.UNITS[m.me.unit].SPEED;
-        this.path = this.find_path();
+        this.recalculate();
     }
-    next_loc(m) {
-        this.path.shift();
-        return this.path[0];
+    next_loc(m, wait=false) {
+        let next = this.path[0];
+        if(next === undefined) return undefined;
+        if (idx(m.getVisibleRobotMap(), ...next) != 0) {
+          // add ability to go around better
+          if (wait)
+            return undefined;
+          else
+            this.recalculate();
+        }
+        return this.path.shift();
     }
-    find_path() {
+    recalculate(){
+      this.path = this.find_path(this.goal);
+    }
+    find_path(pred) {
         let parent = new Map();
         let vis = new Set();
         let q = [this.loc];
         while (q.length != 0) {
             let cur = q.shift();
             vis.add(cur.toString());
-            if (this.pred(...cur)) {
+            if (pred(...cur)) {
                 let path = [cur];
                 while (parent.has(cur)) {
                     cur = parent.get(cur);
