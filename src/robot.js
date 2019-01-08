@@ -3,7 +3,8 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 class MyRobot extends BCAbstractRobot {
   turn() {
     //this.log(SPECS);
-    this.log("attempt " + this.me.id + " " + this.me.unit)
+    this.log("attempt " + this.me.id + " " + this.me.unit);
+    this.log("dimensions " + this.map.length + " " + this.map[0].length);
     switch (this.me.unit) {
       case SPECS.CASTLE:
         return runCastle(this);
@@ -42,7 +43,7 @@ function runPilgrim(m){
   if (typeof m.pathfinder === "undefined")
     m.pathfinder = new Pathfinder(m, karbonite_pred(m));
   let next = m.pathfinder.next_loc();
-  let dx = next[0] - m.me.x; let dy = next[1] - m.me.u;
+  let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
   return m.move(dx, dy);
   return;
 }
@@ -119,6 +120,7 @@ class Pathfinder {
           cur = parent[cur];
           path.push(cur);
         }
+        this.m.log("finished bfs");
         return path.reverse();
       }
       for (let space of open_neighbors(this.m, ...cur)){
