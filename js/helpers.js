@@ -11,7 +11,7 @@ export function get_stats(m) {
         default:
             v = SPECS.UNITS[m.me.unit];
     }
-    return new Map([["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE],["vr",v.VISION_RADIUS],["da",v.ATTACK_DAMAGE],[ar,v.ATTACK_RANGE],["fc",v.ATTACK_FUEL_COST]);
+    return new Map([["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE],["vr",v.VISION_RADIUS],["da",v.ATTACK_DAMAGE],["ar",v.ATTACK_RADIUS],["fc",v.ATTACK_FUEL_COST]]);
 }
 
 export function open_neighbors(m, x, y) {
@@ -26,11 +26,11 @@ export function valid_loc(m) {
     return (l => {
         let x = l[0];
         let y = l[1];
-        //let visMapIx = idx(m.visible_map, x, y);
+        let visMapIx = idx(m.visible_map, x, y);
         return x >= 0 && y >= 0 &&
           x < m.map[0].length && y < m.map.length &&
-          idx(m.map, x, y);/* &&
-          (visMapIx == 0 || visMapIx == -1);*/
+          idx(m.map, x, y) &&
+          (visMapIx == 0 || visMapIx == -1);
     });
 }
 
