@@ -31,7 +31,9 @@ export class Pathfinder {
           else
             this.recalculate();
         }
-        return this.path.shift();
+        let result = this.path.shift();
+        this.loc = result;
+        return result;
     }
     recalculate(){
       this.path = this.find_path(this.goal);

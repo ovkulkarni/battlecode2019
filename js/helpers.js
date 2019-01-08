@@ -30,11 +30,10 @@ export function valid_loc(m) {
     return (l => {
         let x = l[0];
         let y = l[1];
-        //let visMapIx = idx(m.visible_map, x, y);
-        return x >= 0 && y >= 0 &&
-          x < m.map[0].length && y < m.map.length &&
-          idx(m.map, x, y);/* &&
-          (visMapIx == 0 || visMapIx == -1);*/
+        if (!(x >= 0 && y >= 0 && x < m.map[0].length && y < m.map.length))
+          return false;
+        let visMapIx = idx(m.visible_map, x, y);
+        return idx(m.map, x, y) && (visMapIx == 0 || visMapIx == -1);
     });
 }
 
