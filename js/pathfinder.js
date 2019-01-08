@@ -27,7 +27,7 @@ export class Pathfinder {
         let q = [this.loc];
         while (q.length != 0) {
             let cur = q.shift();
-            vis.add(cur);
+            vis.add(cur.toString());
             if (this.pred(...cur)) {
                 let path = [cur];
                 while (parent.has(cur)) {
@@ -37,7 +37,7 @@ export class Pathfinder {
                 return path.reverse();
             }
             for (let space of open_neighbors(this.m, ...cur)) {
-                if (vis.has(space)) continue;
+                if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
                 q.push(space);
             }
