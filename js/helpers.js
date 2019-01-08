@@ -2,20 +2,16 @@ import { SPECS } from 'battlecode';
 
 // Based on the Unit, returns an array of movement speed, movement cost, vision radius, damage, attack damage, attack range, and fuel cost
 export function get_stats(m) {
+    let v = null;
     switch(m.me.unit) {
-        case SPECS.PILGRIM:
-            return new Map([["ms",4],["mc",1],["vr",100],["ad",0],["ar",0],["fc",0]]);
-        case SPECS.CRUSADER:
-            return new Map([["ms",9],["mc",1],["vr",36],["ad",10],["ar",4],["fc",10]]);
-        case SPECS.PROPHET:
-            return new Map([["ms",4],["mc",2],["vr",64],["ad",10],["ar",8],["fc",25]]);
-        case SPECS.PREACHER:
-            return new Map([["ms",4],["mc",3],["vr",16],["ad",20],["ar",4],["fc",15]]);
         case SPECS.CASTLE: // Movement Speed is the same as like Deploying Speed???
             return new Map([["ms",2]]);
         case SPECS.CHURCH:
             return new Map([["ms",2]]);
+        default:
+            v = SPECS.UNITS[m.me.unit];
     }
+    return new Map([["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE],["vr",v.VISION_RADIUS],["da",v.ATTACK_DAMAGE],[ar,v.ATTACK_RANGE],["fc",v.ATTACK_FUEL_COST]);
 }
 
 export function open_neighbors(m, x, y) {
