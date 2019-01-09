@@ -24,19 +24,25 @@ export class Pathfinder {
     next_loc(m, wait=false) {
         let next = this.path[0];
         if(next === undefined) return undefined;
-        if (idx(m.getVisibleRobotMap(), ...next) != 0) {
-          // add ability to go around better
-          if (wait)
-            return undefined;
-          else
-            this.recalculate();
+        m.log("NEXT MOVE: " + next);
+        if (idx(m.getVisibleRobotMap(), ...next) == 1) {
+            // add ability to go around better
+            if (wait) {
+                m.log("WAITING");
+                return undefined;
+            }
+            else {
+                m.log("RECALCULATING");
+                this.recalculate();
+                m.log("RECALCULATING DONE");
+            }
         }
         let result = this.path.shift();
         this.loc = result;
         return result;
     }
     recalculate(){
-      this.path = this.find_path(this.goal);
+        this.path = this.find_path(this.goal);
     }
     find_path(pred) {
         let parent = new Map();
@@ -44,18 +50,19 @@ export class Pathfinder {
         let q = [this.loc];
         while (q.length != 0) {
             let cur = q.shift();
-            vis.add(cur.toString());
             if (pred(...cur)) {
                 let path = [cur];
                 while (parent.has(cur)) {
                     cur = parent.get(cur);
                     path.push(cur);
                 }
+                this.m.log("FOUND:" + path);
                 return path.reverse();
             }
             for (let space of open_neighbors(this.m, ...cur)) {
                 if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
+                vis.add(cur.toString());
                 q.push(space);
             }
         }
