@@ -24,8 +24,8 @@ export class Pathfinder {
     next_loc(m, wait = false) {
         let next = this.path[0];
         if (next === undefined) return undefined;
-        occupied = idx(m.visible_map, ...next);
-        if (idx !== 0 && idx !== -1) {
+        let occupied = idx(m.visible_map, ...next);
+        if (occupied !== 0 && occupied !== -1) {
             // add ability to go around better
             if (wait) {
                 m.log("WAITING");
