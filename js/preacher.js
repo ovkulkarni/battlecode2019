@@ -1,16 +1,22 @@
 import { Pathfinder, exact_pred } from './pathfinder.js';
-import { calcOpposite, idx } from './helpers.js';
+import { get_stats, calcOpposite, idx } from './helpers.js';
 
 export function runPreacher(m) {
   m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
+  if (m.stats == undefined) {
+    m.stats = get_stats(m);
+  }
   if (typeof m.pathfinder === "undefined") {
       let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
       opp[0]--;
       m.pathfinder = new Pathfinder(m, exact_pred(...opp));
   }
   let next = m.pathfinder.next_loc(m);
-  if (next === undefined && shouldAttack(m) && m.me.fuel >= m.stats.get("ac")) {
-    return m.attack(1, 0);
+  if (next === undefined) {
+    if (shouldAttack(m) && m.me.fuel >= m.stats.get("ac")) {
+      m.log("PREACHER ATTACKED");
+      return m.attack(1, 0);
+    }
   }
   else if (next === -1) {
       m.log("PREACHER STUCK");
@@ -22,13 +28,16 @@ export function runPreacher(m) {
   }
 }
 
-function shouldAttack(m) {
+export function shouldAttack(m) {
 
     for (var i = -1; i <= 1; i++) {
       for (var j = -1; j <= 1; j++) {
         if (i != 0 || j != 0) {
-          if (idx(m.visible_map,m.me.x + i, m.me.y+j) != 0 && idx(m.visible_map,m.me.x + i, m.me.y+j) != 1) {
-            if (m.getRobot(idx(m.visible_map,m.me.x + i, m.me.y+j)).me.team == this.me.team) {
+          var id = idx(m.getVisibleRobotMap(),m.me.x + i, m.me.y+j);
+          m.log("ROBOT ID " + id);
+          if (id != 0 && id != -1) {
+            m.log("TEAM "  + m.getRobot(id).team);
+            if (m.getRobot(id).team == m.team) {
               return false;
             }
           }
