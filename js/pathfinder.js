@@ -8,6 +8,9 @@ export function exact_pred(fx, fy) {
 export function around_pred(fx, fy, l, r) {
     return ((x, y) => (x-fx)*(x-fx) + (y-fy)*(y-fy) >= l && (x-fx)*(x-fx) + (y-fy)*(y-fy) <= r);
 }
+export function attack_pred(m, fx, fy){
+    return around_pred(fx, fy, 1, m.stats.ar);
+}
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
 }
