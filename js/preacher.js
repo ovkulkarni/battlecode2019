@@ -21,7 +21,7 @@ export function runPreacher(m) {
   }
   else if (next === -1) {
       m.log("PREACHER STUCK");
-  }
+  } else if ()
   else {
       m.log("PREACHER MOVING: " + next);
       let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
