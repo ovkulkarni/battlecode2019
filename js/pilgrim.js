@@ -3,9 +3,6 @@ import { get_stats, list_dir, idx } from './helpers.js';
 
 export function runPilgrim(m) {
     m.log("PILGRIM ID: " + m.me.id + "  X: "+m.me.x+"  Y: "+m.me.y);
-    if(m.stats === undefined) {
-        m.stats = get_stats(m);
-    }
     if(m.ix === undefined) {
         let choices = list_dir(2);
         for(let i = 0; i < 8; i++) {
