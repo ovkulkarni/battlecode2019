@@ -16,13 +16,13 @@ export function runPilgrim(m) {
         }
     }
     if (typeof m.pathfinder === "undefined")
-        m.pathfinder = new Pathfinder(m, karbonite_pred(m), 0);
+        m.pathfinder = new Pathfinder(m, karbonite_pred(m));
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {
         if (m.pathfinder.type == 0) {
             if (m.me.karbonite === m.stats.get("kcap") || m.me.fuel === m.stats.get("fcap")) {
                 m.log("DROPPING OFF");
-                m.pathfinder = new Pathfinder(m, around_pred(m.ix, m.iy, 1, 2), 1);
+                m.pathfinder = new Pathfinder(m, around_pred(m.ix, m.iy, 1, 2));
                 next = m.pathfinder.next_loc(m);
             }
             else {
@@ -33,7 +33,7 @@ export function runPilgrim(m) {
         else if (m.pathfinder.type == 1) {
             let dx = m.ix - m.me.x;
             let dy = m.iy - m.me.y;
-            m.pathfinder = new Pathfinder(m, karbonite_pred(m), 0);
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }

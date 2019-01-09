@@ -20,15 +20,7 @@ export function on_path(path) {
 }
 
 export class Pathfinder {
-    constructor(m, goal, type) {
-        /*
-            PathFinder Types
-            WORKER
-            0 - Mining Path
-            1 - Deposit Path
-            2 - Church Path
-        */
-        this.type = type;
+    constructor(m, goal) {
         this.goal = goal;
         this.speed = SPECS.UNITS[m.me.unit].SPEED;
         this.recalculate(m);
@@ -39,7 +31,7 @@ export class Pathfinder {
             o.fail = true;
             return o;
         }
-        if (m.me.x === this.fin[0] && m.me.y === this.fin[1] || this.path.length === 0) {
+        if (this.path.length === 0) {
             o.fin = true;
             return o;
         }
@@ -56,15 +48,7 @@ export class Pathfinder {
                 return o;
             }
         }
-        if (occupied === -1 && dis(m.me.x, m.me.y, next[0], next[1]) <= m.stats.get("ms")) {
-            m.log("WTF:" + next[0] + " " + next[1] + " CURRENT: " + m.me.x + " " + m.me.y);
-            o.weird = true;
-            return o;
-        }
         let result = this.path.pop();
-        if (m.me.x === result[0] && m.me.y === result[1]) {
-            result = this.path.pop();
-        }
         m.log("NEXT MOVE: " + result);
         o.res = result;
         return o;
