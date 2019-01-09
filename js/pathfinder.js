@@ -54,7 +54,7 @@ export class Pathfinder {
         let q = new LinkedList();
         q.addToHead(this.loc);
         //let q = [this.loc];
-        while (q.length != 0) {
+        while (q.len != 0) {
             //let cur = q.shift();
             let cur = q.head.value;
             q.removeHead();
@@ -87,6 +87,7 @@ function Node(value, next, prev) {
     this.value = value;
     this.next = next;
     this.prev = prev;
+    this.len = 0;
 }
 
 // Add nodes methods
@@ -96,6 +97,7 @@ LinkedList.prototype.addToHead = function (value) {
     if (this.head) this.head.prev = newNode;
     else this.tail = newNode;
     this.head = newNode;
+    this.len += 1;
 };
 
 LinkedList.prototype.addToTail = function (value) {
@@ -103,6 +105,7 @@ LinkedList.prototype.addToTail = function (value) {
     if (this.tail) this.tail.next = newNode;
     else this.head = newNode;
     this.tail = newNode;
+    this.len += 1;
 }
 
 // Remove nodes methods
@@ -113,7 +116,7 @@ LinkedList.prototype.removeHead = function () {
 
     if (this.head) this.head.prev = null;
     else this.tail = null;
-
+    this.len -= 1;
     return value;
 
 }
@@ -125,7 +128,7 @@ LinkedList.prototype.removeTail = function () {
 
     if (this.tail) this.tail.next = null;
     else this.head = null;
-
+    this.len -= 1;
     return value;
 }
 
@@ -139,4 +142,8 @@ LinkedList.prototype.search = function (searchValue) {
         currentNode = currentNode.next;
     }
     return null;
+}
+
+LinkedList.prototype.len = function () {
+    return this.len;
 }
