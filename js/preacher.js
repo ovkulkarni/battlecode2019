@@ -23,8 +23,9 @@ export function runPreacher(m) {
 }
 
 function shouldAttack(m) {
-    for (i = -1; i <= 1; i++) {
-      for (j = -1; j <= 1; j++) {
+
+    for (var i = -1; i <= 1; i++) {
+      for (var j = -1; j <= 1; j++) {
         if (i != 0 || j != 0) {
           if (idx(m.visible_map,m.me.x + i, m.me.y+j) != 0 && idx(m.visible_map,m.me.x + i, m.me.y+j) != 1) {
             if (m.getRobot(idx(m.visible_map,m.me.x + i, m.me.y+j)).me.team == this.me.team) {
