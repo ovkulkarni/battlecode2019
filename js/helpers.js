@@ -12,14 +12,11 @@ export function get_stats(m) {
         default:
             v = SPECS.UNITS[m.me.unit];
     }
-    return new Map([["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE], ["vr", v.VISION_RADIUS], ["da", v.ATTACK_DAMAGE], ["ar", v.ATTACK_RADIUS], ["fc", v.ATTACK_FUEL_COST], ["dir", list_dir(v.SPEED)]]);
+    return new Map([["kcap",v.KARBONITE_CAPACITY],["fcap",v.FUEL_CAPACITY],["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE],["vr",v.VISION_RADIUS],["da",v.ATTACK_DAMAGE],["ar",v.ATTACK_RADIUS],["fc",v.ATTACK_FUEL_COST],["dir",list_dir(v.SPEED)]]);
 }
 
 export function open_neighbors(m, x, y) {
-    if (m.stats === undefined) {
-        m.stats = get_stats(m);
-    }
-    const choices = m.stats.get("dir"); //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+    const choices =  m.stats.get("dir"); //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
         .filter(valid_loc(m));
 }

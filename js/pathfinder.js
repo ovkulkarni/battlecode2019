@@ -5,6 +5,9 @@ import { open_neighbors, idx } from './helpers.js';
 export function exact_pred(fx, fy) {
     return ((x, y) => fx === x && fy === y);
 }
+export function around_pred(fx, fy, l, r) {
+    return ((x, y) => (x-fx)*(x-fx) + (y-fy)*(y-fy) >= l && (x-fx)*(x-fx) + (y-fy)*(y-fy) <= r);
+}
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
 }
@@ -14,14 +17,24 @@ export function on_path(path) {
 }
 
 export class Pathfinder {
-    constructor(m, goal) {
+    constructor(m, goal, type) {
+        /*
+            PathFinder Types
+            WORKER
+            0 - Mining Path
+            1 - Deposit Path
+            2 - Church Path
+        */
         this.m = m;
+        this.type = type;
         this.loc = [m.me.x, m.me.y];
         this.goal = goal;
         this.speed = SPECS.UNITS[m.me.unit].SPEED;
         this.recalculate();
     }
     next_loc(m, wait = false) {
+        if(m.me.x === this.fin[0] && m.me.y === this.fin[1]) return undefined;
+        m.log("FINDING NEXT " + this.path);
         let next = this.path[0];
         if (next === undefined) return undefined;
         let occupied = idx(m.visible_map, ...next);
@@ -60,6 +73,7 @@ export class Pathfinder {
             q.removeHead();
             if (pred(...cur)) {
                 let path = [cur];
+                this.fin = cur;
                 while (parent.has(cur)) {
                     cur = parent.get(cur);
                     path.push(cur);
