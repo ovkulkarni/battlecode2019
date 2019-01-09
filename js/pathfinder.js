@@ -1,12 +1,12 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors, idx } from './helpers.js';
+import { open_neighbors, idx, dis } from './helpers.js';
 
 // premade predicates
 export function exact_pred(fx, fy) {
     return ((x, y) => fx === x && fy === y);
 }
 export function around_pred(fx, fy, l, r) {
-    return ((x, y) => (x-fx)*(x-fx) + (y-fy)*(y-fy) >= l && (x-fx)*(x-fx) + (y-fy)*(y-fy) <= r);
+    return ((x, y) => dis(x, y, fx, fy) <= r && dis(x, y, fx, fy) >= r);
 }
 export function attack_pred(m, fx, fy){
     return around_pred(fx, fy, 1, m.stats.ar);
@@ -30,36 +30,43 @@ export class Pathfinder {
         */
         this.m = m;
         this.type = type;
-        this.loc = [m.me.x, m.me.y];
         this.goal = goal;
         this.speed = SPECS.UNITS[m.me.unit].SPEED;
         this.recalculate();
     }
     next_loc(m, wait = false) {
-        if(m.me.x === this.fin[0] && m.me.y === this.fin[1]) return undefined;
-        m.log("FINDING NEXT " + this.path);
-        let next = this.path[0];
-        if (next === undefined) return undefined;
+        let o = {};
+        if (m.me.x === this.fin[0] && m.me.y === this.fin[1]) {
+            o.fin = true;
+            return o;
+        }
+        o.fin = false;
+        let next = this.path.head.value;
         let occupied = idx(m.visible_map, ...next);
-        if (occupied !== 0 && occupied !== -1) {
-            // add ability to go around better
+        if (occupied >= 1) {
             if (wait) {
-                m.log("WAITING");
-                return undefined;
+                o.wait = true;
+                return o;
             }
-            else {
-                m.log("RECALCULATING");
-                this.recalculate();
-                m.log("RECALCULATING DONE");
-            }
+            m.log("RECALCULATING");
+            this.recalculate();
+            m.log("RECALCULATING DONE");
         }
-        let result = this.path.shift();
-        if (result[0] === this.loc[0] && result[1] === this.loc[1]) {
-            result = this.path.shift();
+        if (occupied === -1 && dis(m.me.x, m.me.y, next[0], next[1]) <= m.stats["ms"]) {
+            m.log("WTF TRYING TO MOVE TO SOMEWHERE YOU CAN'T GO:" + next[0] + " " + next[1] + " CURRENT: " + m.me.x + " " + m.me.y);
+            o.weird = true;
+            return o;
         }
-        this.loc = result
-        m.log("NEXT MOVE: " + result);
-        return result;
+        o.weird = false;
+        let result = this.path.head.value;
+        this.path.removeHead();
+        if (m.me.x === result[0] && m.me.y === result[1]) {
+            result = this.path.head.value;
+            this.path.removeHead();
+        }
+        m.log("NEXT MOVES: " + result);
+        o.res = result;
+        return o;
     }
     recalculate() {
         this.path = this.find_path(this.goal);
@@ -68,27 +75,26 @@ export class Pathfinder {
         let parent = new Map();
         let vis = new Set();
         let q = new LinkedList();
-        q.addToHead(this.loc);
+        q.addToHead([this.m.me.x, this.m.me.y]);
         //let q = [this.loc];
         while (q.len !== 0) {
             //let cur = q.shift();
             let cur = q.head.value;
             q.removeHead();
             if (pred(...cur)) {
-                let path = [cur];
+                let path = new LinkedList();
+                path.addToHead(cur);
                 this.fin = cur;
                 while (parent.has(cur)) {
                     cur = parent.get(cur);
-                    path.push(cur);
+                    path.addToHead(cur);
                 }
-                this.m.log("FOUND:" + path);
-                return path.reverse();
+                return path;
             }
             for (let space of open_neighbors(this.m, ...cur)) {
                 if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
                 vis.add(space.toString());
-                //q.push(space);
                 q.addToTail(space);
             }
         }
