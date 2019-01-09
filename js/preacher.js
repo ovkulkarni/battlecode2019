@@ -21,10 +21,10 @@ export function runPreacher(m) {
   }
   else if (next === -1) {
       m.log("PREACHER STUCK");
-  } else if ()
+  }
   else {
-      m.log("PREACHER MOVING: " + next);
-      let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
+      m.log("PREACHER MOVING: " + next.res);
+      let dx = next.res[0] - m.me.x; let dy = next.res[1] - m.me.y;
       return m.move(dx, dy);
   }
 }

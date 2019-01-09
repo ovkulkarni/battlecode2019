@@ -47,7 +47,7 @@ export function runPilgrim(m) {
     }
     else {
         m.log("PILGRIM MOVING: " + next.res);
-        let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
+        let dx = next.res[0] - m.me.x; let dy = next.res[1] - m.me.y;
         return m.move(dx, dy);
     }
 }

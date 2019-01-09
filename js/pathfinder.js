@@ -41,6 +41,9 @@ export class Pathfinder {
             return o;
         }
         o.fin = false;
+        // if (this.path.head == undefined) {
+        //   return;
+        // }
         let next = this.path.head.value;
         let occupied = idx(m.visible_map, ...next);
         if (occupied >= 1) {
