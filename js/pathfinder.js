@@ -54,7 +54,7 @@ export class Pathfinder {
         let q = new LinkedList();
         q.addToHead(this.loc);
         //let q = [this.loc];
-        while (q.len != 0) {
+        while (q.len !== 0) {
             //let cur = q.shift();
             let cur = q.head.value;
             q.removeHead();
@@ -81,13 +81,13 @@ export class Pathfinder {
 function LinkedList() {
     this.head = null;
     this.tail = null;
+    this.len = 0;
 }
 
 function Node(value, next, prev) {
     this.value = value;
     this.next = next;
     this.prev = prev;
-    this.len = 0;
 }
 
 // Add nodes methods
