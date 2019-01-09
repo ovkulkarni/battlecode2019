@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "bc19": "^0.1.9",
-    "chokidar": "^2.0.4",
-    "supports-color": "^6.0.0"
-  }
-}
