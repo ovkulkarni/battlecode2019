@@ -13,7 +13,8 @@ export function runPreacher(m) {
   }
   let next = m.pathfinder.next_loc(m);
   if (next === undefined) {
-    if (shouldAttack(m) && m.me.fuel >= m.stats.get("ac")) {
+    m.log("FUEL " + m.fuel + " " + m.stats.get("fc"));
+    if (shouldAttack(m) && (m.fuel >= m.stats.get("fc"))) {
       m.log("PREACHER ATTACKED");
       return m.attack(1, 0);
     }
@@ -30,15 +31,15 @@ export function runPreacher(m) {
 
 export function shouldAttack(m) {
 
-    for (var i = -1; i <= 1; i++) {
-      for (var j = -1; j <= 1; j++) {
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
         if (i != 0 || j != 0) {
-          var id = idx(m.getVisibleRobotMap(),m.me.x + i, m.me.y+j);
+          let id = idx(m.getVisibleRobotMap(),m.me.x + i, m.me.y+j);
           m.log("ROBOT ID " + id);
           if (id != 0 && id != -1) {
             m.log("TEAM "  + m.getRobot(id).team);
-            if (m.getRobot(id).team == m.team) {
-              return false;
+            if (m.getRobot(id).team === m.team) {
+              return true;
             }
           }
         }
