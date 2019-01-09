@@ -5,9 +5,9 @@ export function get_stats(m) {
     let v = null;
     switch(m.me.unit) {
         case SPECS.CASTLE: // Movement Speed is the same as like Deploying Speed???
-            return new Map([["ms",2]]);
+            return new Map([["ms",2], ["dir",list_dir(2)]]);
         case SPECS.CHURCH:
-            return new Map([["ms",2]]);
+            return new Map([["ms",2], ["dir",list_dir(2)]]);
         default:
             v = SPECS.UNITS[m.me.unit];
     }
