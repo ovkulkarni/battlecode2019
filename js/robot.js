@@ -6,12 +6,14 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
+import { get_stats} from './helpers.js';
 
 
 class MyRobot extends BCAbstractRobot {
     turn() {
         this.visible_map = this.getVisibleRobotMap();
         this.visible_robots = this.getVisibleRobots();
+        this.stats = get_stats(this);
         const N = this.karbonite_map.length;
         const M = this.karbonite_map[0].length;
         let horizontal = true;
