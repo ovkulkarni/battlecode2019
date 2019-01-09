@@ -8,8 +8,8 @@ export function exact_pred(fx, fy) {
 export function around_pred(fx, fy, l, r) {
     return ((x, y) => dis(x, y, fx, fy) <= r && dis(x, y, fx, fy) >= r);
 }
-export function attack_pred(m, fx, fy){
-    return around_pred(fx, fy, 1, m.stats.ar);
+export function attack_pred(m, fx, fy) {
+    return around_pred(fx, fy, 1, m.stats.get("ar"));
 }
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
@@ -28,73 +28,70 @@ export class Pathfinder {
             1 - Deposit Path
             2 - Church Path
         */
-        this.m = m;
         this.type = type;
         this.goal = goal;
         this.speed = SPECS.UNITS[m.me.unit].SPEED;
-        this.recalculate();
+        this.recalculate(m);
     }
     next_loc(m, wait = false) {
         let o = {};
-        if (m.me.x === this.fin[0] && m.me.y === this.fin[1]) {
+        if (this.path === undefined) {
+            o.fail = true;
+            return o;
+        }
+        if (m.me.x === this.fin[0] && m.me.y === this.fin[1] || this.path.length === 0) {
             o.fin = true;
             return o;
         }
-        o.fin = false;
-        // if (this.path.head == undefined) {
-        //   return;
-        // }
-        let next = this.path.head.value;
+        let next = this.path[this.path.length - 1];
         let occupied = idx(m.visible_map, ...next);
         if (occupied >= 1) {
             if (wait) {
                 o.wait = true;
                 return o;
             }
-            m.log("RECALCULATING");
-            this.recalculate();
-            m.log("RECALCULATING DONE");
+            this.recalculate(m);
+            if (this.path === undefined) {
+                o.fail = true;
+                return o;
+            }
         }
-        if (occupied === -1 && dis(m.me.x, m.me.y, next[0], next[1]) <= m.stats["ms"]) {
-            m.log("WTF TRYING TO MOVE TO SOMEWHERE YOU CAN'T GO:" + next[0] + " " + next[1] + " CURRENT: " + m.me.x + " " + m.me.y);
+        if (occupied === -1 && dis(m.me.x, m.me.y, next[0], next[1]) <= m.stats.get("ms")) {
+            m.log("WTF:" + next[0] + " " + next[1] + " CURRENT: " + m.me.x + " " + m.me.y);
             o.weird = true;
             return o;
         }
-        o.weird = false;
-        let result = this.path.head.value;
-        this.path.removeHead();
+        let result = this.path.pop();
         if (m.me.x === result[0] && m.me.y === result[1]) {
-            result = this.path.head.value;
-            this.path.removeHead();
+            result = this.path.pop();
         }
-        m.log("NEXT MOVES: " + result);
+        m.log("NEXT MOVE: " + result);
         o.res = result;
         return o;
     }
-    recalculate() {
-        this.path = this.find_path(this.goal);
+    recalculate(m) {
+        m.log("CALCULATING");
+        this.path = this.find_path(m, this.goal);
+        m.log("FOUND PATH: " + this.path);
     }
-    find_path(pred) {
+    find_path(m, pred) {
         let parent = new Map();
         let vis = new Set();
         let q = new LinkedList();
-        q.addToHead([this.m.me.x, this.m.me.y]);
-        //let q = [this.loc];
+        q.addToHead([m.me.x, m.me.y]);
         while (q.len !== 0) {
-            //let cur = q.shift();
             let cur = q.head.value;
             q.removeHead();
             if (pred(...cur)) {
-                let path = new LinkedList();
-                path.addToHead(cur);
+                let path = [];
                 this.fin = cur;
                 while (parent.has(cur)) {
+                    path.push(cur);
                     cur = parent.get(cur);
-                    path.addToHead(cur);
                 }
                 return path;
             }
-            for (let space of open_neighbors(this.m, ...cur)) {
+            for (let space of open_neighbors(m, ...cur)) {
                 if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
                 vis.add(space.toString());
