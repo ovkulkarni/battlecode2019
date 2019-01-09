@@ -24,8 +24,7 @@ export class Pathfinder {
     next_loc(m, wait=false) {
         let next = this.path[0];
         if(next === undefined) return undefined;
-        m.log("NEXT MOVE: " + next);
-        if (idx(m.getVisibleRobotMap(), ...next) == 1) {
+        if (idx(m.getVisibleRobotMap(), ...next) === 1) {
             // add ability to go around better
             if (wait) {
                 m.log("WAITING");
@@ -33,12 +32,17 @@ export class Pathfinder {
             }
             else {
                 m.log("RECALCULATING");
+                return -1;
                 this.recalculate();
                 m.log("RECALCULATING DONE");
             }
         }
         let result = this.path.shift();
-        this.loc = result;
+        if(result[0] === this.loc[0] && result[1] === this.loc[1]) {
+            result = this.path.shift();
+        }
+        this.loc = result
+        m.log("NEXT MOVE: " + result);
         return result;
     }
     recalculate(){
@@ -47,9 +51,13 @@ export class Pathfinder {
     find_path(pred) {
         let parent = new Map();
         let vis = new Set();
-        let q = [this.loc];
+        let q = new LinkedList();
+        q.addToHead(this.loc);
+        //let q = [this.loc];
         while (q.length != 0) {
-            let cur = q.shift();
+            //let cur = q.shift();
+            let cur = q.head.value;
+            q.removeHead();
             if (pred(...cur)) {
                 let path = [cur];
                 while (parent.has(cur)) {
@@ -62,9 +70,73 @@ export class Pathfinder {
             for (let space of open_neighbors(this.m, ...cur)) {
                 if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
-                vis.add(cur.toString());
-                q.push(space);
+                vis.add(space.toString());
+                //q.push(space);
+                q.addToTail(space);
             }
         }
     }
+}
+
+function LinkedList() {
+  this.head = null;
+  this.tail = null;
+}
+
+function Node(value, next, prev) {
+  this.value = value;
+  this.next = next;
+  this.prev = prev;
+}
+
+// Add nodes methods
+
+LinkedList.prototype.addToHead = function (value) {
+  const newNode = new Node(value, this.head, null);
+  if (this.head) this.head.prev = newNode;
+  else this.tail = newNode;
+  this.head = newNode;
+};
+
+LinkedList.prototype.addToTail = function (value) {
+  const newNode = new Node(value, null, this.tail);
+  if (this.tail) this.tail.next = newNode;
+  else this.head = newNode;
+  this.tail = newNode;
+}
+
+// Remove nodes methods
+LinkedList.prototype.removeHead = function () {
+  if (!this.head) return null;
+  let value = this.head.value;
+  this.head = this.head.next;
+
+  if (this.head) this.head.prev = null;
+  else this.tail = null;
+
+  return value;
+
+}
+
+LinkedList.prototype.removeTail = function () {
+  if (!this.tail) return null;
+  let value = this.tail.value;
+  this.tail = this.tail.prev;
+
+  if (this.tail) this.tail.next = null;
+  else this.head = null;
+
+  return value;
+}
+
+// Search method
+
+LinkedList.prototype.search = function (searchValue) {
+  let currentNode = this.head;
+
+  while (currentNode) {
+    if (currentNode.value === searchValue) return currentNode;
+    currentNode = currentNode.next;
+  }
+  return null;
 }
