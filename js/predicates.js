@@ -16,7 +16,7 @@ export function around_pred(fx, fy, l, r) {
     return ((x, y) => dis(x, y, fx, fy) <= r && dis(x, y, fx, fy) >= l);
 }
 export function attack_pred(m, fx, fy) {
-    return around_pred(fx, fy, 1, m.stats.ATTACK_RADIUS);
+    return around_pred(fx, fy, m.stats.ATTACK_RADIUS[0], m.stats.ATTACK_RADIUS[1]);
 }
 
 export function fuel_pred(m) {
@@ -43,4 +43,3 @@ export function prophet_pred(m, cx, cy) {
         central_of_pred(m, cx, cy)
     );
 }
-
