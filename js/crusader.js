@@ -1,4 +1,4 @@
-import { Pathfinder, exact_pred } from './pathfinder.js';
+import { Pathfinder } from './pathfinder.js';
 import { calcOpposite } from './helpers.js';
 
 export function runCrusader(m) {

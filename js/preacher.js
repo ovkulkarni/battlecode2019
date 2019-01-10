@@ -1,5 +1,6 @@
-import { Pathfinder, exact_pred } from './pathfinder.js';
+import { Pathfinder } from './pathfinder.js';
 import { get_stats, calcOpposite, idx } from './helpers.js';
+import { exact_pred } from "./predicates.js";
 
 export function runPreacher(m) {
     m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);

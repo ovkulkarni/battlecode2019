@@ -16,7 +16,7 @@ export function runCastle(m) {
 }
 
 export function whatUnit(m) {
-    return SPECS.PILGRIM;
+    return SPECS.PROPHET;
 }
 
 export function botCost(b) {

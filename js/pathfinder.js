@@ -1,23 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors, idx, dis } from './helpers.js';
-
-// premade predicates
-export function exact_pred(fx, fy) {
-    return ((x, y) => fx === x && fy === y);
-}
-export function around_pred(fx, fy, l, r) {
-    return ((x, y) => dis(x, y, fx, fy) <= r && dis(x, y, fx, fy) >= r);
-}
-export function attack_pred(m, fx, fy) {
-    return around_pred(fx, fy, 1, m.stats.get("ar"));
-}
-export function karbonite_pred(m) {
-    return ((x, y) => idx(m.karbonite_map, x, y));
-}
-export function on_path(path) {
-    let spath = path.map(a => a.toString());
-    return ((x, y) => path.includes([x, y].toString()));
-}
+import { open_neighbors, idx } from './helpers.js';
 
 export class Pathfinder {
     constructor(m, goal) {
@@ -51,6 +33,7 @@ export class Pathfinder {
         let result = this.path.pop();
         m.log("NEXT MOVE: " + result);
         o.res = result;
+        o.diff = [o.res[0] - m.me.x, o.res[1] - m.me.y];
         return o;
     }
     recalculate(m) {

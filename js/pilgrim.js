@@ -1,4 +1,5 @@
-import { Pathfinder, karbonite_pred, around_pred } from './pathfinder.js';
+import { Pathfinder } from './pathfinder.js';
+import { karbonite_pred, around_pred } from './predicates.js';
 import { get_stats, list_dir, idx } from './helpers.js';
 
 export function runPilgrim(m) {
