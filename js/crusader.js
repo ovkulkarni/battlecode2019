@@ -9,7 +9,7 @@ export function runCrusader(m) {
         opp[0]--;
         m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
     }
-    
+
     let next = m.pathfinder.next_loc(m);
     if (next.fail || next.wait) {
         m.log("FAILED/WAITING");

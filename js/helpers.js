@@ -3,20 +3,22 @@ import { constants } from './constants.js';
 
 // Based on the Unit, returns an array of movement speed, movement cost, vision radius, damage, attack damage, attack range, and fuel cost
 export function get_stats(m) {
-    let v = null;
+    let o = SPECS.UNITS[m.me.unit];
     switch (m.me.unit) {
-        case SPECS.CASTLE: // Movement Speed is the same as like Deploying Speed???
-            return new Map([["ms", 2], ["dir", list_dir(2)]]);
+        case SPECS.CASTLE:
+            o.DIRECTIONS = list_dir(2);
+            break;
         case SPECS.CHURCH:
-            return new Map([["ms", 2], ["dir", list_dir(2)]]);
+            o.DIRECTIONS = list_dir(2);
+            break;
         default:
-            v = SPECS.UNITS[m.me.unit];
+            o.DIRECTIONS = list_dir(o.SPEED);
     }
-    return new Map([["kcap", v.KARBONITE_CAPACITY], ["fcap", v.FUEL_CAPACITY], ["ms", v.SPEED], ["mc", v.FUEL_PER_MOVE], ["vr", v.VISION_RADIUS], ["da", v.ATTACK_DAMAGE], ["ar", v.ATTACK_RADIUS], ["fc", v.ATTACK_FUEL_COST], ["dir", list_dir(v.SPEED)]]);
+    return o;
 }
 
 export function open_neighbors(m, x, y) {
-    const choices = m.stats.get("dir"); //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+    const choices = m.stats.DIRECTIONS; //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
         .filter(valid_loc(m));
 }

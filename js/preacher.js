@@ -14,8 +14,8 @@ export function runPreacher(m) {
     }
     let next = m.pathfinder.next_loc(m);
     if (next === undefined) {
-        m.log("FUEL " + m.fuel + " " + m.stats.get("fc"));
-        if (shouldAttack(m) && (m.fuel >= m.stats.get("fc"))) {
+        m.log("FUEL " + m.fuel + " " + m.stats.FUEL_CAPACITY);
+        if (shouldAttack(m) && (m.fuel >= m.stats.FUEL_CAPACITY)) {
             m.log("PREACHER ATTACKED");
             return m.attack(1, 0);
         }
@@ -24,10 +24,10 @@ export function runPreacher(m) {
         m.log("PREACHER STUCK");
     }
     else {
-        m.log("PREACHER MOVING: " + next);
-        let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
+        m.log("PREACHER MOVING: " + next.res);
+        let dx = next.res[0] - m.me.x; let dy = next.res[1] - m.me.y;
         return m.move(dx, dy);
-    }   
+    }
 }
 
 export function shouldAttack(m) {

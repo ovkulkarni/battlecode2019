@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors, idx } from './helpers.js';
+import { open_neighbors, idx, dis } from './helpers.js';
 
 export class Pathfinder {
     constructor(m, goal) {
@@ -18,6 +18,10 @@ export class Pathfinder {
             return o;
         }
         let next = this.path[this.path.length - 1];
+        if (m.fuel <= (m.stats.FUEL_PER_MOVE * dis(m.me.x, m.me.y, ...next) * 30)) {
+            o.wait = true;
+            return o;
+        }
         let occupied = idx(m.visible_map, ...next);
         if (occupied >= 1) {
             if (wait) {
