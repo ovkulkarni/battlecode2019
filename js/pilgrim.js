@@ -1,40 +1,42 @@
+import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { karbonite_pred, around_pred } from './predicates.js';
-import { get_stats, list_dir, idx } from './helpers.js';
+import { karbonite_pred, around_pred, fuel_pred } from './predicates.js';
+import { constants } from './constants.js';
 
 export function runPilgrim(m) {
     m.log("PILGRIM ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
-    if (m.ix === undefined) {
-        let choices = list_dir(2);
-        for (let i = 0; i < 8; i++) {
-            let r = m.getRobot(idx(m.getVisibleRobotMap(), choices[i][0] + m.me.x, choices[i][1] + m.me.y));
-            if (r === null) continue;
-            if (r.unit <= 1) {
-                m.ix = choices[i][0] + m.me.x;
-                m.iy = choices[i][1] + m.me.y;
-                break;
-            }
+    if (typeof m.pathfinder === "undefined") {
+        if (m.fuel > constants.MIN_FUEL) {
+            m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+        } else {
+            m.pathfinder = new Pathfinder(m, fuel_pred(m));
         }
+        m.mission = constants.GATHER;
     }
-    if (typeof m.pathfinder === "undefined")
-        m.pathfinder = new Pathfinder(m, karbonite_pred(m));
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {
-        if (m.pathfinder.type == 0) {
-            if (m.me.karbonite === m.stats.get("kcap") || m.me.fuel === m.stats.get("fcap")) {
+        if (m.mission === constants.GATHER) {
+            if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
                 m.log("DROPPING OFF");
-                m.pathfinder = new Pathfinder(m, around_pred(m.ix, m.iy, 1, 2));
-                next = m.pathfinder.next_loc(m);
+                m.mission = constants.DEPOSIT;
+                m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                return;
             }
             else {
                 m.log("MINING");
-                return m.mine();
+                if (m.fuel > SPECS.MINE_FUEL_COST)
+                    return m.mine();
             }
         }
-        else if (m.pathfinder.type == 1) {
-            let dx = m.ix - m.me.x;
-            let dy = m.iy - m.me.y;
-            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+        else if (m.mission === constants.DEPOSIT) {
+            let dx = m.spawn_castle.x - m.me.x;
+            let dy = m.spawn_castle.y - m.me.y;
+            m.mission = constants.GATHER;
+            if (m.fuel > constants.MIN_FUEL) {
+                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+            } else {
+                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            }
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }
@@ -48,7 +50,6 @@ export function runPilgrim(m) {
     }
     else {
         m.log("PILGRIM MOVING: " + next.res);
-        let dx = next.res[0] - m.me.x; let dy = next.res[1] - m.me.y;
-        return m.move(dx, dy);
+        return m.move(...next.diff);
     }
 }

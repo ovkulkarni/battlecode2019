@@ -6,7 +6,7 @@ export function runCastle(m) {
     const choices = open_neighbors_diff(m, m.me.x, m.me.y);
     const choice = choices[Math.floor(Math.random() * choices.length)];
     m.log("BUILD UNIT");
-    if (m.karbonite >= botCost("crusader")) {
+    if (m.karbonite >= botCost("pilgrim") && Math.random() < 0.1) {
         m.log(m.karbonite);
         return m.buildUnit(whatUnit(m), ...choice);
     } else {
@@ -16,7 +16,7 @@ export function runCastle(m) {
 }
 
 export function whatUnit(m) {
-    return SPECS.PROPHET;
+    return SPECS.PILGRIM;
 }
 
 export function botCost(b) {
