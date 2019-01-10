@@ -16,7 +16,8 @@ export function around_pred(fx, fy, l, r) {
     return ((x, y) => dis(x, y, fx, fy) <= r && dis(x, y, fx, fy) >= l);
 }
 export function attack_pred(m, fx, fy) {
-    return around_pred(fx, fy, 1, m.stats.get("ar"));
+    let ar = m.stats.get("ar")
+    return around_pred(fx, fy, 1, ar[0], ar[1]);
 }
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));

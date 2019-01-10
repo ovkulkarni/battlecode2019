@@ -16,7 +16,7 @@ export function runCastle(m) {
 }
 
 export function whatUnit(m) {
-    return SPECS.PROPHET;
+    return m.me.team ? SPECS.CRUSADER : SPECS.PROPHET;
 }
 
 export function botCost(b) {

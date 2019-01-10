@@ -6,7 +6,7 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { get_stats} from './helpers.js';
+import { get_stats } from './helpers.js';
 
 
 class MyRobot extends BCAbstractRobot {
