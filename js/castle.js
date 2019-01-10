@@ -49,10 +49,10 @@ export function runCastle(m) {
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = what_unit(m);
     if (unit !== undefined && build_opts.length > 0) {
-        if (m.karbonite >= unit_cost(unit)) {
+        if (m.karbonite >= unit_cost(unit.unit)) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-            m.log(`BUILD UNIT ${unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-            return m.buildUnit(unit, ...build_loc);
+            m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+            return m.buildUnit(unit.unit, ...build_loc);
         } else {
             m.log(m.me.karbonite + " Not enough karbonite");
         }
@@ -61,11 +61,24 @@ export function runCastle(m) {
 }
 
 export function what_unit(m) {
+    let o = {};
     if (m.karbonite < constants.MIN_KARB || m.fuel < constants.MIN_FUEL)
-        return SPECS.PILGRIM;
+        o.unit = SPECS.PILGRIM;
+        o.task = constants.GATHER;
+        return o;
     if (m.mission === constants.DEFEND)
-        return SPECS.PROPHET;
-    return Math.random() < 0.1 ? SPECS.PROPHET : SPECS.CRUSADER;
+        o.unit = SPECS.PROPHET;
+        o.task = constants.DEFEND;
+        return o;
+    if(Math.random() < 0.1) {
+        o.unit = SPECS.PROPHET;
+        o.task = constants.ATTACK;
+    }
+    else {
+        o.unit = SPECS.CRUSADER;
+        o.task = constants.ATTACK;
+    }
+    return o;
 }
 
 export function unit_cost(b) {
