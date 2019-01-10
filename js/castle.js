@@ -19,13 +19,12 @@ export function runCastle(m) {
             if (message.command === "defend")
                 m.mission = constants.DEFEND;
             if (message.command === "castle_coord") {
-                m.friendly_castles[r.id] = {}
-                if (m.friendly_castles[r.id].x === undefined) {
+                if (m.friendly_castles[r.id] === undefined)
+                    m.friendly_castles[r.id] = {}
+                if (m.friendly_castles[r.id].x === undefined)
                     m.friendly_castles[r.id].x = message.args[0];
-                }
-                if (m.friendly_castles[r.id].y === undefined) {
+                else if (m.friendly_castles[r.id].y === undefined)
                     m.friendly_castles[r.id].y = message.args[0];
-                }
             }
         }
     }
