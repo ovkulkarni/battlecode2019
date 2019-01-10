@@ -44,8 +44,8 @@ export function runPilgrim(m) {
         m.log("WAITING");
         return;
     }
-    else if (next.weird) {
-        m.log("DIDN'T MOVE");
+    else if (next.fail) {
+        m.log("FAILED TO MOVE");
         return;
     }
     else {
