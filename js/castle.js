@@ -1,10 +1,13 @@
 import { SPECS } from 'battlecode';
 import { open_neighbors_diff } from './helpers.js';
-import { decode8 } from "./communication.js";
+import { encode8, decode8 } from "./communication.js";
 import { constants } from "./constants.js"
 
 export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
+    if (m.friendly_castles === undefined) {
+        m.friendly_castles = {}
+    }
 
     if (m.mission === undefined)
         m.mission = constants.NEUTRAL;
@@ -12,10 +15,35 @@ export function runCastle(m) {
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
             let message = decode8(r.castle_talk);
-            m.log(`RECIEVED (${message.command} ${message.args}) FROM ${r.id}`);
-            if (message.command == "defend")
+            m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
+            if (message.command === "defend")
                 m.mission = constants.DEFEND;
+            if (message.command === "castle_coord") {
+                m.friendly_castles[r.id] = {}
+                if (m.friendly_castles[r.id].x === undefined) {
+                    m.friendly_castles[r.id].x = message.args[0];
+                }
+                if (m.friendly_castles[r.id].y === undefined) {
+                    m.friendly_castles[r.id].y = message.args[0];
+                }
+            }
         }
+    }
+
+    if (m.sent_x_coord === undefined) {
+        m.sent_x_coord = true;
+        let msg = encode8("castle_coord", m.me.x);
+        m.log(`Sending ${msg} as x-coordinate`);
+        m.castleTalk(msg);
+    }
+    else if (m.sent_y_coord === undefined) {
+        m.sent_y_coord = true;
+        let msg = encode8("castle_coord", m.me.y);
+        m.log(`Sending ${msg} as y-coordinate`);
+        m.castleTalk(msg);
+    }
+    else {
+        m.log(`Friendlies: ${JSON.stringify(m.friendly_castles)}`);
     }
 
     m.log("BUILD UNIT");

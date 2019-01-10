@@ -13,8 +13,8 @@ class MyRobot extends BCAbstractRobot {
     turn() {
         this.visible_map = this.getVisibleRobotMap();
         this.visible_robots = this.getVisibleRobots();
-        this.visible_allies = this.visible_robots.filter(r => this.me.team === r.team);
-        this.visible_enemies = this.visible_robots.filter(r => this.me.team !== r.team);
+        this.visible_allies = this.visible_robots.filter(r => r.castle_talk !== undefined).filter(r => this.me.id !== r.id);
+        this.visible_enemies = this.visible_robots.filter(r => r.castle_talk === undefined);
         if (this.stats === undefined)
             this.stats = get_stats(this);
         if (this.symmetry === undefined)

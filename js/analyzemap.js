@@ -27,3 +27,7 @@ export function get_visible_castle(m) {
             return robot;
     }
 }
+
+export function find_optimal_churches(m) {
+
+}
