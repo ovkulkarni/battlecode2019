@@ -1,8 +1,8 @@
 export let encode8, decode8, encode16, decode16;
 
 const commands8 = [
-  command("test1", [3, 3]),
-  command("test2", [7])
+  command("defense", [5]),
+  command("", [7])
 ]
 
 const commands16 = [
@@ -60,7 +60,7 @@ function setup(bits, cs) {
     name_num.set(cs[i].name, i);
   }
 
-  let encode = ((command, list) =>
+  let encode = ((command, ...list) =>
     e_funcs[command](list)*2**header_bits + name_num.get(command)
   );
 

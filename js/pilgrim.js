@@ -4,7 +4,7 @@ import { karbonite_pred, around_pred, fuel_pred } from './predicates.js';
 import { constants } from './constants.js';
 
 export function runPilgrim(m) {
-    m.log("PILGRIM ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
+    m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     if (typeof m.pathfinder === "undefined") {
         if (m.fuel > constants.MIN_FUEL) {
             m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));

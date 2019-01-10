@@ -1,8 +1,17 @@
 export let constants = {
-    HORIZONTAL: 0,
-    VERTICAL: 1,
-    GATHER: 2,
-    DEPOSIT: 3,
     MIN_FUEL: 1000,
-    FUEL_KARB_RATIO: 0.75
+    MIN_KARB: 200,
+    FUEL_KARB_RATIO: 0.75,
 }
+
+let name_constants = [
+    "HORIZONTAL",
+    "VERTICAL",
+    "GATHER",
+    "DEPOSIT",
+    "DEFEND",
+    "NEUTRAL"
+]
+
+for (let i = 0; i < name_constants.length; i++)
+    constants[name_constants[i]] = i;
