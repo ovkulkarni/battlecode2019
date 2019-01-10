@@ -14,11 +14,13 @@ export function runCrusader(m) {
         }
     }
     for (let r of m.visible_enemies) {
-        if (dis(m.me.x, m.me.y, r.x, r.y) <= m.stats.ATTACK_RANGE) {
+        let dist = dis(m.me.x, m.me.y, r.x, r.y);
+        if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
             m.log(`ATTACKING: (${r.x}, ${r.y})`);
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }
+    m.log(m.pathfinder);
     let next = m.pathfinder.next_loc(m);
     if (next.fail) { m.log("FAILED"); return; }
     if (next.wait) { m.log("WAITING"); return; }
