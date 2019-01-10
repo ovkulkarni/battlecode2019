@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { constants, name_constants } from './constants.js';
+import { constants } from './constants.js';
 import { decode16 } from './communication.js';
 
 // Based on the Unit, returns an array of movement speed, movement cost, vision radius, damage, attack damage, attack range, and fuel cost
@@ -77,7 +77,7 @@ export function get_mission(m) {
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
-            m.log(`GOT MISSION TO ${name_constants[message.args[0]]} FROM ${r.id}`);
+            m.log(`GOT MISSION TO ${message.args[0]} FROM ${r.id}`);
             return message.args[0];
         }
     }
