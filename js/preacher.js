@@ -11,15 +11,9 @@ export function runPreacher(m) {
         m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
     }
     let next = m.pathfinder.next_loc(m);
-<<<<<<< HEAD
-    if (next.fin) {
-        m.log("FUEL " + m.fuel + " " + m.stats.get("fc"));
-        if (shouldAttack(m) && (m.fuel >= m.stats.get("fc"))) {
-=======
     if (next === undefined) {
         m.log("FUEL " + m.fuel + " " + m.stats.FUEL_CAPACITY);
         if (shouldAttack(m) && (m.fuel >= m.stats.FUEL_CAPACITY)) {
->>>>>>> 6ad2b0da0ace72f15a58f686a95737bfd805678a
             m.log("PREACHER ATTACKED");
             return m.attack(1, 0);
         }
@@ -30,15 +24,9 @@ export function runPreacher(m) {
         return;
     }
     else {
-<<<<<<< HEAD
         m.log("PREACHER MOVING: " + next);
         //let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
         return m.move(...next.diff);
-=======
-        m.log("PREACHER MOVING: " + next.res);
-        let dx = next.res[0] - m.me.x; let dy = next.res[1] - m.me.y;
-        return m.move(dx, dy);
->>>>>>> 6ad2b0da0ace72f15a58f686a95737bfd805678a
     }
 }
 
