@@ -22,6 +22,13 @@ export function open_neighbors(m, x, y) {
     return choices.map(s => [x + s[0], y + s[1]])
         .filter(valid_loc(m));
 }
+
+export function open_neighbors2(m,x,y) {
+    const choices = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+    return choices.map(s => [x + s[0], y + s[1]])
+        .filter(valid_loc(m));
+}
+
 export function open_neighbors_diff(m, x, y) {
     return open_neighbors(m, x, y).map(s => [s[0] - x, s[1] - y]);
 }

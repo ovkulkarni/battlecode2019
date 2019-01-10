@@ -49,9 +49,10 @@ export function runCastle(m) {
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = what_unit(m);
     if (unit !== undefined && build_opts.length > 0) {
-        if (m.karbonite >= unit_cost(unit.unit)) {
+        if (m.karbonite >= unit_cost(unit.unit)[0] && m.fuel >= unit_cost(unit.unit)[1]) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+            // Figure Out Transmitting o.task
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
             m.log(m.me.karbonite + " Not enough karbonite");
@@ -82,5 +83,5 @@ export function what_unit(m) {
 }
 
 export function unit_cost(b) {
-    return SPECS.UNITS[b].CONSTRUCTION_KARBONITE;
+    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE,SPECS.UNITS[b].CONSTRUCTION_FUEL];
 }
