@@ -1,14 +1,22 @@
 import { Pathfinder } from './pathfinder.js';
 import { get_stats, calcOpposite, idx } from './helpers.js';
-import { exact_pred } from "./predicates.js";
+import { attack_pred } from "./predicates.js";
 
 export function runPreacher(m) {
     m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
-    if (m.stats == undefined) {
+    if (m.stats === undefined) {
         m.stats = get_stats(m);
     }
-    if (typeof m.pathfinder === "undefined") {
-        m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+    if (m.me.turn === 1) {
+        switch (m.mission) {
+            case constants.ATTACK:
+                let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
+                m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
+                break;
+            default:
+                m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                break;
+        }
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {

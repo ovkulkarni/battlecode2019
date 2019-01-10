@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { open_neighbors_diff } from './helpers.js';
-import { encode8, decode8 } from "./communication.js";
+import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js"
 
 export function runCastle(m) {
@@ -33,7 +33,9 @@ export function runCastle(m) {
         if (m.karbonite >= unit_cost(unit.unit)[0] && m.fuel >= unit_cost(unit.unit)[1]) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-            // Figure Out Transmitting o.task
+            let msg = encode16("task", unit.task);
+            m.log(`SENDING ${msg}, ${JSON.stringify(unit)}`);
+            m.signal(msg, 1);
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
             m.log(m.me.karbonite + " Not enough karbonite");
@@ -44,14 +46,16 @@ export function runCastle(m) {
 
 export function what_unit(m) {
     let o = {};
-    if (m.karbonite < constants.MIN_KARB || m.fuel < constants.MIN_FUEL)
+    if (m.fuel < constants.MIN_FUEL) {
         o.unit = SPECS.PILGRIM;
-    o.task = constants.GATHER;
-    return o;
-    if (m.mission === constants.DEFEND)
+        o.task = constants.GATHER;
+        return o;
+    }
+    if (m.mission === constants.DEFEND) {
         o.unit = SPECS.PROPHET;
-    o.task = constants.DEFEND;
-    return o;
+        o.task = constants.DEFEND;
+        return o;
+    }
     if (Math.random() < 0.1) {
         o.unit = SPECS.PROPHET;
         o.task = constants.ATTACK;
@@ -64,7 +68,7 @@ export function what_unit(m) {
 }
 
 export function unit_cost(b) {
-    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE,SPECS.UNITS[b].CONSTRUCTION_FUEL];
+    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
 }
 
 function handle_castle_coord(m, r, message) {

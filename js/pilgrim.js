@@ -5,13 +5,26 @@ import { constants } from './constants.js';
 
 export function runPilgrim(m) {
     m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
-    if (typeof m.pathfinder === "undefined") {
-        if (m.fuel > constants.MIN_FUEL) {
-            m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
-        } else {
-            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+    if (m.me.turn === 1) {
+        switch (m.mission) {
+            case constants.GATHER:
+                if (m.fuel > constants.MIN_FUEL) {
+                    m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+                } else {
+                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                }
+                break;
+            case constants.DEPOSIT:
+                m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                break;
+            default:
+                if (m.fuel > constants.MIN_FUEL) {
+                    m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+                } else {
+                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                }
+                break;
         }
-        m.mission = constants.GATHER;
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {

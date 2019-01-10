@@ -6,9 +6,7 @@ const commands8 = [
 ]
 
 const commands16 = [
-    command("test1", [6, 6]),
-    command("test2", [3, 9]),
-    command("workermine", [6, 6])
+    command("task", [4])
 ]
 
 function command(name, bit_list) {
