@@ -8,7 +8,7 @@ const commands8 = [
 const commands16 = [
     command("test1", [6, 6]),
     command("test2", [3, 9]),
-    command("workermine", [6,6])
+    command("workermine", [6, 6])
 ]
 
 function command(name, bit_list) {
@@ -40,11 +40,6 @@ function setup(bits, cs) {
         name_header.set(c.name, header);
         name_header_len.set(c.name, c.header_len);
     }
-
-    for (c of cs) {
-        console.log(c.name, name_header.get(c.name).toString(2));
-    }
-    console.log();
 
     // generate partial encode and decode functions
     let e_funcs = {}
