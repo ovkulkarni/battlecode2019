@@ -1,5 +1,6 @@
 export let constants = {
     MIN_FUEL: 1000,
+    MIN_KARB: 100,
     FUEL_KARB_RATIO: 0.2,
     FUEL_MIN_DIS: 15,
     KARB_MIN_DIS: 15,

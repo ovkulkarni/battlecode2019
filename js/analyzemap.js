@@ -18,7 +18,7 @@ export function get_symmetry(m) {
             }
         }
         if (horizontal)
-            return constants.HORIZONTAL
+            return constants.HORIZONTAL;
         else
             return constants.VERTICAL;
     }

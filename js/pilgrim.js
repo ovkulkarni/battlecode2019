@@ -13,7 +13,15 @@ export function runPilgrim(m) {
         m.log("INITIAL MISSION: " + m.mission);
         switch (m.mission) {
             case constants.GATHER:
-                if (m.fuel > constants.MIN_FUEL) {
+                if (m.fuel < constants.MIN_FUEL) {
+                    m.mission = constants.GATHER_FUEL;
+                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                }
+                else if(m.karbonite < constants.MIN_KARB) {
+                    m.mission = constants.GATHER_KARB;
+                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                }
+                else {
                     if(Math.random() < constants.FUEL_KARB_RATIO) {
                         m.pathfinder = new Pathfinder(m, fuel_pred(m));
                         m.mission = constants.GATHER_FUEL;
@@ -22,9 +30,6 @@ export function runPilgrim(m) {
                         m.pathfinder = new Pathfinder(m, karbonite_pred(m));
                         m.mission = constants.GATHER_KARB;
                     }
-                } else {
-                    m.mission = constants.GATHER_FUEL;
-                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 }
                 break;
             case constants.DEPOSIT:
@@ -81,6 +86,7 @@ export function runPilgrim(m) {
                             m.log("BUILDING CHURCH: " + dr);
                             return m.buildUnit(SPECS.CHURCH, ...m.church);
                         }
+                        m.church = undefined;
                         m.log("NOT ENOUGH RESOURCES");
                         // Tell Castle to Send more Harvesters if Feasable
                         return;

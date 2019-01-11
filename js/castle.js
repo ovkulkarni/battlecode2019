@@ -37,6 +37,10 @@ export function runCastle(m) {
                 m.mission = constants.DEFEND;
             } else if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message);
+                if(flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
+            }
+            if(message.command === "firstdone") {
+                // m.startBuilding = true;
             }
 
             if (m.me.turn === 1)
@@ -50,7 +54,6 @@ export function runCastle(m) {
     if (m.me.turn === 1) {
         initializeQueue(m, flag);
     }
-
     m.log("BUILD UNIT");
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = what_unit(m);
@@ -59,14 +62,15 @@ export function runCastle(m) {
         if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+            // Figure Out Transmitting o.task
             let msg = encode16("task", unit.task);
             m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-            if (m.me.turn === 1) m.startBuilding = false;
+            // if(m.me.turn === 1) m.startBuilding = false;
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
-            m.log("Not enough materials");
-            m.queue.addToHead(Unit(unit.unit, unit.task));
+            m.log(m.me.karbonite + " Not enough karbonite");
+            m.queue.push(unit);
         }
     }
     return;
