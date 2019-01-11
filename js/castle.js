@@ -3,6 +3,7 @@ import { open_neighbors_diff } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs } from './analyzemap.js';
+import { LinkedList } from './pathfinder.js';
 
 export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
