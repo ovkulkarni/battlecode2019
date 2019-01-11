@@ -1,7 +1,8 @@
 import { Pathfinder } from './pathfinder.js';
-import { attack_pred } from './predicates.js';
+import { attack_pred, around_pred } from './predicates.js';
 import { calcOpposite, dis } from './helpers.js';
 import { constants } from './constants.js';
+import { wander } from './analyzemap.js';
 
 export function runCrusader(m) {
     m.log(`CRUSADER: (${m.me.x}, ${m.me.y})`);
@@ -20,10 +21,12 @@ export function runCrusader(m) {
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }
-    m.log(m.pathfinder);
     let next = m.pathfinder.next_loc(m);
     if (next.fail) { m.log("FAILED"); return; }
     if (next.wait) { m.log("WAITING"); return; }
-    if (next.fin) { m.log("FINISHED"); return; }
+    if (next.fin) {
+        wander(m);
+        return;
+    }
     return m.move(...next.diff);
 }

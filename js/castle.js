@@ -21,10 +21,10 @@ export function runCastle(m) {
             if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message)
             }
-            if(message.command === "firstdone") {
+            if (message.command === "firstdone") {
                 m.fdone = true;
             }
-            if(message.command === "stopbuild" && !(m.fdone === true)) {
+            if (message.command === "stopbuild" && !(m.fdone === true)) {
                 m.fdone = false;
             }
         }
@@ -43,7 +43,7 @@ export function runCastle(m) {
             // Figure Out Transmitting o.task
             let msg = encode16("task", unit.task);
             m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
-            m.signal(msg,2);
+            m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
             m.log(m.me.karbonite + " Not enough karbonite");
@@ -54,7 +54,7 @@ export function runCastle(m) {
 
 export function what_unit(m) {
     let o = {};
-    if(m.fdone === undefined) {
+    if (m.fdone === undefined) {
         m.fdone = false;
         o.unit = SPECS.PILGRIM;
         o.task = constants.CHURCH_KARB;
@@ -63,7 +63,7 @@ export function what_unit(m) {
         m.castleTalk(msg);
         return o;
     }
-    if(m.fdone) {
+    if (m.fdone) {
         if (m.karbonite < constants.MIN_KARB || m.fuel < constants.MIN_FUEL) {
             o.unit = SPECS.PILGRIM;
             o.task = constants.GATHER;
@@ -89,7 +89,7 @@ export function what_unit(m) {
 }
 
 export function unit_cost(b) {
-    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE,SPECS.UNITS[b].CONSTRUCTION_FUEL];
+    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
 }
 
 function handle_castle_coord(m, r, message) {
