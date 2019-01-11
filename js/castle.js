@@ -73,6 +73,7 @@ export function runCastle(m) {
                     return m.buildUnit(unit.unit, ...build_loc);
                 } else {
                     m.log(m.me.karbonite + " Not enough karbonite");
+                    m.queue.addToHead(Unit(unit.unit, unit.task));
                 }
             }
         }
