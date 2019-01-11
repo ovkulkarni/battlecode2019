@@ -1,8 +1,9 @@
 export let encode8, decode8, encode16, decode16;
 
 const commands8 = [
-    command("defense", []),
-    command("castle_coord", [6])
+    command("castle_coord", [6]),
+    command("firstdone", [1]),
+    command("stopbuild", [1])
 ]
 
 const commands16 = [

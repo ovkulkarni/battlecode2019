@@ -20,8 +20,7 @@ export function attack_pred(m, fx, fy) {
 }
 
 export function fuel_pred(m) {
-    return ((x, y) => idx(m.fuel_map, x, y) &&
-        2 * dis(m.me.x, m.me.y, x, y) * m.stats.FUEL_PER_MOVE < m.stats.FUEL_CAPACITY);
+    return ((x, y) => idx(m.fuel_map, x, y));
 }
 
 export function karbonite_pred(m) {

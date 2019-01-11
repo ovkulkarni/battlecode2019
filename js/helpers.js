@@ -78,6 +78,7 @@ export function dis(x1, y1, x2, y2) {
 }
 
 export function get_mission(m) {
+    m.log("GETTING MISSION");
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);

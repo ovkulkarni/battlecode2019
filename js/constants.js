@@ -13,6 +13,8 @@ let task_constant_bins = [
         "GATHER",
         "GATHER_FUEL",
         "GATHER_KARB",
+        "CHURCH_KARB",
+        "CHURCH_FUEL",
         "DEPOSIT",
         "NEUTRAL"
     ],
@@ -39,7 +41,7 @@ for (let bin of task_constant_bins) {
         constants[task] = i;
         max_task = Math.max(max_task, i);
         i++;
-    }  
+    }
 }
 
 for (let i = 0; i < name_constants.length; i++)

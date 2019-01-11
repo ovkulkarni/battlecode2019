@@ -10,6 +10,7 @@ export class Pathfinder {
     next_loc(m, wait = false) {
         let o = {};
         if (this.path === undefined) {
+            m.log("PATH UNDEFINED");
             o.fail = true;
             return o;
         }
