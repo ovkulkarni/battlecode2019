@@ -2,15 +2,26 @@ import { SPECS } from 'battlecode';
 import { open_neighbors_diff } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
+import { best_fuel_locs } from './analyzemap.js';
 
 export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
+
+    m.kstash = 50;
+    if (m.queue === undefined) {
+        m.queue = new LinkedList();
+    }
     if (m.friendly_castles === undefined) {
         m.friendly_castles = {}
     }
-
-    if (m.mission === undefined)
+    if (m.mission === undefined) {
         m.mission = constants.NEUTRAL;
+    }
+    if (m.fuel_locs === undefined) {
+        m.fuel_locs = best_fuel_locs(m);
+        for (let i = 0; i < m.fuel_locs.length; i++)
+            m.queue.addToHead(Unit(SPECS.PILGRIM, constants.GATHER_FUEL));
+    }
 
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
@@ -21,12 +32,6 @@ export function runCastle(m) {
             if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message)
             }
-            if (message.command === "firstdone") {
-                m.fdone = true;
-            }
-            if (message.command === "stopbuild" && !(m.fdone === true)) {
-                m.fdone = false;
-            }
         }
     }
 
@@ -36,8 +41,8 @@ export function runCastle(m) {
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = what_unit(m);
     m.log("UNIT: " + unit);
-    if (unit.unit !== undefined && build_opts.length > 0) {
-        if (m.karbonite >= unit_cost(unit.unit)[0] && m.fuel >= unit_cost(unit.unit)[1]) {
+    if (unit !== undefined && build_opts.length > 0) {
+        if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             // Figure Out Transmitting o.task
@@ -53,43 +58,18 @@ export function runCastle(m) {
 }
 
 export function what_unit(m) {
-    let o = {};
-    if (m.fdone === undefined) {
-        m.fdone = false;
-        o.unit = SPECS.PILGRIM;
-        o.task = constants.CHURCH_KARB;
-        m.log("FIRST UNIT BUILDiNG");
-        let msg = encode8("stopbuild", 0);
-        m.castleTalk(msg);
-        return o;
+    if (m.queue.length > 0) {
+        m.queue.removeTail();
+        return m.queue.tail;
     }
-    if (m.fdone) {
-        if (m.karbonite < constants.MIN_KARB || m.fuel < constants.MIN_FUEL) {
-            o.unit = SPECS.PILGRIM;
-            o.task = constants.GATHER;
-            return o;
-        }
-        if (m.mission === constants.DEFEND) {
-            o.unit = SPECS.PROPHET;
-            o.task = constants.DEFEND;
-            return o;
-        }
-        if (Math.random() < 0.1) {
-            o.unit = SPECS.PROPHET;
-            o.task = constants.ATTACK;
-        }
-        else {
-            o.unit = SPECS.CRUSADER;
-            o.task = constants.ATTACK;
-        }
-        return o;
-    }
-    m.log("WHY");
-    return o;
 }
 
 export function unit_cost(b) {
     return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
+}
+
+function Unit(unit, task) {
+    return { unit: unit, task: task };
 }
 
 function handle_castle_coord(m, r, message) {
