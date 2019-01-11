@@ -3,14 +3,15 @@ import { open_neighbors_diff } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs } from './analyzemap.js';
-import { LinkedList } from './pathfinder.js';
+import { PriorityQueue } from './pqueue.js';
 
 export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
 
+    // set "global" variables
     m.kstash = 50;
     if (m.queue === undefined) {
-        m.queue = new LinkedList();
+        m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
     }
     if (m.friendly_castles === undefined) {
         m.friendly_castles = {}
@@ -19,102 +20,61 @@ export function runCastle(m) {
         m.mission = constants.NEUTRAL;
     }
     if (m.fuel_locs === undefined) {
-        //m.fuel_locs = best_fuel_locs(m);
-        m.fuel_locs = [1,1];
-        for (let i = 0; i < m.fuel_locs.length; i++)
-            m.queue.addToHead(Unit(SPECS.PILGRIM, constants.GATHER_FUEL));
+        m.fuel_locs = best_fuel_locs(m);
+        m.log(`Good Fuel Locs: ${JSON.stringify(m.fuel_locs)}`);
     }
-    let flag = constants.NOT_FIRST_TURN;
-    if(m.me.turn === 1) {
-        flag = constants.FIRST_CHURCH;
-        /*
-        m.log("NUM ALLIES: " + m.visible_allies.length);
-        for(let i = 0; i < m.visible_allies.length; i++) {
-            m.log("ALLY: " + m.visible_allies[i].id + " OF TYPE: " + m.visible_allies[i].unit);
-            if(m.me.id > m.visible_allies[i].id && m.visible_allies[i].unit === 0) {
-                m.log("I AM SMALLER: " + m.me.id + " " + m.visible_allies[i].id);
-                flag = 0;
-                break;
-            }
-        }*/
-    }
+
+    let flag = constants.FIRST_CHURCH;
+
+    // handle castle-talk
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
+
             let message = decode8(r.castle_talk);
             m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
-            if (message.command === "defend")
+
+            if (message.command === "defend") {
                 m.mission = constants.DEFEND;
-            if (message.command === "castle_coord") {
+            } else if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message);
-                if(flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
             }
-            if(message.command === "firstdone") {
-                m.startBuilding = true;
-            }
+
+            if (m.me.turn === 1)
+                flag = constants.FIRST_NOT_CHURCH;
         }
     }
 
     send_castle_coord(m);
-    if(m.me.turn === 1) {
-        return firstTurn(m,flag);
+
+    // first turn logic
+    if (m.me.turn === 1) {
+        initializeQueue(m, flag);
     }
-    else if(m.startBuilding === true) {
-        m.log("BUILD UNIT");
-        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-        let unit = what_unit(m);
-        m.log("UNIT: " + unit);
-        if (unit !== undefined && build_opts.length > 0) {
-            if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
-                let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-                m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-                // Figure Out Transmitting o.task
-                let msg = encode16("task", unit.task);
-                m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
-                m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-                if(m.me.turn === 1) m.startBuilding = false;
-                return m.buildUnit(unit.unit, ...build_loc);
-            } else {
-                m.log(m.me.karbonite + " Not enough karbonite");
-                m.queue.addToHead(Unit(unit.unit, unit.task));
-            }
+
+    m.log("BUILD UNIT");
+    let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
+    let unit = what_unit(m);
+    m.log("UNIT: " + unit);
+    if (unit !== undefined && build_opts.length > 0) {
+        if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
+            let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
+            m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+            let msg = encode16("task", unit.task);
+            m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
+            m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+            if (m.me.turn === 1) m.startBuilding = false;
+            return m.buildUnit(unit.unit, ...build_loc);
+        } else {
+            m.log("Not enough materials");
+            m.queue.addToHead(Unit(unit.unit, unit.task));
         }
-    }
-    else {
-        m.log("STOPPED BUILDING");
     }
     return;
 }
 
-export function firstTurn(m, flag) {
-    if(flag === constants.FIRST_CHURCH) {
-        m.log("BUILD UNIT TURN 1 SPECIAL CHURCH");
-        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-        let unit = Unit(SPECS.PILGRIM, constants.CHURCH_KARB);
-        let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-        let msg = encode16("task", unit.task);
-        m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task + " AND UNIT: " + unit.unit);
-        m.log("BUILDING IN DIR " + build_loc);
-        m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-        m.startBuilding = false;
-        return m.buildUnit(unit.unit, ...build_loc);
-    }
-    if(flag === constants.FIRST_NOT_CHURCH) {
-        m.log("BUILD UNIT TURN 1 SPECIAL");
-        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-        let unit = Unit(SPECS.PILGRIM, constants.GATHER_FUEL);
-        let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-        let msg = encode16("task", unit.task);
-        m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
-        m.log("BUILDING IN DIR " + build_loc);
-        m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-        m.startBuilding = false;
-        return m.buildUnit(unit.unit, ...build_loc);
-    }
-}
-
 export function what_unit(m) {
-    if (m.queue.length > 0) {
-        return m.queue.removeTail();
+    if (!m.queue.isEmpty()) {
+        return m.queue.pop();
     }
 }
 
@@ -122,8 +82,16 @@ export function unit_cost(b) {
     return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
 }
 
-function Unit(unit, task) {
-    return { unit: unit, task: task };
+function Unit(unit, task, priority) {
+    return { unit: unit, task: task, priority: priority };
+}
+
+function initializeQueue(m, flag) {
+    if (flag === constants.FIRST_CHURCH) {
+        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 8));
+    }
+    for (let i = 0; i < m.fuel_locs.length; i++)
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
 }
 
 function handle_castle_coord(m, r, message) {

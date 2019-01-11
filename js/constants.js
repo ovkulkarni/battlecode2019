@@ -2,7 +2,8 @@ export let constants = {
     MIN_FUEL: 1000,
     FUEL_KARB_RATIO: 0.2,
     FUEL_MIN_DIS: 15,
-    KARB_MIN_DIS: 15
+    KARB_MIN_DIS: 15,
+    KSTASH_DISREGARD_PRIORITY: 10
 }
 
 let name_constants = [
@@ -10,7 +11,7 @@ let name_constants = [
     "VERTICAL",
     "FIRST_CHURCH",
     "FIRST_NOT_CHURCH",
-    "NOT_FIRST_TURN"
+    "NOT_FIRST_TURN",
 ]
 
 let task_constant_bins = [

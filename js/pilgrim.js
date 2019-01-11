@@ -71,8 +71,6 @@ export function runPilgrim(m) {
                         if(dir.length === 0) {
                             m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
                             m.mission = (m.mission === constants.CHURCH_KARB)? constants.GATHER_KARB:constants.GATHER_FUEL;
-                            let msg = encode8("firstdone",0);
-                            m.castleTalk(msg);
                             m.mission = constants.DEPOSIT;
                             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                             return;
@@ -81,8 +79,6 @@ export function runPilgrim(m) {
                         m.church = [dr[0]-m.me.x,dr[1]-m.me.y];
                         if(m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
                             m.log("BUILDING CHURCH: " + dr);
-                            let msg = encode8("firstdone",1);
-                            m.castleTalk(msg);
                             return m.buildUnit(SPECS.CHURCH, ...m.church);
                         }
                         m.log("NOT ENOUGH RESOURCES");
