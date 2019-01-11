@@ -27,13 +27,16 @@ export function runCastle(m) {
     let flag = 2;
     if(m.me.turn === 1) {
         flag = 1;
+        /*
+        m.log("NUM ALLIES: " + m.visible_allies.length);
         for(let i = 0; i < m.visible_allies.length; i++) {
-            if(m.me.id > m.visible_allies[i].id) {
+            m.log("ALLY: " + m.visible_allies[i].id + " OF TYPE: " + m.visible_allies[i].unit);
+            if(m.me.id > m.visible_allies[i].id && m.visible_allies[i].unit === 0) {
                 m.log("I AM SMALLER: " + m.me.id + " " + m.visible_allies[i].id);
                 flag = 0;
                 break;
             }
-        }
+        }*/
     }
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
@@ -42,7 +45,8 @@ export function runCastle(m) {
             if (message.command === "defend")
                 m.mission = constants.DEFEND;
             if (message.command === "castle_coord") {
-                handle_castle_coord(m, r, message)
+                handle_castle_coord(m, r, message);
+                if(flag === 1) flag = 0;
             }
             if(message.command === "firstdone") {
                 m.startBuilding = true;
@@ -51,7 +55,7 @@ export function runCastle(m) {
     }
 
     send_castle_coord(m);
-    if(m.startBuilding === undefined || m.startBuilding) {
+    if(m.startBuilding === true || m.me.turn === 1) {
         if(flag === 2) {
             m.log("BUILD UNIT");
             let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
@@ -79,6 +83,7 @@ export function runCastle(m) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             let msg = encode16("task", unit.task);
             m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task + " AND UNIT: " + unit.unit);
+            m.log("BUILDING IN DIR " + build_loc);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             m.startBuilding = false;
             return m.buildUnit(unit.unit, ...build_loc);
@@ -90,6 +95,7 @@ export function runCastle(m) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             let msg = encode16("task", unit.task);
             m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
+            m.log("BUILDING IN DIR " + build_loc);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             m.startBuilding = false;
             return m.buildUnit(unit.unit, ...build_loc);
