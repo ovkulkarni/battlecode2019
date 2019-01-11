@@ -51,7 +51,7 @@ export class Pathfinder {
         let vis = new Set();
         let q = new LinkedList();
         q.addToHead([m.me.x, m.me.y]);
-        while (q.len !== 0) {
+        while (q.length !== 0) {
             let cur = q.head.value;
             q.removeHead();
             if (pred(...cur)) {
