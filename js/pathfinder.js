@@ -77,7 +77,7 @@ class LinkedList {
     constructor() {
         this.head = null;
         this.tail = null;
-        this.len = 0;
+        this.length = 0;
     }
 
     addToHead(value) {
@@ -85,7 +85,7 @@ class LinkedList {
         if (this.head) this.head.prev = newNode;
         else this.tail = newNode;
         this.head = newNode;
-        this.len += 1;
+        this.length += 1;
     };
 
     addToTail(value) {
@@ -93,7 +93,7 @@ class LinkedList {
         if (this.tail) this.tail.next = newNode;
         else this.head = newNode;
         this.tail = newNode;
-        this.len += 1;
+        this.length += 1;
     }
     removeHead() {
         if (!this.head) return null;
@@ -102,7 +102,7 @@ class LinkedList {
 
         if (this.head) this.head.prev = null;
         else this.tail = null;
-        this.len -= 1;
+        this.length -= 1;
         return value;
     }
 
@@ -113,7 +113,7 @@ class LinkedList {
 
         if (this.tail) this.tail.next = null;
         else this.head = null;
-        this.len -= 1;
+        this.length -= 1;
         return value;
     }
     search(searchValue) {

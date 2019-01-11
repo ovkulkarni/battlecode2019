@@ -1,8 +1,8 @@
 export let constants = {
     MIN_FUEL: 1000,
     FUEL_KARB_RATIO: 0.75,
-    FUELMINDIS: 15,
-    KARBMINDIS: 15
+    FUEL_MIN_DIS: 15,
+    KARB_MIN_DIS: 15
 }
 
 let name_constants = [
