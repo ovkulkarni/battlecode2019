@@ -44,6 +44,10 @@ export function valid_loc(m) {
     });
 }
 
+export function passable_loc(m, x, y) {
+    return x >= 0 && y >= 0 && x < m.map[0].length && y < m.map.length && idx(m.map, x, y)
+}
+
 export function list_dir(r) {
     let pos = []
     for (var i = Math.floor(-1 * Math.sqrt(r)); i <= Math.sqrt(r); i++) {
