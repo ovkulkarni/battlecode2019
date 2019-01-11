@@ -24,9 +24,9 @@ export function runCastle(m) {
         for (let i = 0; i < m.fuel_locs.length; i++)
             m.queue.addToHead(Unit(SPECS.PILGRIM, constants.GATHER_FUEL));
     }
-    let flag = 2;
+    let flag = constants.NOT_FIRST_TURN;
     if(m.me.turn === 1) {
-        flag = 1;
+        flag = constants.FIRST_CHURCH;
         /*
         m.log("NUM ALLIES: " + m.visible_allies.length);
         for(let i = 0; i < m.visible_allies.length; i++) {
@@ -46,7 +46,7 @@ export function runCastle(m) {
                 m.mission = constants.DEFEND;
             if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message);
-                if(flag === 1) flag = 0;
+                if(flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
             }
             if(message.command === "firstdone") {
                 m.startBuilding = true;
@@ -55,57 +55,61 @@ export function runCastle(m) {
     }
 
     send_castle_coord(m);
-    if(m.startBuilding === true || m.me.turn === 1) {
-        if(flag === 2) {
-            m.log("BUILD UNIT");
-            let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-            let unit = what_unit(m);
-            m.log("UNIT: " + unit);
-            if (unit !== undefined && build_opts.length > 0) {
-                if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
-                    let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-                    m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-                    // Figure Out Transmitting o.task
-                    let msg = encode16("task", unit.task);
-                    m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
-                    m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-                    if(m.me.turn === 1) m.startBuilding = false;
-                    return m.buildUnit(unit.unit, ...build_loc);
-                } else {
-                    m.log(m.me.karbonite + " Not enough karbonite");
-                    m.queue.addToHead(Unit(unit.unit, unit.task));
-                }
+    if(m.me.turn === 1) {
+        return firstTurn(m,flag);
+    }
+    else if(m.startBuilding === true) {
+        m.log("BUILD UNIT");
+        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
+        let unit = what_unit(m);
+        m.log("UNIT: " + unit);
+        if (unit !== undefined && build_opts.length > 0) {
+            if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
+                let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
+                m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+                // Figure Out Transmitting o.task
+                let msg = encode16("task", unit.task);
+                m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
+                m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+                if(m.me.turn === 1) m.startBuilding = false;
+                return m.buildUnit(unit.unit, ...build_loc);
+            } else {
+                m.log(m.me.karbonite + " Not enough karbonite");
+                m.queue.addToHead(Unit(unit.unit, unit.task));
             }
-        }
-        if(flag === 1) {
-            m.log("BUILD UNIT TURN 1 SPECIAL CHURCH");
-            let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-            let unit = Unit(SPECS.PILGRIM, constants.CHURCH_KARB);
-            let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-            let msg = encode16("task", unit.task);
-            m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task + " AND UNIT: " + unit.unit);
-            m.log("BUILDING IN DIR " + build_loc);
-            m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-            m.startBuilding = false;
-            return m.buildUnit(unit.unit, ...build_loc);
-        }
-        if(flag === 0) {
-            m.log("BUILD UNIT TURN 1 SPECIAL");
-            let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-            let unit = Unit(SPECS.PILGRIM, constants.GATHER_FUEL);
-            let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
-            let msg = encode16("task", unit.task);
-            m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
-            m.log("BUILDING IN DIR " + build_loc);
-            m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-            m.startBuilding = false;
-            return m.buildUnit(unit.unit, ...build_loc);
         }
     }
     else {
         m.log("STOPPED BUILDING");
     }
     return;
+}
+
+export function firstTurn(m, flag) {
+    if(flag === constants.FIRST_CHURCH) {
+        m.log("BUILD UNIT TURN 1 SPECIAL CHURCH");
+        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
+        let unit = Unit(SPECS.PILGRIM, constants.CHURCH_KARB);
+        let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
+        let msg = encode16("task", unit.task);
+        m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task + " AND UNIT: " + unit.unit);
+        m.log("BUILDING IN DIR " + build_loc);
+        m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+        m.startBuilding = false;
+        return m.buildUnit(unit.unit, ...build_loc);
+    }
+    if(flag === constants.FIRST_NOT_CHURCH) {
+        m.log("BUILD UNIT TURN 1 SPECIAL");
+        let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
+        let unit = Unit(SPECS.PILGRIM, constants.GATHER_FUEL);
+        let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
+        let msg = encode16("task", unit.task);
+        m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
+        m.log("BUILDING IN DIR " + build_loc);
+        m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+        m.startBuilding = false;
+        return m.buildUnit(unit.unit, ...build_loc);
+    }
 }
 
 export function what_unit(m) {
