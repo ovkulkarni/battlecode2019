@@ -25,7 +25,7 @@ export function runPreacher(m) {
         if (m.fuel >= m.stats.ATTACK_FUEL_COST) {
           for (let r of m.visible_enemies) {
               let dist = dis(m.me.x, m.me.y, r.x, r.y);
-              if (shouldAttak(m, r.x - m.me.x, r.y - m.me.y) && stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
+              if (shouldAttack(m, r.x - m.me.x, r.y - m.me.y) && stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
                   m.log(`ATTACKING: (${r.x}, ${r.y})`);
                   return m.attack(r.x - m.me.x, r.y - m.me.y);
               }
