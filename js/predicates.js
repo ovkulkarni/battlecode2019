@@ -1,4 +1,5 @@
 import { idx, dis } from './helpers.js';
+import { constants } from './constants.js';
 
 // predicate combinators
 function pand(...ps) {
@@ -23,9 +24,18 @@ export function fuel_pred(m) {
     return ((x, y) => idx(m.fuel_map, x, y));
 }
 
+export function fuel_pred_church(m, xx, yy) {
+    return ((x, y) => idx(m.fuel_map, x, y) && dis(x, y, xx, yy) <= constants.FUELMINDIS);
+}
+
 export function karbonite_pred(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
 }
+
+export function karbonite_pred_church(m, xx, yy) {
+    return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) <= constants.KARBMINDIS);
+}
+
 export function on_path(path) {
     let spath = path.map(a => a.toString());
     return ((x, y) => path.includes([x, y].toString()));

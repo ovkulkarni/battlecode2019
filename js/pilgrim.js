@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { karbonite_pred, around_pred, fuel_pred } from './predicates.js';
+import { karbonite_pred, around_pred, fuel_pred, karbonite_pred_church, fuel_pred_church } from './predicates.js';
 import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
 import { encode8, decode8 } from './communication.js';
@@ -34,13 +34,13 @@ export function runPilgrim(m) {
                 m.pathfinder = new Pathfinder(m, karbonite_pred(m));
                 break;
             case constants.CHURCH_KARB:
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+                m.pathfinder = new Pathfinder(m, karbonite_pred_church(m, m.me.x, m.me.y));
                 break;
             case constants.GATHER_FUEL:
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 break;
             case constants.CHURCH_FUEL:
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                m.pathfinder = new Pathfinder(m, fuel_pred_church(m,m.me.x,m.me.y));
                 break;
             default:
                 m.log("ERROR SHOULDNT HAPPEN");
