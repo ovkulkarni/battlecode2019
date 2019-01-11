@@ -1,6 +1,7 @@
 import { Pathfinder } from './pathfinder.js';
-import { get_stats, calcOpposite, idx } from './helpers.js';
+import { get_stats, calcOpposite, idx, dis } from './helpers.js';
 import { attack_pred } from "./predicates.js";
+import { constants } from "./constants.js"
 
 export function runPreacher(m) {
     m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
@@ -21,9 +22,14 @@ export function runPreacher(m) {
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {
         m.log("FUEL " + m.fuel + " " + m.stats.FUEL_CAPACITY);
-        if (shouldAttack(m) && (m.fuel >= m.stats.FUEL_CAPACITY)) {
-            m.log("PREACHER ATTACKED");
-            return m.attack(1, 0);
+        if (m.fuel >= m.stats.ATTACK_FUEL_COST) {
+          for (let r of m.visible_enemies) {
+              let dist = dis(m.me.x, m.me.y, r.x, r.y);
+              if (shouldAttack(m, r.x - m.me.x, r.y - m.me.y) && stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
+                  m.log(`ATTACKING: (${r.x}, ${r.y})`);
+                  return m.attack(r.x - m.me.x, r.y - m.me.y);
+              }
+          }
         }
         return;
     }
@@ -38,21 +44,23 @@ export function runPreacher(m) {
     }
 }
 
-export function shouldAttack(m) {
+export function shouldAttack(m, x, y) {
 
+    let count = 0
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-            if (i != 0 || j != 0) {
-                let id = idx(m.getVisibleRobotMap(), m.me.x + i + 1, m.me.y + j);
+            //if (i != 0 || j != 0) {
+                let id = idx(m.getVisibleRobotMap(), m.me.x + i + x, m.me.y + j + y);
                 m.log("ROBOT ID " + id);
                 if (id != 0 && id != -1) {
                     m.log("TEAM " + m.getRobot(id).team);
-                    //if (m.getRobot(id).team === m.team) {
-                    return true;
-                    //}
+                    if (m.getRobot(id).team === m.team) {
+                      count = count - 1;
+                    }
+                    else count = count + 1;
                 }
-            }
+            //}
         }
     }
-    return false;
+    return count > 0;
 }
