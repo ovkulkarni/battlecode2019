@@ -1,10 +1,13 @@
+import { SPECS } from 'battlecode';
 export let constants = {
     MIN_FUEL: 1000,
     MIN_KARB: 100,
     FUEL_KARB_RATIO: 0.2,
     FUEL_MIN_DIS: 15,
     KARB_MIN_DIS: 15,
-    KSTASH_DISREGARD_PRIORITY: 10
+    KSTASH_DISREGARD_PRIORITY: 10,
+    HORDE_SIZE: 4,
+    ATTACKING_TROOPS: new Set([SPECS.CRUSADER, SPECS.PREACHER])
 }
 
 let name_constants = [
@@ -28,7 +31,8 @@ let task_constant_bins = [
     [// CRUSADER, PROPHET, PREACHER
         "ATTACK",
         "DEFEND",
-        "NEUTRAL"
+        "NEUTRAL",
+        "HORDE_INTERMEDIATE"
     ],
 ]
 

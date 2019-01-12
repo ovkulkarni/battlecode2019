@@ -4,7 +4,7 @@ import { open_neighbors, idx, dis } from './helpers.js';
 export class Pathfinder {
     constructor(m, goal) {
         this.goal = goal;
-        this.speed = SPECS.UNITS[m.me.unit].SPEED;
+        this.speed = m.stats.SPEED;
         this.recalculate(m);
     }
     next_loc(m, wait = false) {
@@ -42,9 +42,9 @@ export class Pathfinder {
         return o;
     }
     recalculate(m) {
-        m.log("CALCULATING");
+        // m.log("CALCULATING");
         this.path = this.find_path(m, this.goal);
-        m.log("FOUND PATH: " + this.path);
+        // m.log("FOUND PATH: " + this.path);
     }
     find_path(m, pred) {
         let parent = new Map();

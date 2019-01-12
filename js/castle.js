@@ -37,9 +37,9 @@ export function runCastle(m) {
                 m.mission = constants.DEFEND;
             } else if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message);
-                if(flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
+                if (flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
             }
-            if(message.command === "firstdone") {
+            if (message.command === "firstdone") {
                 // m.startBuilding = true;
             }
 
@@ -57,7 +57,7 @@ export function runCastle(m) {
     m.log("BUILD UNIT");
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = what_unit(m);
-    m.log("UNIT: " + unit);
+    m.log(`UNIT: ${JSON.stringify(unit)}`);
     if (unit !== undefined && build_opts.length > 0) {
         if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
@@ -80,6 +80,8 @@ export function what_unit(m) {
     if (!m.queue.isEmpty()) {
         return m.queue.pop();
     }
+    // TODO: Remove this once we have better logic for when to spawn a crusader
+    return Unit(SPECS.CRUSADER, constants.ATTACK, 10);
 }
 
 export function unit_cost(b) {

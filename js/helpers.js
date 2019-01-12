@@ -24,6 +24,17 @@ export function open_neighbors(m, x, y) {
         .filter(valid_loc(m));
 }
 
+export function create_augmented_obj(m, x, y) {
+    let o = {};
+    o.me = {};
+    o.me.x = x;
+    o.me.y = y;
+    o.stats = m.stats;
+    o.map = m.map;
+    o.visible_map = m.visible_map;
+    return o;
+}
+
 export function open_neighbors2(m, x, y) {
     const choices = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])

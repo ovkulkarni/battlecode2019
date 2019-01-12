@@ -1,8 +1,8 @@
 import { SPECS } from 'battlecode';
 import { constants } from './constants.js';
-import { idx, dis, passable_loc } from './helpers.js';
+import { idx, dis, passable_loc, valid_loc } from './helpers.js';
 import { Pathfinder } from './pathfinder.js';
-import { exact_pred } from './predicates.js';
+import { around_pred } from './predicates.js';
 
 export function get_symmetry(m) {
     const N = m.karbonite_map.length;
@@ -61,31 +61,41 @@ export function find_optimal_churches(m) {
 export function wander(m) {
     if (m.split_regions === undefined) {
         m.split_regions = get_region_locs(m);
-        m.log(JSON.stringify(m.split_regions));
     }
     if (m.curr_index === undefined) {
         let min_dist = 64 * 64;
         m.curr_index = 0;
         for (let i in m.split_regions) {
-            if (dis(...m.split_regions[i], m.me.x, m.me.y) < min_dist) {
+            let dist = dis(...m.split_regions[i], m.me.x, m.me.y);
+            if (dist < min_dist) {
                 m.curr_index = i;
+                min_dist = dist;
             }
         }
     } else {
         m.curr_index++;
         m.curr_index %= m.split_regions.length;
     }
-    m.pathfinder = new Pathfinder(m, exact_pred(...m.split_regions[m.curr_index]));
+    m.pathfinder = new Pathfinder(m, around_pred(...m.split_regions[m.curr_index], 1, Math.floor(constants.HORDE_SIZE ** 0.5)));
 }
 
 
 export function get_region_locs(m) {
-    let r = Math.floor(m.stats.ATTACK_RADIUS[1] ** 0.5);
+    let r = constants.HORDE_SIZE ** 2;
     let regions = [];
-    for (let i = 0; i < m.karbonite_map.length; i += r) {
-        for (let j = ((i / r) % 2 === 0) ? 0 : m.karbonite_map[0].length - r; ((i / r) % 2 === 0) ? j < m.karbonite_map[0].length : j > -1; j += ((i / r) % 2 === 0) ? r : -1 * r) {
-            regions.push([i, j]);
+    for (let i = Math.floor(r ** 0.5); i < m.karbonite_map.length; i += r) {
+        for (let j = ((i / r) % 2 === 0) ? Math.floor(r ** 0.5) : m.karbonite_map[0].length - Math.floor(r ** 0.5); ((i / r) % 2 === 0) ? j < m.karbonite_map[0].length : j > -1; j += ((i / r) % 2 === 0) ? r : -1 * r) {
+            regions.push(m.symmetry === constants.VERTICAL ? [i, j] : [j, i]);
         }
     }
-    return regions;
+    return regions.filter(valid_loc(m));
+}
+
+export function check_horde(m) {
+    let count = 1;
+    for (let r of m.visible_allies) {
+        if (constants.ATTACKING_TROOPS.has(r.unit))
+            count++;
+    }
+    return count >= constants.HORDE_SIZE;
 }
