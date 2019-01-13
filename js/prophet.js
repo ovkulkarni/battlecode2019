@@ -1,7 +1,8 @@
 import { Pathfinder } from './pathfinder.js';
-import { prophet_pred } from "./predicates.js";
+import { prophet_pred, attack_pred } from "./predicates.js";
 import { encode8 } from './communication.js';
 import { constants } from './constants.js';
+import { calcOpposite } from './helpers.js';
 
 export function runProphet(m) {
     m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
