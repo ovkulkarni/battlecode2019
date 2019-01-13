@@ -6,7 +6,9 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { get_stats, get_mission } from './helpers.js';
+import { get_stats, get_mission, dis, open_neighbors2, create_augmented_obj } from './helpers.js';
+import { Pathfinder } from './pathfinder.js';
+import { exact_pred } from './predicates.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
@@ -27,20 +29,47 @@ class MyRobot extends BCAbstractRobot {
             this.symmetry = get_symmetry(this);
         if (this.spawn_castle === undefined)
             this.spawn_castle = get_visible_castle(this);
+        let ret = undefined;
         switch (this.me.unit) {
             case SPECS.CASTLE:
-                return runCastle(this);
+                ret = runCastle(this);
+                break;
             case SPECS.CRUSADER:
-                return runCrusader(this);
+                ret = runCrusader(this);
+                break;
             case SPECS.CHURCH:
-                return runChurch(this);
+                ret = runChurch(this);
+                break;
             case SPECS.PILGRIM:
-                return runPilgrim(this);
+                ret = runPilgrim(this);
+                break;
             case SPECS.PREACHER:
-                return runPreacher(this);
+                ret = runPreacher(this);
+                break;
             case SPECS.PROPHET:
-                return runProphet(this);
+                ret = runProphet(this);
+                break;
         }
+        if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
+            let diff = undefined;
+            let min_allies = 25;
+            for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
+                let count = 0;
+                for (let ally of this.visible_allies) {
+                    if (dis(ally.x, ally.y, opt[0], opt[1]) <= 2)
+                        count++;
+                }
+                if (count < min_allies) {
+                    min_allies = count;
+                    diff = [opt[0] - this.me.x, opt[1] - this.me.y];
+                }
+            }
+            if (diff !== undefined) {
+                this.log(`DIFFUSING by ${JSON.stringify(diff)}`);
+                return this.move(...diff);
+            }
+        }
+        return ret;
     }
 }
 

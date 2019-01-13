@@ -35,6 +35,13 @@ export class Pathfinder {
                 return o;
             }
         }
+        if (dis(...next, m.me.x, m.me.y) > m.stats.SPEED) {
+            this.recalculate(m);
+            if (this.path === undefined) {
+                o.fail = true;
+                return o;
+            }
+        }
         let result = this.path.pop();
         m.log("NEXT MOVE: " + result);
         o.res = result;
