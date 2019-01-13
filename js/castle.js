@@ -9,57 +9,26 @@ export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
 
     // set "global" variables
-    m.kstash = 50;
-    if (m.queue === undefined) {
-        m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
-    }
-    if (m.friendly_castles === undefined) {
-        m.friendly_castles = {}
-    }
-    if (m.mission === undefined) {
-        m.mission = constants.NEUTRAL;
-    }
-    if (m.fuel_locs === undefined) {
-        m.fuel_locs = best_fuel_locs(m);
-        m.log(`Good Fuel Locs: ${JSON.stringify(m.fuel_locs)}`);
-    }
+    set_globals(m);
 
-    let flag = constants.FIRST_CHURCH;
-
-    // handle castle-talk
-    for (let r of m.visible_allies) {
-        if (r.castle_talk !== 0) {
-
-            let message = decode8(r.castle_talk);
-            m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
-
-            if (message.command === "defend") {
-                m.mission = constants.DEFEND;
-            } else if (message.command === "castle_coord") {
-                handle_castle_coord(m, r, message);
-                if (flag === constants.FIRST_CHURCH) flag = constants.FIRST_NOT_CHURCH;
-            }
-            if (message.command === "firstdone") {
-                // m.startBuilding = true;
-            }
-
-            if (m.me.turn === 1)
-                flag = constants.FIRST_NOT_CHURCH;
-        }
-    }
+    handle_castle_talk(m);
 
     send_castle_coord(m);
 
+    determine_mission(m);
+
     // first turn logic
     if (m.me.turn === 1) {
-        initializeQueue(m, flag);
+        initialize_queue(m);
     }
-    m.log("BUILD UNIT");
+
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
-    let unit = what_unit(m);
-    m.log(`UNIT: ${JSON.stringify(unit)}`);
+    let unit = pick_unit(m);
+    m.log(`BUILD ATTEMPT: ${JSON.stringify(unit)}`);
     if (unit !== undefined && build_opts.length > 0) {
-        if (m.karbonite >= unit_cost(unit.unit)[0] + m.kstash && m.fuel >= unit_cost(unit.unit)[1]) {
+        let leftover_k = m.karbonite - unit_cost(unit.unit)[0];
+        let leftover_f = m.fuel - unit_cost(unit.unit)[1];
+        if (leftover_k >= 0 && leftover_f >= 0 && (leftover_k >= m.kstash || unit.priority >= constants.KSTASH_DISREGARD_PRIORITY)) {
             let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             // Figure Out Transmitting o.task
@@ -76,37 +45,59 @@ export function runCastle(m) {
     return;
 }
 
-export function what_unit(m) {
+export function pick_unit(m) {
+    update_queue(m);
     if (!m.queue.isEmpty()) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.ATTACK, 10);
+    return Unit(SPECS.CRUSADER, constants.ATTACK, 8);
 }
 
-export function unit_cost(b) {
-    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
+function update_queue(m) {
+    if (m.mission === constants.DEFEND) {
+
+    }
 }
 
-function Unit(unit, task, priority) {
-    return { unit: unit, task: task, priority: priority };
-}
-
-function initializeQueue(m, flag) {
-    if (flag === constants.FIRST_CHURCH) {
-        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 8));
+function initialize_queue(m) {
+    if (m.church_flag === constants.FIRST_CHURCH) {
+        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 5));
     }
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
 }
 
-function handle_castle_coord(m, r, message) {
-    if (m.friendly_castles[r.id] === undefined)
-        m.friendly_castles[r.id] = {}
-    if (m.friendly_castles[r.id].x === undefined)
-        m.friendly_castles[r.id].x = message.args[0];
-    else if (m.friendly_castles[r.id].y === undefined)
-        m.friendly_castles[r.id].y = message.args[0];
+function determine_mission(m) {
+    if (m.visible_enemies.length > 0) {
+        m.mission = constants.DEFEND;
+    }
+    else {
+        m.mission = constants.NEUTRAL;
+    }
+}
+
+function handle_castle_talk(m) {
+    m.church_flag = constants.FIRST_CHURCH
+    for (let r of m.visible_allies) {
+        if (r.castle_talk !== 0) {
+
+            let message = decode8(r.castle_talk);
+            m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
+
+            if (message.command === "castle_coord") {
+                handle_castle_coord(m, r, message);
+                if (m.church_flag === constants.FIRST_CHURCH)
+                    m.church_flag = constants.FIRST_NOT_CHURCH;
+            }
+            if (message.command === "firstdone") {
+                // m.startBuilding = true;
+            }
+
+            if (m.me.turn === 1)
+                m.church_flag = constants.FIRST_NOT_CHURCH;
+        }
+    }
 }
 
 function send_castle_coord(m) {
@@ -125,4 +116,43 @@ function send_castle_coord(m) {
     else {
         m.log(`Friendlies: ${JSON.stringify(m.friendly_castles)}`);
     }
+}
+
+function handle_castle_coord(m, r, message) {
+    if (m.friendly_castles[r.id] === undefined)
+        m.friendly_castles[r.id] = {}
+    if (m.friendly_castles[r.id].x === undefined)
+        m.friendly_castles[r.id].x = message.args[0];
+    else if (m.friendly_castles[r.id].y === undefined)
+        m.friendly_castles[r.id].y = message.args[0];
+}
+
+function set_globals(m) {
+    m.kstash = 50;
+    if (m.queue === undefined) {
+        m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
+    }
+    if (m.friendly_castles === undefined) {
+        m.friendly_castles = {}
+    }
+    if (m.mission === undefined) {
+        m.mission = constants.NEUTRAL;
+    }
+    if (m.fuel_locs === undefined) {
+        m.fuel_locs = best_fuel_locs(m);
+    }
+    if (m.mission === undefined) {
+        m.mission = constants.NEUTRAL;
+    }
+    if (m.church_flag === undefined) {
+        m.church_flag = constants.FIRST_CHURCH;
+    }
+}
+
+function Unit(unit, task, priority) {
+    return { unit: unit, task: task, priority: priority };
+}
+
+export function unit_cost(b) {
+    return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
 }
