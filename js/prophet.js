@@ -18,12 +18,6 @@ export function runProphet(m) {
     }
     for (let r of m.visible_enemies) {
         m.log(`ATTACKING: (${r.x}, ${r.y})`);
-        if (!m.defending) {
-            m.defending = true;
-            let message = encode8("defense", 1);
-            m.log(`CTALK DEFENSE: ${message}`);
-            m.castleTalk(message);
-        }
         return m.attack(r.x - m.me.x, r.y - m.me.y);
     }
     let next = m.pathfinder.next_loc(m);
