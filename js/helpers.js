@@ -98,3 +98,30 @@ export function get_mission(m) {
         }
     }
 }
+
+export function random_from(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+export function most_central_loc(m, list) {
+    let min_val;
+    let min_i;
+    for (let i of list) {
+        let val = centricity(m, i[0] + m.me.x, i[1] + m.me.y);
+        if (min_val === undefined || val < min_val) {
+            min_val = val;
+            min_i = i;
+        }
+    }
+    return min_i;
+}
+
+export function centricity(m, x, y) {
+    let center_x = Math.floor(m.map[0].length / 2);
+    let center_y = Math.floor(m.map.length / 2);
+    if (m.symmetry === constants.VERTICAL) {
+        return dis(x, y, center_x, y);
+    } else if (m.symmetry === constants.HORIZONTAL) {
+        return dis(x, y, x, center_y);
+    }
+}

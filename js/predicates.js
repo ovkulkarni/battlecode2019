@@ -33,7 +33,7 @@ export function karbonite_pred(m) {
 }
 
 export function karbonite_pred_church(m, xx, yy) {
-    return ((x, y) => idx(m.karbonite_map, x, y) /*&& dis(x, y, xx, yy) >=  constants.KARB_MIN_DIS*/);
+    return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) >= constants.KARB_MIN_DIS);
 }
 
 export function on_path(path) {
@@ -43,8 +43,13 @@ export function on_path(path) {
 export function central_of_pred(m, fx, fy) {
     let center_x = Math.floor(m.map[0].length / 2);
     let center_y = Math.floor(m.map.length / 2);
-    let fd = dis(fx, fy, center_x, center_y);
-    return ((x, y) => dis(x, y, center_x, center_y) < fd);
+    if (m.symmetry === constants.VERTICAL) {
+        let fd = dis(fx, fy, center_x, fy);
+        return ((x, y) => dis(x, y, center_x, y) < fd);
+    } else if (m.symmetry === constants.HORIZONTAL) {
+        let fd = dis(fx, fy, fx, center_y);
+        return ((x, y) => dis(x, y, x, center_y) < fd);
+    }
 }
 export function prophet_pred(m, cx, cy) {
     return pand(

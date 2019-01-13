@@ -5,6 +5,7 @@ const right = i => (i + 1) << 1;
 
 export class PriorityQueue {
   constructor(comparator = (a, b) => a > b) {
+    this.task_count = new Map();
     this._heap = [];
     this._comparator = comparator;
   }
@@ -19,6 +20,9 @@ export class PriorityQueue {
   }
   push(...values) {
     values.forEach(value => {
+      if (!this.task_count.has(value.task))
+        this.task_count.set(value.task, 0);
+      this.task_count.set(value.task, 1 + this.task_count.get(value.task));
       this._heap.push(value);
       this._siftUp();
     });
@@ -32,6 +36,7 @@ export class PriorityQueue {
     }
     this._heap.pop();
     this._siftDown();
+    this.task_count.set(poppedValue.task, this.task_count.get(poppedValue.task) - 1);
     return poppedValue;
   }
   replace(value) {

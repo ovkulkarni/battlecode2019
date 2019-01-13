@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs } from './analyzemap.js';
@@ -8,13 +8,9 @@ import { PriorityQueue } from './pqueue.js';
 export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
 
-    // set "global" variables
     set_globals(m);
-
     handle_castle_talk(m);
-
     send_castle_coord(m);
-
     determine_mission(m);
 
     // first turn logic
@@ -24,21 +20,22 @@ export function runCastle(m) {
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = pick_unit(m);
-    m.log(`BUILD ATTEMPT: ${JSON.stringify(unit)}`);
-    if (unit !== undefined && build_opts.length > 0) {
+    if (unit !== undefined) {
         let leftover_k = m.karbonite - unit_cost(unit.unit)[0];
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
-        if (leftover_k >= 0 && leftover_f >= 0 && (leftover_k >= m.kstash || unit.priority >= constants.KSTASH_DISREGARD_PRIORITY)) {
-            let build_loc = build_opts[Math.floor(Math.random() * build_opts.length)];
+        if (
+            build_opts.length > 0 &&
+            leftover_k >= 0 && leftover_f >= 0 &&
+            (leftover_k >= m.kstash || unit.priority >= constants.EMERGENCY_PRIORITY)
+        ) {
+            let build_loc = most_central_loc(m, build_opts);
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-            // Figure Out Transmitting o.task
+            m.log(`SENDING TASK ${unit.task}`);
             let msg = encode16("task", unit.task);
-            m.log("SENDING " + msg + " SIGNAL FOR GUY WITH TASK " + unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-            // if(m.me.turn === 1) m.startBuilding = false;
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
-            m.log(m.me.karbonite + " Not enough karbonite");
+            m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
         }
     }
@@ -56,7 +53,12 @@ export function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-
+        const current_defenders = m.visible_allies.length;
+        const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
+        while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
+            m.log("QUEUE DEFENDER!");
+            m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+        }
     }
 }
 
@@ -66,10 +68,12 @@ function initialize_queue(m) {
     }
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+    m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
 }
 
 function determine_mission(m) {
     if (m.visible_enemies.length > 0) {
+        m.log("I'm being attacked! Ow.");
         m.mission = constants.DEFEND;
     }
     else {
