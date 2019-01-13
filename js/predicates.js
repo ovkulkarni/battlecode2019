@@ -25,7 +25,7 @@ export function fuel_pred(m) {
 }
 
 export function fuel_pred_church(m, xx, yy) {
-    return ((x, y) => idx(m.fuel_map, x, y) && dis(x, y, xx, yy) >= constants.FUEL_MIN_DIS);
+    return ((x, y) => idx(m.fuel_map, x, y) /*&& dis(x, y, xx, yy) >= constants.FUEL_MIN_DIS*/);
 }
 
 export function karbonite_pred(m) {
@@ -33,7 +33,7 @@ export function karbonite_pred(m) {
 }
 
 export function karbonite_pred_church(m, xx, yy) {
-    return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) >=  constants.KARB_MIN_DIS);
+    return ((x, y) => idx(m.karbonite_map, x, y) /*&& dis(x, y, xx, yy) >=  constants.KARB_MIN_DIS*/);
 }
 
 export function on_path(path) {

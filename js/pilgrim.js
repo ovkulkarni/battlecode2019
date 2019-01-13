@@ -4,7 +4,7 @@ import { karbonite_pred, around_pred, fuel_pred, karbonite_pred_church, fuel_pre
 import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
 import { encode8, decode8 } from './communication.js';
-import { open_neighbors2 } from './helpers.js';
+import { open_neighbors2, idx, dis } from './helpers.js';
 
 export function runPilgrim(m) {
     m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
@@ -97,7 +97,20 @@ export function runPilgrim(m) {
                 else {
                     m.log("GOING BACK");
                     m.mission = constants.DEPOSIT;
-                    m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                    let foundDrop = false;
+                    let minr = 10000000;
+                    for(let i = 0; i < m.visible_allies.length; i++) {
+                        let ally = m.visible_allies[i];
+                        if(ally.unit <= 1) {
+                            foundDrop = true;
+                            if(dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
+                                minr = dis(ally.x, ally.y, m.me.x, m.me.y);
+                                m.log("FOUND CLOSER DROPOFF");
+                                m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
+                            }
+                        }
+                    }
+                    if(!foundDrop)  m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                 }
             }
             else if(m.mission === constants.DEPOSIT) {
