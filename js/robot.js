@@ -1,5 +1,5 @@
 import { BCAbstractRobot, SPECS } from 'battlecode';
-import { get_symmetry, get_visible_castle } from './analyzemap.js';
+import { get_symmetry, get_visible_base } from './analyzemap.js';
 import { runCastle } from './castle.js';
 import { runCrusader } from './crusader.js';
 import { runChurch } from './church.js';
@@ -28,7 +28,7 @@ class MyRobot extends BCAbstractRobot {
         if (this.symmetry === undefined)
             this.symmetry = get_symmetry(this);
         if (this.spawn_castle === undefined)
-            this.spawn_castle = get_visible_castle(this);
+            this.spawn_castle = get_visible_base(this);
         let ret = undefined;
         switch (this.me.unit) {
             case SPECS.CASTLE:

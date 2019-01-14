@@ -70,9 +70,9 @@ export function best_karb_locs(m) {
     return karbonite_locs.sort((a, b) => dis(...a, ...init) - dis(...b, ...init));
 }
 
-export function get_visible_castle(m) {
+export function get_visible_base(m) {
     for (let robot of m.visible_robots) {
-        if (robot.unit === SPECS.CASTLE)
+        if (robot.unit === SPECS.CASTLE || robot.unit === SPECS.CHURCH)
             return robot;
     }
 }
