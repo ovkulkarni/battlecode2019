@@ -47,6 +47,29 @@ export function best_fuel_locs(m) {
     return fuel_locs.sort((a, b) => dis(...a, ...init) - dis(...b, ...init));
 }
 
+export function best_karb_locs(m) {
+    let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
+    let max_dist = pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
+    const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+    let karbonite_locs = [];
+    let init = [m.me.x, m.me.y];
+    let vis = new Set([init.toString()]);
+    let stk = [init];
+    while (stk.length > 0) {
+        let loc = stk.pop();
+        if (idx(m.karbonite_map, ...loc))
+            karbonite_locs.push(loc);
+        for (let adj of adjs.map(s => [s[0] + loc[0], s[1] + loc[1]])) {
+            if (vis.has(adj.toString()) || dis(...adj, ...init) >= max_dist || !passable_loc(m, ...adj))
+                continue;
+            vis.add(adj.toString());
+            stk.push(adj);
+        }
+    }
+    return karbonite_locs.sort((a, b) => dis(...a, ...init) - dis(...b, ...init));
+}
+
 export function get_visible_castle(m) {
     for (let robot of m.visible_robots) {
         if (robot.unit === SPECS.CASTLE)

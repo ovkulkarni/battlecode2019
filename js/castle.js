@@ -2,7 +2,7 @@ import { SPECS } from 'battlecode';
 import { open_neighbors_diff, random_from, most_central_loc } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 
 export function runCastle(m) {
@@ -66,8 +66,9 @@ function initialize_queue(m) {
     if (m.church_flag === constants.FIRST_CHURCH) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 5));
     }
-    for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+    for (let i = 0; i < m.karb_locs.length; i++)
+        //m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
 }
 
@@ -144,6 +145,9 @@ function set_globals(m) {
     }
     if (m.fuel_locs === undefined) {
         m.fuel_locs = best_fuel_locs(m);
+    }
+    if(m.karb_locs === undefined) {
+        m.karb_locs = best_karb_locs(m);
     }
     if (m.mission === undefined) {
         m.mission = constants.NEUTRAL;
