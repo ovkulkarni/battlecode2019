@@ -2,9 +2,10 @@ import { SPECS } from 'battlecode';
 import { open_neighbors, idx, dis } from './helpers.js';
 
 export class Pathfinder {
-    constructor(m, goal) {
+    constructor(m, goal, speed = undefined) {
         this.goal = goal;
-        this.speed = m.stats.SPEED;
+        this.passed_speed = speed;
+        this.speed = speed || m.stats.SPEED;
         this.recalculate(m);
     }
     next_loc(m, wait = false) {
@@ -35,7 +36,7 @@ export class Pathfinder {
                 return o;
             }
         }
-        if (dis(...next, m.me.x, m.me.y) > m.stats.SPEED) {
+        if (dis(...next, m.me.x, m.me.y) > this.speed) {
             this.recalculate(m);
             if (this.path === undefined) {
                 o.fail = true;
@@ -70,7 +71,7 @@ export class Pathfinder {
                 }
                 return path;
             }
-            for (let space of open_neighbors(m, ...cur)) {
+            for (let space of open_neighbors(m, ...cur, this.passed_speed)) {
                 if (vis.has(space.toString())) continue;
                 parent.set(space, cur);
                 vis.add(space.toString());

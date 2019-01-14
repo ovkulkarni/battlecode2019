@@ -18,8 +18,8 @@ export function get_stats(m) {
     return o;
 }
 
-export function open_neighbors(m, x, y) {
-    const choices = m.stats.DIRECTIONS; //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+export function open_neighbors(m, x, y, speed = undefined) {
+    const choices = speed !== undefined ? list_dir(speed) : m.stats.DIRECTIONS; //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
         .filter(valid_loc(m));
 }

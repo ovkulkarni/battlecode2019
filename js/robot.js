@@ -52,7 +52,9 @@ class MyRobot extends BCAbstractRobot {
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
             let diff = undefined;
-            let min_allies = 25;
+            let min_allies = this.visible_allies.filter(r => dis(this.me.x, this.me.y, r.x, r.y) <= 2).length;
+            if (min_allies < 3)
+                return;
             for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
                 let count = 0;
                 for (let ally of this.visible_allies) {

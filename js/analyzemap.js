@@ -1,8 +1,8 @@
 import { SPECS } from 'battlecode';
 import { constants } from './constants.js';
-import { idx, dis, passable_loc, valid_loc } from './helpers.js';
+import { idx, dis, passable_loc, valid_loc, calcOpposite, create_augmented_obj } from './helpers.js';
 import { Pathfinder } from './pathfinder.js';
-import { around_pred } from './predicates.js';
+import { around_pred, attack_pred } from './predicates.js';
 
 export function get_symmetry(m) {
     const N = m.karbonite_map.length;
@@ -121,4 +121,25 @@ export function check_horde(m) {
             count++;
     }
     return count >= constants.HORDE_SIZE;
+}
+
+export function horde(m) {
+    let castle_dist = dis(m.spawn_castle.x, m.spawn_castle.y, m.me.x, m.me.y);
+    let in_horde = check_horde(m) || m.joined_horde;
+    if (!in_horde && castle_dist <= 10)
+        return false;
+    else if (in_horde && (castle_dist <= 10 || m.mission === constants.HORDE_INTERMEDIATE)) {
+        m.log("IN HORDE");
+        m.joined_horde = true;
+        if (m.intermediate_point === undefined) {
+            m.mission = constants.HORDE_INTERMEDIATE;
+            let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
+            let pf = new Pathfinder(create_augmented_obj(m, m.spawn_castle.x, m.spawn_castle.y), attack_pred(m, ...opp));
+            m.intermediate_point = pf.path[Math.floor(pf.path.length / 2)];
+            return false;
+        }
+        else {
+            m.pathfinder = new Pathfinder(m, around_pred(...m.intermediate_point, 1, 2));
+        }
+    }
 }

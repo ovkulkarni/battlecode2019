@@ -1,8 +1,7 @@
 import { Pathfinder } from './pathfinder.js';
 import { prophet_pred, attack_pred } from "./predicates.js";
-import { encode8 } from './communication.js';
 import { constants } from './constants.js';
-import { calcOpposite } from './helpers.js';
+import { calcOpposite, dis } from './helpers.js';
 
 export function runProphet(m) {
     m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
@@ -18,8 +17,11 @@ export function runProphet(m) {
         }
     }
     for (let r of m.visible_enemies) {
-        m.log(`ATTACKING: (${r.x}, ${r.y})`);
-        return m.attack(r.x - m.me.x, r.y - m.me.y);
+        let dist = dis(m.me.x, m.me.y, r.x, r.y);
+        if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
+            m.log(`ATTACKING: (${r.x}, ${r.y})`);
+            return m.attack(r.x - m.me.x, r.y - m.me.y);
+        }
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fin || next.fail || next.wait)

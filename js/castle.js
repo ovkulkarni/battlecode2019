@@ -48,7 +48,7 @@ export function pick_unit(m) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.ATTACK, 8);
+    return Math.random() < 0.5 ? Unit(SPECS.CRUSADER, constants.ATTACK, 8) : Unit(SPECS.PREACHER, constants.ATTACK, 8);
 }
 
 function update_queue(m) {

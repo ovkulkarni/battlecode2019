@@ -17,12 +17,12 @@ export function runPilgrim(m) {
                     m.mission = constants.GATHER_FUEL;
                     m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 }
-                else if(m.karbonite < constants.MIN_KARB) {
+                else if (m.karbonite < constants.MIN_KARB) {
                     m.mission = constants.GATHER_KARB;
                     m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 }
                 else {
-                    if(Math.random() < constants.FUEL_KARB_RATIO) {
+                    if (Math.random() < constants.FUEL_KARB_RATIO) {
                         m.pathfinder = new Pathfinder(m, fuel_pred(m));
                         m.mission = constants.GATHER_FUEL;
                     }
@@ -45,15 +45,15 @@ export function runPilgrim(m) {
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 break;
             case constants.CHURCH_FUEL:
-                m.pathfinder = new Pathfinder(m, fuel_pred_church(m,m.me.x,m.me.y));
+                m.pathfinder = new Pathfinder(m, fuel_pred_church(m, m.me.x, m.me.y));
                 break;
             default:
                 m.log("ERROR SHOULDNT HAPPEN");
         }
     }
-    if(m.mission === constants.GATHER) {
+    if (m.mission === constants.GATHER) {
         if (m.fuel > constants.MIN_FUEL) {
-            if(Math.random() < constants.FUEL_KARB_RATIO) {
+            if (Math.random() < constants.FUEL_KARB_RATIO) {
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 m.mission = constants.GATHER_FUEL;
             }
@@ -70,19 +70,19 @@ export function runPilgrim(m) {
     if (next.fin) {
         if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH_KARB) || (m.mission === constants.CHURCH_FUEL)) {
             if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
-                if(m.mission === constants.CHURCH_KARB || m.mission === constants.CHURCH_FUEL) {
-                    if(m.church === undefined) {
-                        let dir = open_neighbors2(m,m.me.x,m.me.y);
-                        if(dir.length === 0) {
+                if (m.mission === constants.CHURCH_KARB || m.mission === constants.CHURCH_FUEL) {
+                    if (m.church === undefined) {
+                        let dir = open_neighbors2(m, m.me.x, m.me.y);
+                        if (dir.length === 0) {
                             m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
-                            m.mission = (m.mission === constants.CHURCH_KARB)? constants.GATHER_KARB:constants.GATHER_FUEL;
+                            m.mission = (m.mission === constants.CHURCH_KARB) ? constants.GATHER_KARB : constants.GATHER_FUEL;
                             m.mission = constants.DEPOSIT;
                             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                             return;
                         }
                         let dr = dir[0];
-                        m.church = [dr[0]-m.me.x,dr[1]-m.me.y];
-                        if(m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
+                        m.church = [dr[0] - m.me.x, dr[1] - m.me.y];
+                        if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
                             m.log("BUILDING CHURCH: " + dr);
                             return m.buildUnit(SPECS.CHURCH, ...m.church);
                         }
@@ -99,32 +99,32 @@ export function runPilgrim(m) {
                     m.mission = constants.DEPOSIT;
                     let foundDrop = false;
                     let minr = 10000000;
-                    for(let i = 0; i < m.visible_allies.length; i++) {
+                    for (let i = 0; i < m.visible_allies.length; i++) {
                         let ally = m.visible_allies[i];
-                        if(ally.unit <= 1) {
+                        if (ally.unit <= 1) {
                             foundDrop = true;
-                            if(dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
+                            if (dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
                                 minr = dis(ally.x, ally.y, m.me.x, m.me.y);
                                 m.log("FOUND CLOSER DROPOFF");
                                 m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
                             }
                         }
                     }
-                    if(!foundDrop)  m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                    if (!foundDrop) m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                 }
             }
-            else if(m.mission === constants.DEPOSIT) {
+            else if (m.mission === constants.DEPOSIT) {
                 m.log("DEPOSITING RESOURCES IN CASTLE");
                 m.mission === constants.GATHER;
-                return m.give(m.spawn_castle.x-m.me.x,m.spawn_castle.y-m.me.y,m.me.karbonite,m.me.fuel);
+                return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
             }
             else {
                 m.log("MINING");
                 m.log("CHECKING FOR ENEMIES");
                 let robArr = m.getVisibleRobots();
-                for(let i = 0; i < robArr.length; i++) {
+                for (let i = 0; i < robArr.length; i++) {
                     let tempRob = robArr[i];
-                    if(tempRob.team != m.me.team) {
+                    if (tempRob.team != m.me.team) {
                         m.log("FOUND ENEMY");
                         // Tell the Castle you hit an enemy so they can defend.
                         // Altenratively tell remaining
