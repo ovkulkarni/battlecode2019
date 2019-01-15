@@ -22,11 +22,10 @@ export function runCrusader(m) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (message.command === "horde_loc") {
+            if (message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
-            } else if (message.command === "release_horde") {
                 m.begin_horde = true;
             } else if (message.command === "task") {
                 m.mission = message.args[0];

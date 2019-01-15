@@ -19,6 +19,10 @@ export function runCastle(m) {
         initialize_queue(m);
     }
 
+    if (handle_horde(m)) {
+        return;
+    }
+
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = pick_unit(m);
     if (unit !== undefined) {
@@ -38,20 +42,12 @@ export function runCastle(m) {
         } else {
             m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
-            if (!check_horde(m)) {
-                let opp = calcOpposite(m, m.me.x, m.me.y);
-                m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
-                m.signal(encode16("horde_loc", ...opp), 10);
-            }
-            else {
-                m.signal(encode16("release_horde"), 10);
-            }
         }
     }
     return;
 }
 
-export function pick_unit(m) {
+function pick_unit(m) {
     update_queue(m);
     if (!m.queue.isEmpty()) {
         return m.queue.pop();
@@ -77,7 +73,6 @@ function update_queue(m) {
     const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
-        m.log("QUEUE PILGRIM!");
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 10));
     }
 }
@@ -88,6 +83,15 @@ function initialize_queue(m) {
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+}
+
+function handle_horde(m) {
+    if (check_horde(m)) {
+        let opp = calcOpposite(m, m.me.x, m.me.y);
+        m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
+        m.signal(encode16("send_horde", ...opp), 10);
+        return true;
+    }
 }
 
 function determine_mission(m) {
