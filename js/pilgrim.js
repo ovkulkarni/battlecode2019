@@ -34,6 +34,7 @@ export function runPilgrim(m) {
                 break;
             case constants.DEPOSIT:
                 m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
                 break;
             case constants.GATHER_KARB:
                 m.pathfinder = new Pathfinder(m, karbonite_pred(m));
@@ -78,6 +79,7 @@ export function runPilgrim(m) {
                             m.mission = (m.mission === constants.CHURCH_KARB) ? constants.GATHER_KARB : constants.GATHER_FUEL;
                             m.mission = constants.DEPOSIT;
                             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
                             return;
                         }
                         let dr = dir[0];
@@ -107,10 +109,14 @@ export function runPilgrim(m) {
                                 minr = dis(ally.x, ally.y, m.me.x, m.me.y);
                                 m.log("FOUND CLOSER DROPOFF");
                                 m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
+                                m.pathfinder.final_loc = [ally.x, ally.y];
                             }
                         }
                     }
-                    if (!foundDrop) m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                    if (!foundDrop) {
+                        m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+                        m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+                    }
                 }
             }
             else if (m.mission === constants.DEPOSIT) {
@@ -136,14 +142,16 @@ export function runPilgrim(m) {
             }
         }
         else if (m.mission === constants.DEPOSIT) {
-            let dx = m.spawn_castle.x - m.me.x;
-            let dy = m.spawn_castle.y - m.me.y;
+            let dx = m.pathfinder.final_loc[0] - m.me.x;
+            let dy = m.pathfinder.final_loc[1] - m.me.y;
+
             m.mission = constants.GATHER;
             if (m.fuel > constants.MIN_FUEL) {
                 m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
             } else {
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
             }
+            m.log("GIVING IN DIRECTION: " + dx + " " + dy);
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }
