@@ -6,9 +6,6 @@ import { horde } from './analyzemap.js';
 
 export function runPreacher(m) {
     m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
-    if (m.stats === undefined) {
-        m.stats = get_stats(m);
-    }
     if (m.me.turn === 1) {
         switch (m.mission) {
             case constants.ATTACK:
@@ -62,7 +59,7 @@ export function shouldAttack(m, x, y) {
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             //if (i != 0 || j != 0) {
-            let id = idx(m.getVisibleRobotMap(), m.me.x + i + x, m.me.y + j + y);
+            let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
             // m.log("ROBOT ID " + id);
             if (id !== 0 && id !== -1) {
                 // m.log("TEAM " + m.getRobot(id).team);
