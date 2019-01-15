@@ -17,6 +17,7 @@ export class Pathfinder {
         }
         if (this.path.length === 0) {
             o.fin = true;
+            this.fin = true;
             return o;
         }
         let next = this.path[this.path.length - 1];

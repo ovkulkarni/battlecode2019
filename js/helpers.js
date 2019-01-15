@@ -125,3 +125,7 @@ export function centricity(m, x, y) {
         return dis(x, y, x, center_y);
     }
 }
+
+export function stash_condition(m, x, y) {
+    return m.me.turn > 20 && m.karbonite >= 75;
+}

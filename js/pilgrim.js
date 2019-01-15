@@ -38,12 +38,14 @@ export function runPilgrim(m) {
                 break;
             case constants.GATHER_KARB:
                 m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+                m.initial_mission = m.mission;
                 break;
             case constants.CHURCH_KARB:
                 m.pathfinder = new Pathfinder(m, karbonite_pred_church(m, m.me.x, m.me.y));
                 break;
             case constants.GATHER_FUEL:
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                m.initial_mission = m.mission;
                 break;
             case constants.CHURCH_FUEL:
                 m.pathfinder = new Pathfinder(m, fuel_pred_church(m, m.me.x, m.me.y));
@@ -146,7 +148,14 @@ export function runPilgrim(m) {
             let dy = m.pathfinder.final_loc[1] - m.me.y;
 
             m.mission = constants.GATHER;
-            if (m.fuel > constants.MIN_FUEL) {
+            if (m.initial_mission === constants.GATHER_FUEL) {
+                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                m.mission = m.initial_mission;
+            } else if (m.initial_mission === constants.GATHER_KARB) {
+                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+                m.mission = m.initial_mission;
+            }
+            else if (m.fuel > constants.MIN_FUEL) {
                 m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
             } else {
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));

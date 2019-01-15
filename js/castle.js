@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc, calcOpposite } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs, check_horde } from './analyzemap.js';
@@ -9,6 +9,7 @@ export function runCastle(m) {
     m.log(`CASTLE: (${m.me.x}, ${m.me.y})`);
 
     set_globals(m);
+    handle_kstash(m);
     handle_castle_talk(m);
     send_castle_coord(m);
     determine_mission(m);
@@ -60,6 +61,11 @@ export function pick_unit(m) {
 }
 
 function update_queue(m) {
+    if (m.kstash > 0 && m.church_flag === constants.FIRST_CHURCH) {
+        m.log("CHURCH PILGRIM QUEUED");
+        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 2));
+        m.church_flag = constants.FIRST_NOT_CHURCH;
+    }
     if (m.mission === constants.DEFEND) {
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
@@ -71,14 +77,12 @@ function update_queue(m) {
     const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 1));
+        m.log("QUEUE PILGRIM!");
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 10));
     }
 }
 
 function initialize_queue(m) {
-    if (m.church_flag === constants.FIRST_CHURCH) {
-        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 5));
-    }
     for (let i = 0; i < m.karb_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
     for (let i = 0; i < m.fuel_locs.length; i++)
@@ -97,7 +101,6 @@ function determine_mission(m) {
 }
 
 function handle_castle_talk(m) {
-    m.church_flag = constants.FIRST_CHURCH
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
 
@@ -147,7 +150,9 @@ function handle_castle_coord(m, r, message) {
 }
 
 function set_globals(m) {
-    m.kstash = 50;
+    if (m.kstash === undefined) {
+        m.kstash = 0;
+    }
     if (m.queue === undefined) {
         m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
     }
@@ -168,6 +173,15 @@ function set_globals(m) {
     }
     if (m.church_flag === undefined) {
         m.church_flag = constants.FIRST_CHURCH;
+    }
+}
+
+function handle_kstash(m) {
+    if (stash_condition(m)) {
+        m.log("KSTASH");
+        m.kstash = 50;
+    } else {
+        m.kstash = 0;
     }
 }
 
