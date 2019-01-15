@@ -33,7 +33,7 @@ let task_constant_bins = [
         "ATTACK",
         "DEFEND",
         "NEUTRAL",
-        "HORDE_INTERMEDIATE"
+        "HORDE"
     ],
 ]
 

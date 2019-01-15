@@ -115,8 +115,10 @@ export function get_region_locs(m) {
 }
 
 export function check_horde(m) {
-    let count = 1;
+    let count = 0;
     for (let r of m.visible_allies) {
+        if (r.x && r.y && dis(r.x, r.y, m.me.x, m.me.y) > 10)
+            continue;
         if (constants.ATTACKING_TROOPS.has(r.unit))
             count++;
     }

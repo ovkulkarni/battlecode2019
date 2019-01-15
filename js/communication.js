@@ -5,7 +5,9 @@ const commands8 = [
 ]
 
 const commands16 = [
-    command("task", [4])
+    command("task", [4]),
+    command("horde_loc", [6, 6]),
+    command("release_horde", [])
 ]
 
 function command(name, bit_list) {

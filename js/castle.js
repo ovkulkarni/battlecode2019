@@ -1,8 +1,8 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, calcOpposite } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs, check_horde } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 
 export function runCastle(m) {
@@ -37,6 +37,14 @@ export function runCastle(m) {
         } else {
             m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
+            if (!check_horde(m)) {
+                let opp = calcOpposite(m, m.me.x, m.me.y);
+                m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
+                m.signal(encode16("horde_loc", ...opp), 10);
+            }
+            else {
+                m.signal(encode16("release_horde"), 10);
+            }
         }
     }
     return;
@@ -48,7 +56,7 @@ export function pick_unit(m) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.ATTACK, 8)
+    return Unit(SPECS.CRUSADER, constants.HORDE, 8)
 }
 
 function update_queue(m) {
@@ -152,7 +160,7 @@ function set_globals(m) {
     if (m.fuel_locs === undefined) {
         m.fuel_locs = best_fuel_locs(m);
     }
-    if(m.karb_locs === undefined) {
+    if (m.karb_locs === undefined) {
         m.karb_locs = best_karb_locs(m);
     }
     if (m.mission === undefined) {
