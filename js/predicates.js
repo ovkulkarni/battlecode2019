@@ -51,22 +51,22 @@ export function central_of_pred(m, fx, fy) {
         return ((x, y) => dis(x, y, x, center_y) < fd);
     }
 }
-export function opposite_of_pred(m, fx, fy) {
+export function opposite_of_pred(m, fx, fy, v) {
     let center_x = Math.floor(m.map[0].length / 2);
     let center_y = Math.floor(m.map.length / 2);
     let x_far = fx > center_x ? 0 : m.map[0].length;
     let y_far = fy > center_y ? 0 : m.map.length;
     if (m.symmetry === constants.VERTICAL) {
         let fd = dis(fx, fy, x_far, fy);
-        return ((x, y) => dis(x, y, x_far, y) < fd);
+        return ((x, y) => dis(x, y, x_far, y) < (fd - v));
     } else if (m.symmetry === constants.HORIZONTAL) {
         let fd = dis(fx, fy, fx, y_far);
-        return ((x, y) => dis(x, y, x, y_far) < fd);
+        return ((x, y) => dis(x, y, x, y_far) < (fd - v));
     }
 }
 export function prophet_pred(m, cx, cy) {
     return pand(
         around_pred(cx, cy, 16, 25),
-        opposite_of_pred(m, cx, cy)
+        opposite_of_pred(m, cx, cy, 3)
     );
 }

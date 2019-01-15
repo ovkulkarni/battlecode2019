@@ -53,7 +53,7 @@ function pick_unit(m) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.HORDE, 8)
+    return Unit(SPECS.CRUSADER, constants.HORDE, 8);
 }
 
 function update_queue(m) {
@@ -70,9 +70,10 @@ function update_queue(m) {
             m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
-    const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
+    const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
+        m.log("QUEUE PILGRIM!");
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 10));
     }
 }
