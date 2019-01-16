@@ -1,8 +1,8 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition, dis } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs, check_horde } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 
 export function runCastle(m) {
@@ -80,7 +80,7 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
@@ -91,6 +91,8 @@ function handle_horde(m) {
         let opp = calcOpposite(m, m.me.x, m.me.y);
         m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
         m.signal(encode16("send_horde", ...opp), 10);
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+        m.horde_size += 2;
         return true;
     }
 }
@@ -179,6 +181,20 @@ function set_globals(m) {
     if (m.church_flag === undefined) {
         m.church_flag = constants.FIRST_CHURCH;
     }
+    if (m.horde_size === undefined) {
+        m.horde_size = 4;
+    }
+}
+
+export function check_horde(m) {
+    let count = 0;
+    for (let r of m.visible_allies) {
+        if (r.x && r.y && dis(r.x, r.y, m.me.x, m.me.y) > 10)
+            continue;
+        if (constants.ATTACKING_TROOPS.has(r.unit))
+            count++;
+    }
+    return count >= m.horde_size;
 }
 
 function handle_kstash(m) {
