@@ -49,7 +49,7 @@ export function best_fuel_locs(m) {
 
 export function best_karb_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist = pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
+    let max_dist = 2 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let karbonite_locs = [];
@@ -112,17 +112,6 @@ export function get_region_locs(m) {
         }
     }
     return regions.filter(valid_loc(m));
-}
-
-export function check_horde(m) {
-    let count = 0;
-    for (let r of m.visible_allies) {
-        if (r.x && r.y && dis(r.x, r.y, m.me.x, m.me.y) > 10)
-            continue;
-        if (constants.ATTACKING_TROOPS.has(r.unit))
-            count++;
-    }
-    return count >= constants.HORDE_SIZE;
 }
 
 export function horde(m) {

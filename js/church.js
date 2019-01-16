@@ -57,7 +57,7 @@ function update_queue(m) {
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
-    const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    const desired_pilgrims = m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 1));
     }
@@ -65,9 +65,7 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
-    for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
 }
 

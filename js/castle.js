@@ -1,8 +1,8 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition, dis } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs, check_horde } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 
 export function runCastle(m) {
@@ -36,6 +36,9 @@ export function runCastle(m) {
             let build_loc = most_central_loc(m, build_opts);
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             m.log(`SENDING TASK ${unit.task}`);
+            if (unit.task === constants.HORDE) {
+                m.current_horde++;
+            }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             return m.buildUnit(unit.unit, ...build_loc);
@@ -80,7 +83,7 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
@@ -90,7 +93,11 @@ function handle_horde(m) {
     if (check_horde(m)) {
         let opp = calcOpposite(m, m.me.x, m.me.y);
         m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
-        m.signal(encode16("send_horde", ...opp), 10);
+        //todo only send as far as u have to
+        m.signal(encode16("send_horde", ...opp), 100);
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+        m.horde_size += 2;
+        m.current_horde = 0;
         return true;
     }
 }
@@ -179,6 +186,16 @@ function set_globals(m) {
     if (m.church_flag === undefined) {
         m.church_flag = constants.FIRST_CHURCH;
     }
+    if (m.horde_size === undefined) {
+        m.horde_size = 4;
+    }
+    if (m.current_horde === undefined) {
+        m.current_horde = 0;
+    }
+}
+
+export function check_horde(m) {
+    return m.current_horde >= m.horde_size;
 }
 
 function handle_kstash(m) {
