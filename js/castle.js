@@ -36,6 +36,9 @@ export function runCastle(m) {
             let build_loc = most_central_loc(m, build_opts);
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             m.log(`SENDING TASK ${unit.task}`);
+            if (unit.task === constants.HORDE) {
+                m.current_horde++;
+            }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             return m.buildUnit(unit.unit, ...build_loc);
@@ -90,9 +93,11 @@ function handle_horde(m) {
     if (check_horde(m)) {
         let opp = calcOpposite(m, m.me.x, m.me.y);
         m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
-        m.signal(encode16("send_horde", ...opp), 10);
+        //todo only send as far as u have to
+        m.signal(encode16("send_horde", ...opp), 100);
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
         m.horde_size += 2;
+        m.current_horde = 0;
         return true;
     }
 }
@@ -184,17 +189,13 @@ function set_globals(m) {
     if (m.horde_size === undefined) {
         m.horde_size = 4;
     }
+    if (m.current_horde === undefined) {
+        m.current_horde = 0;
+    }
 }
 
 export function check_horde(m) {
-    let count = 0;
-    for (let r of m.visible_allies) {
-        if (r.x && r.y && dis(r.x, r.y, m.me.x, m.me.y) > 10)
-            continue;
-        if (constants.ATTACKING_TROOPS.has(r.unit))
-            count++;
-    }
-    return count >= m.horde_size;
+    return m.current_horde >= m.horde_size;
 }
 
 function handle_kstash(m) {

@@ -127,5 +127,5 @@ export function centricity(m, x, y) {
 }
 
 export function stash_condition(m, x, y) {
-    return m.me.turn > 20 && m.karbonite >= 50;
+    return (m.me.turn > 20 && m.karbonite >= 50) || (m.me.turn > 100);
 }
