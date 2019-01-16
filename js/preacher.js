@@ -17,8 +17,8 @@ export function runPreacher(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] }
                 break;
             case constants.DEFEND:
-              m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
-              break;
+                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
@@ -33,7 +33,7 @@ export function runPreacher(m) {
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
                 m.begin_horde = true;
-            } else if (message.command === "task") {
+            } else if (m.mission !== constants.DEFEND && message.command === "task") {
                 m.mission = message.args[0];
             }
         }
@@ -87,6 +87,8 @@ export function runPreacher(m) {
                 }
             case constants.RETURN:
                 return;
+            case constants.DEFEND:
+                return;
             default:
                 m.mission = constants.NEUTRAL;
                 m.log("WANDERING");
@@ -104,17 +106,17 @@ export function shouldAttack(m, x, y) {
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             //if (i != 0 || j != 0) {
-            if (passable_loc(m, m.me.x + i + x, m.me.y+j+y)) {
-              let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
-              // m.log("ROBOT ID " + id);
-              if (id !== 0 && id !== -1) {
-                  // m.log("TEAM " + m.getRobot(id).team);
-                  if (m.getRobot(id).team === m.team) {
-                      count = count - 1;
-                  }
-                  else count = count + 1;
-              }
-          }
+            if (passable_loc(m, m.me.x + i + x, m.me.y + j + y)) {
+                let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
+                // m.log("ROBOT ID " + id);
+                if (id !== 0 && id !== -1) {
+                    // m.log("TEAM " + m.getRobot(id).team);
+                    if (m.getRobot(id).team === m.team) {
+                        count = count - 1;
+                    }
+                    else count = count + 1;
+                }
+            }
             //}
         }
     }
