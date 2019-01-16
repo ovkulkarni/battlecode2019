@@ -66,11 +66,12 @@ function update_queue(m) {
         m.church_flag = constants.FIRST_NOT_CHURCH;
     }
     if (m.mission === constants.DEFEND) {
+        m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
         while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
             m.log("QUEUE DEFENDER!");
-            m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+            m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;

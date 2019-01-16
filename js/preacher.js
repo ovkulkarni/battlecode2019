@@ -1,5 +1,5 @@
 import { Pathfinder } from './pathfinder.js';
-import { attack_pred, around_pred } from './predicates.js';
+import { attack_pred, around_pred, prophet_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, get_mission, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
 import { wander } from './analyzemap.js';

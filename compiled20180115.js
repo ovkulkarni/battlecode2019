@@ -321,8 +321,7 @@ const commands8 = [
 
 const commands16 = [
     command("task", [4]),
-    command("horde_loc", [6, 6]),
-    command("release_horde", [])
+    command("send_horde", [6, 6]),
 ];
 
 function command(name, bit_list) {
@@ -550,7 +549,7 @@ function centricity(m, x, y) {
 }
 
 function stash_condition(m, x, y) {
-    return m.me.turn > 20 && m.karbonite >= 75;
+    return (m.me.turn > 20 && m.karbonite >= 50) || (m.me.turn > 100);
 }
 
 class Pathfinder {
@@ -725,21 +724,23 @@ function karbonite_pred(m) {
 function karbonite_pred_church(m, xx, yy) {
     return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) >= constants.KARB_MIN_DIS);
 }
-function central_of_pred(m, fx, fy) {
+function opposite_of_pred_by(m, fx, fy, v) {
     let center_x = Math.floor(m.map[0].length / 2);
     let center_y = Math.floor(m.map.length / 2);
+    let x_far = fx > center_x ? 0 : m.map[0].length;
+    let y_far = fy > center_y ? 0 : m.map.length;
     if (m.symmetry === constants.VERTICAL) {
-        let fd = dis(fx, fy, center_x, fy);
-        return ((x, y) => dis(x, y, center_x, y) < fd);
+        let fd = dis(fx, fy, x_far, fy);
+        return ((x, y) => dis(x, y, x_far, y) < fd && Math.abs(fx - x) >= v);
     } else if (m.symmetry === constants.HORIZONTAL) {
-        let fd = dis(fx, fy, fx, center_y);
-        return ((x, y) => dis(x, y, x, center_y) < fd);
+        let fd = dis(fx, fy, fx, y_far);
+        return ((x, y) => dis(x, y, x, y_far) < fd && Math.abs(fy - y) >= v);
     }
 }
 function prophet_pred(m, cx, cy) {
     return pand(
-        around_pred(cx, cy, 16, 25),
-        central_of_pred(m, cx, cy)
+        around_pred(cx, cy, 16, 36),
+        opposite_of_pred_by(m, cx, cy, 3)
     );
 }
 
@@ -788,7 +789,7 @@ function best_fuel_locs(m) {
 
 function best_karb_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist = pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
+    let max_dist = 2 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let karbonite_locs = [];
@@ -816,7 +817,7 @@ function get_visible_base(m) {
     }
 }
 
-function wander$1(m) {
+function wander(m) {
     if (m.split_regions === undefined) {
         m.split_regions = get_region_locs(m);
     }
@@ -847,38 +848,6 @@ function get_region_locs(m) {
         }
     }
     return regions.filter(valid_loc(m));
-}
-
-function check_horde(m) {
-    let count = 0;
-    for (let r of m.visible_allies) {
-        if (r.x && r.y && dis(r.x, r.y, m.me.x, m.me.y) > 10)
-            continue;
-        if (constants.ATTACKING_TROOPS.has(r.unit))
-            count++;
-    }
-    return count >= constants.HORDE_SIZE;
-}
-
-function horde(m) {
-    let castle_dist = dis(m.spawn_castle.x, m.spawn_castle.y, m.me.x, m.me.y);
-    let in_horde = check_horde(m) || m.joined_horde;
-    if (!in_horde && castle_dist <= 10)
-        return false;
-    else if (in_horde && (castle_dist <= 10 || m.mission === constants.HORDE_INTERMEDIATE)) {
-        m.log("IN HORDE");
-        m.joined_horde = true;
-        if (m.intermediate_point === undefined) {
-            m.mission = constants.HORDE_INTERMEDIATE;
-            let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
-            let pf = new Pathfinder(create_augmented_obj(m, m.spawn_castle.x, m.spawn_castle.y), attack_pred(m, ...opp));
-            m.intermediate_point = pf.path[Math.floor(pf.path.length / 2)];
-            return false;
-        }
-        else {
-            m.pathfinder = new Pathfinder(m, around_pred(...m.intermediate_point, 1, 2));
-        }
-    }
 }
 
 const top = 0;
@@ -976,6 +945,10 @@ function runCastle(m) {
         initialize_queue(m);
     }
 
+    if (handle_horde(m)) {
+        return;
+    }
+
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = pick_unit(m);
     if (unit !== undefined) {
@@ -989,20 +962,15 @@ function runCastle(m) {
             let build_loc = most_central_loc(m, build_opts);
             m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             m.log(`SENDING TASK ${unit.task}`);
+            if (unit.task === constants.HORDE) {
+                m.current_horde++;
+            }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
             m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
-            if (!check_horde(m)) {
-                let opp = calcOpposite(m, m.me.x, m.me.y);
-                m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
-                m.signal(encode16("horde_loc", ...opp), 10);
-            }
-            else {
-                m.signal(encode16("release_horde"), 10);
-            }
         }
     }
     return;
@@ -1014,7 +982,7 @@ function pick_unit(m) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.HORDE, 8)
+    return Unit(SPECS.CRUSADER, constants.HORDE, 8);
 }
 
 function update_queue(m) {
@@ -1024,14 +992,15 @@ function update_queue(m) {
         m.church_flag = constants.FIRST_NOT_CHURCH;
     }
     if (m.mission === constants.DEFEND) {
+        m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
         while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
             m.log("QUEUE DEFENDER!");
-            m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+            m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
-    const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
+    const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
         m.log("QUEUE PILGRIM!");
@@ -1041,10 +1010,23 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+}
+
+function handle_horde(m) {
+    if (check_horde$1(m)) {
+        let opp = calcOpposite(m, m.me.x, m.me.y);
+        m.log(`SENDING OUT LOCATION ${JSON.stringify(opp)}`);
+        //todo only send as far as u have to
+        m.signal(encode16("send_horde", ...opp), 100);
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+        m.horde_size += 2;
+        m.current_horde = 0;
+        return true;
+    }
 }
 
 function determine_mission(m) {
@@ -1129,6 +1111,16 @@ function set_globals(m) {
     if (m.church_flag === undefined) {
         m.church_flag = constants.FIRST_CHURCH;
     }
+    if (m.horde_size === undefined) {
+        m.horde_size = 4;
+    }
+    if (m.current_horde === undefined) {
+        m.current_horde = 0;
+    }
+}
+
+function check_horde$1(m) {
+    return m.current_horde >= m.horde_size;
 }
 
 function handle_kstash(m) {
@@ -1164,11 +1156,10 @@ function runCrusader(m) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (message.command === "horde_loc") {
+            if (message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
-            } else if (message.command === "release_horde") {
                 m.begin_horde = true;
             } else if (message.command === "task") {
                 m.mission = message.args[0];
@@ -1203,6 +1194,8 @@ function runCrusader(m) {
             return;
         }
     }
+    if (m.pathfinder === undefined)
+        return;
     let next = m.pathfinder.next_loc(m);
     if (next.fail) { m.log("FAILED"); return; }
     if (next.wait) { m.log("WAITING"); return; }
@@ -1227,7 +1220,7 @@ function runCrusader(m) {
             default:
                 m.mission = constants.NEUTRAL;
                 m.log("WANDERING");
-                wander$1(m);
+                wander(m);
                 return;
         }
     }
@@ -1286,7 +1279,7 @@ function update_queue$1(m) {
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
-    const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    const desired_pilgrims = m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit$1(SPECS.PILGRIM, constants.GATHER, 1));
     }
@@ -1294,9 +1287,7 @@ function update_queue$1(m) {
 
 function initialize_queue$1(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit$1(SPECS.PILGRIM, constants.GATHER_KARB, 1));
-    for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit$1(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+        m.queue.push(Unit$1(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
     m.queue.push(Unit$1(SPECS.PROPHET, constants.DEFEND, 3));
 }
 
@@ -1443,15 +1434,25 @@ function runPilgrim(m) {
                             foundDrop = true;
                             if (dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
                                 minr = dis(ally.x, ally.y, m.me.x, m.me.y);
-                                m.log("FOUND CLOSER DROPOFF");
+                                m.log("FOUND CLOSER DROPOFF: X:" + ally.x + "Y: " + ally.y + "UNIT: " + ally.unit);
                                 m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
                                 m.pathfinder.final_loc = [ally.x, ally.y];
                             }
                         }
                     }
-                    if (!foundDrop) {
+                    if (foundDrop === false) {
+                        m.log("DID NOT FIND CLOSER DROPOFF");
                         m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                         m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+                    }
+                    let nextt = m.pathfinder.next_loc(m);
+                    if(nextt.fin) {
+                        m.log("HERE");
+                        m.mission === constants.GATHER;
+                        return m.give(m.pathfinder.final_loc[0]-m.me.x, m.pathfinder.final_loc[1]-m.me.y, m.me.karbonite, m.me.fuel);
+                    }
+                    else {
+                        return m.move(...nextt.diff);
                     }
                 }
             }
@@ -1515,14 +1516,33 @@ function runPilgrim(m) {
 function runPreacher(m) {
     m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
     if (m.me.turn === 1) {
-        switch (m.mission) {
+        let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);        switch (m.mission) {
             case constants.ATTACK:
-                let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
+                break;
+            case constants.HORDE:
+                m.horde_loc = { x: opp[0], y: opp[1] };
+                break;
+            case constants.DEFEND:
+                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
+        }
+    }
+    for (let r of m.visible_allies) {
+        if (r.signal !== -1) {
+            let message = decode16(r.signal);
+            m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            if (message.command === "send_horde") {
+                m.horde_loc = {};
+                m.horde_loc.x = message.args[0];
+                m.horde_loc.y = message.args[1];
+                m.begin_horde = true;
+            } else if (m.mission !== constants.DEFEND && message.command === "task") {
+                m.mission = message.args[0];
+            }
         }
     }
     for (let r of m.visible_enemies) {
@@ -1532,16 +1552,51 @@ function runPreacher(m) {
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }
-    let h = horde(m);
-    if (h === false)
+    if (m.mission === constants.HORDE) {
+        if (m.begin_horde) {
+            if (m.intermediate_point === undefined) {
+                m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
+                let pf = new Pathfinder(create_augmented_obj(m, m.spawn_castle.x, m.spawn_castle.y), attack_pred(m, m.horde_loc.x, m.horde_loc.y));
+                if (pf.path === undefined) {
+                    m.log(`NO PATH FROM CASTLE TO OPPOSITE :(`);
+                    return;
+                }
+                m.intermediate_point = pf.path[Math.floor(pf.path.length / 2)];
+                return;
+            } else {
+                m.pathfinder = new Pathfinder(m, around_pred(...m.intermediate_point, 1, 2));
+                m.begin_horde = false;
+                m.on_intermediate = true;
+                m.started = true;
+            }
+        } else if (!m.started) {
+            return;
+        }
+    }
+    if (m.pathfinder === undefined)
         return;
     let next = m.pathfinder.next_loc(m);
+    if (next.fail) { m.log("FAILED"); return; }
+    if (next.wait) { m.log("WAITING"); return; }
     if (next.fin) {
         switch (m.mission) {
-            case constants.HORDE_INTERMEDIATE:
-                m.mission = constants.ATTACK;
-                let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
-                m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
+            case constants.HORDE:
+                if (m.on_intermediate) {
+                    m.on_intermediate = false;
+                    m.pathfinder = new Pathfinder(m, attack_pred(m, m.horde_loc.x, m.horde_loc.y));
+                    return;
+                } else {
+                    m.mission = constants.RETURN;
+                    m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
+                    m.begin_horde = undefined;
+                    m.intermediate_point = undefined;
+                    m.on_intermediate = undefined;
+                    m.started = undefined;
+                    return;
+                }
+            case constants.RETURN:
+                return;
+            case constants.DEFEND:
                 return;
             default:
                 m.mission = constants.NEUTRAL;
@@ -1550,15 +1605,8 @@ function runPreacher(m) {
                 return;
         }
     }
-    else if (next.wait || next.fail) {
-        m.log("PREACHER STUCK");
-        return;
-    }
-    else {
-        m.log("PREACHER MOVING: " + next);
-        //let dx = next[0] - m.me.x; let dy = next[1] - m.me.y;
-        return m.move(...next.diff);
-    }
+    return m.move(...next.diff);
+
 }
 
 function shouldAttack(m, x, y) {
@@ -1567,14 +1615,16 @@ function shouldAttack(m, x, y) {
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             //if (i != 0 || j != 0) {
-            let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
-            // m.log("ROBOT ID " + id);
-            if (id !== 0 && id !== -1) {
-                // m.log("TEAM " + m.getRobot(id).team);
-                if (m.getRobot(id).team === m.team) {
-                    count = count - 1;
+            if (passable_loc(m, m.me.x + i + x, m.me.y + j + y)) {
+                let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
+                // m.log("ROBOT ID " + id);
+                if (id !== 0 && id !== -1) {
+                    // m.log("TEAM " + m.getRobot(id).team);
+                    if (m.getRobot(id).team === m.team) {
+                        count = count - 1;
+                    }
+                    else count = count + 1;
                 }
-                else count = count + 1;
             }
             //}
         }
