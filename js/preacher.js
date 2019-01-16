@@ -16,6 +16,9 @@ export function runPreacher(m) {
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] }
                 break;
+            case constants.DEFEND:
+              m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+              break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
