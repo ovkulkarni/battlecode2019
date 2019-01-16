@@ -4,7 +4,7 @@ import { constants } from './constants.js';
 import { calcOpposite, dis } from './helpers.js';
 
 export function runProphet(m) {
-    m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
+    //m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
     if (m.me.turn === 1) {
         let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
         switch (m.mission) {
@@ -36,7 +36,7 @@ export function runProphet(m) {
     for (let r of m.visible_enemies) {
         let dist = dis(m.me.x, m.me.y, r.x, r.y);
         if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            m.log(`ATTACKING: (${r.x}, ${r.y})`);
+            //m.log(`ATTACKING: (${r.x}, ${r.y})`);
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }

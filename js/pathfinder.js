@@ -11,7 +11,7 @@ export class Pathfinder {
     next_loc(m, wait = false) {
         let o = {};
         if (this.path === undefined) {
-            m.log("PATH UNDEFINED");
+            //m.log("PATH UNDEFINED");
             o.fail = true;
             return o;
         }
@@ -45,7 +45,7 @@ export class Pathfinder {
             }
         }
         let result = this.path.pop();
-        m.log("NEXT MOVE: " + result);
+        //m.log("NEXT MOVE: " + result);
         o.res = result;
         o.diff = [o.res[0] - m.me.x, o.res[1] - m.me.y];
         return o;

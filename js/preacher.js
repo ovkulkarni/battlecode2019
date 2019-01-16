@@ -6,7 +6,7 @@ import { wander } from './analyzemap.js';
 import { decode16 } from './communication.js';
 
 export function runPreacher(m) {
-    m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
+    //m.log("PREACHER ID: " + m.me.id + "  X: " + m.me.x + "  Y: " + m.me.y);
     if (m.me.turn === 1) {
         let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);;
         switch (m.mission) {
@@ -27,7 +27,7 @@ export function runPreacher(m) {
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
-            m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            //m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
             if (message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
@@ -41,17 +41,17 @@ export function runPreacher(m) {
     for (let r of m.visible_enemies) {
         let dist = dis(m.me.x, m.me.y, r.x, r.y);
         if (shouldAttack(m, r.x - m.me.x, r.y - m.me.y) && m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            m.log(`ATTACKING: (${r.x}, ${r.y})`);
+            //m.log(`ATTACKING: (${r.x}, ${r.y})`);
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }
     if (m.mission === constants.HORDE) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
-                m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
+                //m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
                 let pf = new Pathfinder(create_augmented_obj(m, m.spawn_castle.x, m.spawn_castle.y), attack_pred(m, m.horde_loc.x, m.horde_loc.y));
                 if (pf.path === undefined) {
-                    m.log(`NO PATH FROM CASTLE TO OPPOSITE :(`);
+                    //m.log(`NO PATH FROM CASTLE TO OPPOSITE :(`);
                     return;
                 }
                 m.intermediate_point = pf.path[Math.floor(pf.path.length / 2)];
@@ -69,8 +69,14 @@ export function runPreacher(m) {
     if (m.pathfinder === undefined)
         return;
     let next = m.pathfinder.next_loc(m);
-    if (next.fail) { m.log("FAILED"); return; }
-    if (next.wait) { m.log("WAITING"); return; }
+    if (next.fail) {
+        //m.log("FAILED");
+        return;
+    }
+    if (next.wait) {
+        //m.log("WAITING");
+        return;
+    }
     if (next.fin) {
         switch (m.mission) {
             case constants.HORDE:
@@ -93,7 +99,7 @@ export function runPreacher(m) {
                 return;
             default:
                 m.mission = constants.NEUTRAL;
-                m.log("WANDERING");
+                //m.log("WANDERING");
                 wander(m);
                 return;
         }

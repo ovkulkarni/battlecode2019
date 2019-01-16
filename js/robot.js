@@ -67,7 +67,7 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
             if (diff !== undefined) {
-                this.log(`DIFFUSING by ${JSON.stringify(diff)}`);
+                //this.log(`DIFFUSING by ${JSON.stringify(diff)}`);
                 return this.move(...diff);
             }
         }

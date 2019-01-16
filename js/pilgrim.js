@@ -7,10 +7,10 @@ import { encode8, decode8 } from './communication.js';
 import { open_neighbors2, idx, dis } from './helpers.js';
 
 export function runPilgrim(m) {
-    m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
-    m.log("INITIAL MISSION: " + m.mission);
+    //m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
+    //m.log("INITIAL MISSION: " + m.mission);
     if (m.me.turn === 1) {
-        m.log("INITIAL MISSION: " + m.mission);
+        //m.log("INITIAL MISSION: " + m.mission);
         switch (m.mission) {
             case constants.GATHER:
                 if (m.fuel < constants.MIN_FUEL) {
@@ -77,7 +77,7 @@ export function runPilgrim(m) {
                     if (m.church === undefined) {
                         let dir = open_neighbors2(m, m.me.x, m.me.y);
                         if (dir.length === 0) {
-                            m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
+                            //m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
                             m.mission = (m.mission === constants.CHURCH_KARB) ? constants.GATHER_KARB : constants.GATHER_FUEL;
                             m.mission = constants.DEPOSIT;
                             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
@@ -87,19 +87,19 @@ export function runPilgrim(m) {
                         let dr = dir[0];
                         m.church = [dr[0] - m.me.x, dr[1] - m.me.y];
                         if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
-                            m.log("BUILDING CHURCH: " + dr);
+                            //m.log("BUILDING CHURCH: " + dr);
                             return m.buildUnit(SPECS.CHURCH, ...m.church);
                         }
                         m.church = undefined;
-                        m.log("NOT ENOUGH RESOURCES");
+                        //m.log("NOT ENOUGH RESOURCES");
                         // Tell Castle to Send more Harvesters if Feasable
                         return;
                     }
-                    m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
+                    //m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
                     return m.give(...m.church, m.me.karbonite, m.me.fuel);
                 }
                 else {
-                    m.log("GOING BACK");
+                    //m.log("GOING BACK");
                     m.mission = constants.DEPOSIT;
                     let foundDrop = false;
                     let minr = 10000000;
@@ -109,20 +109,20 @@ export function runPilgrim(m) {
                             foundDrop = true;
                             if (dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
                                 minr = dis(ally.x, ally.y, m.me.x, m.me.y);
-                                m.log("FOUND CLOSER DROPOFF: X:" + ally.x + "Y: " + ally.y + "UNIT: " + ally.unit);
+                                //m.log("FOUND CLOSER DROPOFF: X:" + ally.x + "Y: " + ally.y + "UNIT: " + ally.unit);
                                 m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
                                 m.pathfinder.final_loc = [ally.x, ally.y];
                             }
                         }
                     }
                     if (foundDrop === false) {
-                        m.log("DID NOT FIND CLOSER DROPOFF");
+                        //m.log("DID NOT FIND CLOSER DROPOFF");
                         m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                         m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
                     }
                     let nextt = m.pathfinder.next_loc(m);
                     if(nextt.fin) {
-                        m.log("HERE");
+                        //m.log("HERE");
                         m.mission === constants.GATHER;
                         return m.give(m.pathfinder.final_loc[0]-m.me.x, m.pathfinder.final_loc[1]-m.me.y, m.me.karbonite, m.me.fuel);
                     }
@@ -132,18 +132,18 @@ export function runPilgrim(m) {
                 }
             }
             else if (m.mission === constants.DEPOSIT) {
-                m.log("DEPOSITING RESOURCES IN CASTLE");
+                //m.log("DEPOSITING RESOURCES IN CASTLE");
                 m.mission === constants.GATHER;
                 return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
             }
             else {
-                m.log("MINING");
-                m.log("CHECKING FOR ENEMIES");
+                //m.log("MINING");
+                //m.log("CHECKING FOR ENEMIES");
                 let robArr = m.getVisibleRobots();
                 for (let i = 0; i < robArr.length; i++) {
                     let tempRob = robArr[i];
                     if (tempRob.team != m.me.team) {
-                        m.log("FOUND ENEMY");
+                        //m.log("FOUND ENEMY");
                         // Tell the Castle you hit an enemy so they can defend.
                         // Altenratively tell remaining
                     }
@@ -170,20 +170,20 @@ export function runPilgrim(m) {
             } else {
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
             }
-            m.log("GIVING IN DIRECTION: " + dx + " " + dy);
+            //m.log("GIVING IN DIRECTION: " + dx + " " + dy);
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }
     else if (next.wait) {
-        m.log("WAITING");
+        //m.log("WAITING");
         return;
     }
     else if (next.fail) {
-        m.log("FAILED TO MOVE");
+        //m.log("FAILED TO MOVE");
         return;
     }
     else {
-        m.log("PILGRIM MOVING: " + next.res);
+        //m.log("PILGRIM MOVING: " + next.res);
         return m.move(...next.diff);
     }
 }
