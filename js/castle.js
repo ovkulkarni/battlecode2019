@@ -56,7 +56,7 @@ function pick_unit(m) {
         return m.queue.pop();
     }
     // TODO: Remove this once we have better logic for when to spawn a crusader
-    return Unit(SPECS.CRUSADER, constants.HORDE, 8);
+    return Unit(SPECS.PREACHER, constants.HORDE, 8);
 }
 
 function update_queue(m) {
@@ -66,7 +66,6 @@ function update_queue(m) {
         m.church_flag = constants.FIRST_NOT_CHURCH;
     }
     if (m.mission === constants.DEFEND) {
-        m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
         while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
