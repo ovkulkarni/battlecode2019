@@ -66,6 +66,8 @@ export function runPreacher(m) {
             return;
         }
     }
+    if (m.pathfinder === undefined)
+        return;
     let next = m.pathfinder.next_loc(m);
     if (next.fail) { m.log("FAILED"); return; }
     if (next.wait) { m.log("WAITING"); return; }
