@@ -33,7 +33,7 @@ export function runPreacher(m) {
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
                 m.begin_horde = true;
-            } else if (m.mission !== constants.DEFEND && message.command === "task") {
+            } else if (message.command === "update_task") {
                 m.mission = message.args[0];
             }
         }
