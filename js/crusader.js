@@ -3,7 +3,7 @@ import { attack_pred, around_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, get_mission } from './helpers.js';
 import { constants } from './constants.js';
 import { wander } from './analyzemap.js';
-import { decode16 } from './communication.js';
+import { decode16, encode8 } from './communication.js';
 
 export function runCrusader(m) {
     m.log(`CRUSADER: (${m.me.x}, ${m.me.y})`);
@@ -21,11 +21,12 @@ export function runCrusader(m) {
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
-            m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            //m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
             if (message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
+                m.sending_castle = message.args[2];
                 m.begin_horde = true;
             } else if (message.command === "update_task") {
                 m.mission = message.args[0];
@@ -75,10 +76,13 @@ export function runCrusader(m) {
                 } else {
                     m.mission = constants.RETURN;
                     m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
+                    let message = encode8("castle_killed", m.sending_castle);
+                    m.castleTalk(message)
                     m.begin_horde = undefined;
                     m.intermediate_point = undefined;
                     m.on_intermediate = undefined;
                     m.started = undefined;
+                    m.sending_castle = undefined;
                     return;
                 }
             case constants.RETURN:

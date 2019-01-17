@@ -1,5 +1,5 @@
-import { dis } from "./helpers.js";
 import { constants } from "./constants.js";
+import { dis } from "./helpers.js";
 
 export var mask = 0xffffffff;
 
@@ -17,7 +17,6 @@ export class EventHandler {
             result = Event(who, constants.BUILD_CHURCH, undefined, true);
         } else {
             let best_a_id;
-            let best_e_loc;
             let min_distance = 64 * 64 + 1;
             for (let a_id in m.friendly_castles) {
                 for (let e_id in m.enemy_castles) {
@@ -28,11 +27,10 @@ export class EventHandler {
                     if (distance < min_distance) {
                         min_distance = distance;
                         best_a_id = a_id;
-                        best_e_loc = [m.enemy_castles[a_id].x, m.enemy_castles[a_id].y];
                     }
                 }
             }
-            result = Event(best_a_id - 0, constants.ATTACK, best_e_loc, false);
+            result = Event(best_a_id - 0, constants.ATTACK, undefined, false);
         }
         this.past.push(result);
         return result;

@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc, calcOpposite, stash_condition, dis } from './helpers.js';
-import { encode8, decode8, encode16, decode16 } from "./communication.js";
+import { open_neighbors_diff, most_central_loc, calcOpposite, dis } from './helpers.js';
+import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
@@ -93,10 +93,24 @@ function initialize_queue(m) {
 
 function handle_horde(m) {
     if (check_horde(m) && m.event.who === m.me.id) {
-        m.log(`SENDING HORDE TO ${JSON.stringify(m.event.where)}`);
+        let best_e_loc;
+        let min_distance = 64 * 64 + 1;
+        for (let a_id in m.friendly_castles) {
+            for (let e_id in m.enemy_castles) {
+                let distance = dis(
+                    m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
+                    m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
+                );
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    best_e_loc = [m.enemy_castles[a_id].x, m.enemy_castles[a_id].y];
+                }
+            }
+        }
+        m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)}`);
 
         //todo only send as far as u have to
-        m.signal(encode16("send_horde", ...m.event.where), 100);
+        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 100);
         m.max_horde_size += 2;
         m.current_horde = 0;
 
@@ -132,7 +146,15 @@ function handle_castle_talk(m) {
             if (message.command === "event_complete") {
                 event_complete_flag = true;
             }
-            
+            if (message.command === "castle_killed") {
+                let c_id = Object.keys(m.friendly_castles)[message.args[0]];
+                m.log(`CASTLE OPPOSITE ${c_id} WAS KILLED`);
+                delete m.enemy_castles[c_id];
+            }
+
+            if (m.me.turn === 1)
+                m.church_flag = constants.FIRST_NOT_CHURCH;
+
         }
         if (m.friendly_castles[r.id] !== undefined) {
             alive_castle[r.id] = true;
@@ -174,7 +196,7 @@ function event_complete(m) {
     if (m.event.who === m.me.id) {
         switch (m.event.what) {
             case constants.ATTACK:
-                for (let i = 0; i < m.max_horde_size; i++){
+                for (let i = 0; i < m.max_horde_size; i++) {
                     m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 8));
                 }
                 break;
@@ -217,7 +239,7 @@ function handle_castle_coord(m, r, message) {
         let opp = calcOpposite(m, x, y);
         m.enemy_castles[r.id] = { x: opp[0], y: opp[1] };
     }
-        
+
 }
 
 function create_event_handler(m) {
@@ -229,7 +251,7 @@ function set_globals(m) {
     m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
 
     m.friendly_castles = {};
-    m.friendly_castles[m.me.id] = {x: m.me.x, y:m.me.y};
+    m.friendly_castles[m.me.id] = { x: m.me.x, y: m.me.y };
 
     m.enemy_castles = {};
     let opp = calcOpposite(m, m.me.x, m.me.y);

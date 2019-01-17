@@ -6,9 +6,7 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { get_stats, get_mission, dis, open_neighbors2, create_augmented_obj } from './helpers.js';
-import { Pathfinder } from './pathfinder.js';
-import { exact_pred } from './predicates.js';
+import { get_stats, get_mission, dis, open_neighbors2 } from './helpers.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
