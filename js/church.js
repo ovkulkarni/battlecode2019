@@ -6,7 +6,7 @@ import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 
 export function runChurch(m) {
-    m.log(`CHURCH: (${m.me.x}, ${m.me.y})`);
+    //m.log(`CHURCH: (${m.me.x}, ${m.me.y})`);
 
     set_globals(m);
     determine_mission(m);
@@ -14,6 +14,7 @@ export function runChurch(m) {
     // first turn logic
     if (m.me.turn === 1) {
         initialize_queue(m);
+        m.castleTalk(encode8("event_complete"));
     }
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
@@ -23,17 +24,16 @@ export function runChurch(m) {
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
         if (
             build_opts.length > 0 &&
-            leftover_k >= 0 && leftover_f >= 0 &&
-            (leftover_k >= m.kstash || unit.priority >= constants.EMERGENCY_PRIORITY)
+            leftover_k >= 0 && leftover_f >= 0
         ) {
             let build_loc = most_central_loc(m, build_opts);
-            m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
-            m.log(`SENDING TASK ${unit.task}`);
+            //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
+            //m.log(`SENDING TASK ${unit.task}`);
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
-            m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
+            //m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
         }
     }
@@ -52,8 +52,8 @@ function update_queue(m) {
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
         while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
-            m.log("QUEUE DEFENDER!");
-            m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+            //m.log("QUEUE DEFENDER!");
+            m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
@@ -71,7 +71,9 @@ function initialize_queue(m) {
 
 function determine_mission(m) {
     if (m.visible_enemies.length > 0) {
-        m.log("I'm being attacked! Ow.");
+        if (m.mission !== constants.DEFEND) {
+            m.log("I'm under attacked!");
+        }
         m.mission = constants.DEFEND;
     }
     else {
@@ -80,25 +82,10 @@ function determine_mission(m) {
 }
 
 function set_globals(m) {
-    m.kstash = 50;
-    if (m.queue === undefined) {
-        m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
-    }
-    if (m.mission === undefined) {
-        m.mission = constants.NEUTRAL;
-    }
-    if (m.fuel_locs === undefined) {
-        m.fuel_locs = best_fuel_locs(m);
-    }
-    if(m.karb_locs === undefined) {
-        m.karb_locs = best_karb_locs(m);
-    }
-    if (m.mission === undefined) {
-        m.mission = constants.NEUTRAL;
-    }
-    if (m.church_flag === undefined) {
-        m.church_flag = constants.FIRST_CHURCH;
-    }
+    m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
+    m.mission = constants.NEUTRAL;
+    m.fuel_locs = best_fuel_locs(m);
+    m.karb_locs = best_karb_locs(m);
 }
 
 function Unit(unit, task, priority) {

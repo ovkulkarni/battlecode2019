@@ -14,8 +14,7 @@ export let constants = {
 let name_constants = [
     "HORIZONTAL",
     "VERTICAL",
-    "FIRST_CHURCH",
-    "FIRST_NOT_CHURCH",
+    "BUILD_CHURCH",
     "NOT_FIRST_TURN",
 ]
 

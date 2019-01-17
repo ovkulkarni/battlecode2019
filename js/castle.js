@@ -12,7 +12,6 @@ export function runCastle(m) {
     if (m.me.turn === 1) {
         set_globals(m);
     }
-    handle_kstash(m);
 
     handle_castle_talk(m);
     send_castle_coord(m);
@@ -39,7 +38,7 @@ export function runCastle(m) {
         if (
             build_opts.length > 0 &&
             leftover_k >= 0 && leftover_f >= 0 &&
-            (leftover_k >= m.kstash || unit.priority >= constants.EMERGENCY_PRIORITY)
+            (m.event === undefined || !m.event.blocking || unit.priority >= constants.EMERGENCY_PRIORITY)
         ) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
@@ -68,11 +67,6 @@ function pick_unit(m) {
 }
 
 function update_queue(m) {
-    /*if (m.kstash > 0 && m.church_flag === constants.FIRST_CHURCH && ) {
-        m.log("CHURCH PILGRIM QUEUED");
-        m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, 2));
-        m.church_flag = constants.FIRST_NOT_CHURCH;
-    }*/
     if (m.mission === constants.DEFEND) {
         const current_defenders = m.visible_allies.length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
@@ -113,7 +107,9 @@ function handle_horde(m) {
 
 function determine_mission(m) {
     if (m.visible_enemies.length > 0) {
-        m.log("I'm being attacked! Ow.");
+        if (m.mission !== constants.DEFEND) {
+            m.log("I'm under attacked!");
+        }
         m.mission = constants.DEFEND;
     }
     else {
@@ -132,15 +128,10 @@ function handle_castle_talk(m) {
 
             if (message.command === "castle_coord") {
                 handle_castle_coord(m, r, message);
-                if (m.church_flag === constants.FIRST_CHURCH)
-                    m.church_flag = constants.FIRST_NOT_CHURCH;
             }
             if (message.command === "event_complete") {
                 event_complete_flag = true;
             }
-
-            if (m.me.turn === 1)
-                m.church_flag = constants.FIRST_NOT_CHURCH;
             
         }
         if (m.friendly_castles[r.id] !== undefined) {
@@ -187,8 +178,11 @@ function event_complete(m) {
                     m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 8));
                 }
                 break;
+            case constants.BUILD_CHURCH:
+                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY));
+                break;
             default:
-                m.log("SWITCH STATEMENT ERROR");
+                m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);
         }
     }
 }
@@ -232,7 +226,6 @@ function create_event_handler(m) {
 }
 
 function set_globals(m) {
-    m.kstash = 0;
     m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
 
     m.friendly_castles = {};
@@ -242,26 +235,15 @@ function set_globals(m) {
     let opp = calcOpposite(m, m.me.x, m.me.y);
     m.enemy_castles[m.me.id] = { x: opp[0], y: opp[1] };
 
-    m.mission = constants.NEUTRAL;
     m.fuel_locs = best_fuel_locs(m);
     m.karb_locs = best_karb_locs(m);
     m.mission = constants.NEUTRAL;
-    m.church_flag = constants.FIRST_CHURCH;
     m.max_horde_size = 4;
     m.current_horde = 0;
 }
 
 export function check_horde(m) {
     return m.current_horde >= m.max_horde_size;
-}
-
-function handle_kstash(m) {
-    /*if (stash_condition(m)) {
-        m.log("KSTASH");
-        m.kstash = 50;
-        return;
-    }*/
-    m.kstash = 0;
 }
 
 function Unit(unit, task, priority) {
