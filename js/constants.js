@@ -15,7 +15,7 @@ let name_constants = [
     "HORIZONTAL",
     "VERTICAL",
     "BUILD_CHURCH",
-    "NOT_FIRST_TURN",
+    "CLEAR_QUEUE",
 ]
 
 let task_constant_bins = [

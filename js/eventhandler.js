@@ -9,12 +9,23 @@ export class EventHandler {
         this.m_w = (123456789 + seed) & mask;
         this.m_z = (987654321 - seed) & mask;
         this.past = [];
+        this.last_clear = {};
     }
     next_event(m) {
         let result;
-        if (this.past.length === 2) {
+        let next_clear;
+        for (let id in m.friendly_castles) {
+            if (this.last_clear[id] === undefined)
+                this.last_clear[id] = -1;
+            if (next_clear === undefined || this.last_clear[id] < this.last_clear[next_clear])
+                next_clear = id;
+        }
+        if ((this.past.length - 3) % 2 === 0) {
+            this.last_clear[next_clear] = m.me.turn;
+            result = Event(next_clear - 0, constants.CLEAR_QUEUE, undefined, 0); 
+        } else if (this.past.length === 2) {
             let who = Math.min(...Object.keys(m.friendly_castles));
-            result = Event(who, constants.BUILD_CHURCH, undefined, true);
+            result = Event(who, constants.BUILD_CHURCH, undefined, 50);
         } else {
             let best_a_id;
             let min_distance = 64 * 64 + 1;
@@ -30,7 +41,7 @@ export class EventHandler {
                     }
                 }
             }
-            result = Event(best_a_id - 0, constants.ATTACK, undefined, false);
+            result = Event(best_a_id - 0, constants.ATTACK, undefined, 0);
         }
         this.past.push(result);
         return result;

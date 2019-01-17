@@ -13,6 +13,10 @@ export function runCastle(m) {
         set_globals(m);
     }
 
+    if (m.new_event_available) {
+        m.new_event_available = false;
+        new_event(m);
+    }
     handle_castle_talk(m);
     send_castle_coord(m);
 
@@ -32,13 +36,15 @@ export function runCastle(m) {
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = pick_unit(m);
+    let result;
     if (unit !== undefined) {
         let leftover_k = m.karbonite - unit_cost(unit.unit)[0];
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
-        if (
+        if (!m.paused &&
             build_opts.length > 0 &&
             leftover_k >= 0 && leftover_f >= 0 &&
-            (m.event === undefined || !m.event.blocking || unit.priority >= constants.EMERGENCY_PRIORITY)
+            (m.event === undefined || (m.event.who === m.me.id && leftover_k >= m.event.blocking)
+                || unit.priority >= constants.EMERGENCY_PRIORITY)
         ) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
@@ -50,13 +56,17 @@ export function runCastle(m) {
             }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-            return m.buildUnit(unit.unit, ...build_loc);
+
+            result = m.buildUnit(unit.unit, ...build_loc);
         } else {
             //m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
             m.queue.push(unit);
         }
     }
-    return;
+    if (m.event && m.event.who === m.me.id && m.event.what === constants.CLEAR_QUEUE && m.queue.isEmpty()) {
+        event_complete(m);
+    }
+    return result;
 }
 
 function pick_unit(m) {
@@ -90,7 +100,8 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
-    m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
+    for (let i = 0; i < 4; i++)
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
 }
 
 function handle_horde(m) {
@@ -122,14 +133,29 @@ function handle_horde(m) {
 }
 
 function determine_mission(m) {
+    let prev_mission = m.mission;
     if (m.visible_enemies.length > 0) {
-        if (m.mission !== constants.DEFEND) {
-            m.log("I'm under attack!");
-        }
         m.mission = constants.DEFEND;
+        if (prev_mission !== constants.DEFEND) {
+            m.log("I'm under attack!");
+            m.my_pause = true;
+            m.castleTalk(encode8("pause"));
+        }
     }
     else {
         m.mission = constants.NEUTRAL;
+        while (!m.queue.isEmpty()) {
+            let unit = m.queue.peek();
+            if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
+                m.queue.pop();
+            } else {
+                break;
+            }
+        }
+        if (m.my_pause) {
+            m.castleTalk(encode8("unpause"));
+            m.my_pause = false;
+        }
     }
 }
 
@@ -155,6 +181,13 @@ function handle_castle_talk(m) {
                         m.watch_out = false;
                     } else { log_recieve = false; }
                     break;
+                case "pause":
+                    m.paused = true;
+                    m.paused_by = r.id;
+                    break;
+                case "unpause":
+                    m.paused = false;
+                    break;
             }
             if (log_recieve)
                 m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
@@ -175,6 +208,10 @@ function handle_castle_talk(m) {
     for (let id of to_delete) {
         delete m.friendly_castles[id];
         m.log("DEATH OF " + id);
+        if (m.paused && m.paused_by === (id - 0)) {
+            m.paused = false;
+            m.log("UNPAUSED");
+        }
     }
 
     // check on m.watch_me
@@ -195,11 +232,14 @@ function event_complete(m) {
             m.log("Sending event_complete");
             m.castleTalk(encode8("event_complete"));
         }
-        // bolster defenses
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
     }
+    m.new_event_available = true;
+}
+
+function new_event(m) {
     // load new event
     m.event = m.event_handler.next_event(m);
+    //m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
     // clear watch_me
     m.watch_me = undefined;
     // initial reaction to event
@@ -214,6 +254,8 @@ function event_complete(m) {
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY));
+                break;
+            case constants.CLEAR_QUEUE:
                 break;
             default:
                 m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);
@@ -256,7 +298,7 @@ function handle_castle_coord(m, r, message) {
 
 function create_event_handler(m) {
     m.event_handler = new EventHandler();
-    event_complete(m);
+    new_event(m);
 }
 
 function set_globals(m) {
