@@ -1,6 +1,6 @@
 import { Pathfinder } from './pathfinder.js';
 import { attack_pred, around_pred, prophet_pred } from './predicates.js';
-import { calcOpposite, dis, create_augmented_obj, get_mission, idx, passable_loc } from './helpers.js';
+import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
 import { wander } from './analyzemap.js';
 import { decode16, encode8 } from './communication.js';
@@ -27,8 +27,8 @@ export function runPreacher(m) {
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
-            //m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (message.command === "send_horde") {
+            // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            if (m.mission === constants.HORDE && message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
@@ -42,7 +42,6 @@ export function runPreacher(m) {
     for (let r of m.visible_enemies) {
         let dist = dis(m.me.x, m.me.y, r.x, r.y);
         if (shouldAttack(m, r.x - m.me.x, r.y - m.me.y) && m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            //m.log(`ATTACKING: (${r.x}, ${r.y})`);
             return m.attack(r.x - m.me.x, r.y - m.me.y);
         }
     }
@@ -98,6 +97,7 @@ export function runPreacher(m) {
                     return;
                 }
             case constants.RETURN:
+                m.mission = constants.HORDE;
                 return;
             case constants.DEFEND:
                 return;
@@ -117,19 +117,17 @@ export function shouldAttack(m, x, y) {
     let count = 0
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-            //if (i != 0 || j != 0) {
             if (passable_loc(m, m.me.x + i + x, m.me.y + j + y)) {
                 let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
-                // m.log("ROBOT ID " + id);
                 if (id !== 0 && id !== -1) {
-                    // m.log("TEAM " + m.getRobot(id).team);
-                    if (m.getRobot(id).team === m.team) {
+                    if (m.getRobot(id).team === m.me.team) {
                         count = count - 1;
                     }
-                    else count = count + 1;
+                    else {
+                        count = count + 1;
+                    }
                 }
             }
-            //}
         }
     }
     return count > 0;

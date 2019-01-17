@@ -23,8 +23,8 @@ export function runProphet(m) {
     for (let r of m.visible_allies) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
-            //m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (message.command === "send_horde") {
+            // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            if (m.mission === constants.HORDE && message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
@@ -87,6 +87,7 @@ export function runProphet(m) {
                         return;
                     }
                 case constants.RETURN:
+                    m.mission = constants.HORDE;
                     return;
                 default:
                     m.mission = constants.DEFEND;

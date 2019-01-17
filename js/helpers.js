@@ -94,7 +94,8 @@ export function get_mission(m) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             //m.log(`GOT MISSION ${message.args[0]} FROM ${r.id}`);
-            return message.args[0];
+            if (message.command === "task")
+                return message.args[0];
         }
     }
 }

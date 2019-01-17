@@ -103,7 +103,7 @@ function handle_horde(m) {
                 );
                 if (distance < min_distance) {
                     min_distance = distance;
-                    best_e_loc = [m.enemy_castles[a_id].x, m.enemy_castles[a_id].y];
+                    best_e_loc = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
                 }
             }
         }
@@ -122,7 +122,7 @@ function handle_horde(m) {
 function determine_mission(m) {
     if (m.visible_enemies.length > 0) {
         if (m.mission !== constants.DEFEND) {
-            m.log("I'm under attacked!");
+            m.log("I'm under attack!");
         }
         m.mission = constants.DEFEND;
     }
