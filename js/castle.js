@@ -43,8 +43,10 @@ export function runCastle(m) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
             //m.log(`SENDING TASK ${unit.task}`);
-            if (unit.task === constants.HORDE) {
-                m.current_horde++;
+            switch (unit.task) {
+                case constants.HORDE:
+                    m.current_horde++;
+                    break;
             }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
@@ -132,39 +134,39 @@ function determine_mission(m) {
 }
 
 function handle_castle_talk(m) {
-    let alive_castle = {};
+    let alive = {};
     let event_complete_flag;
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
-
             let message = decode8(r.castle_talk);
-            m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
-
-            if (message.command === "castle_coord") {
-                handle_castle_coord(m, r, message);
+            let log_recieve = true;
+            switch (message.command) {
+                case "castle_coord":
+                    handle_castle_coord(m, r, message); break;
+                case "event_complete":
+                    event_complete_flag = true; break;
+                case "castle_killed":
+                    let c_id = Object.keys(m.friendly_castles)[message.args[0]];
+                    m.log(`CASTLE OPPOSITE ${c_id} WAS KILLED`);
+                    delete m.enemy_castles[c_id]; break;
+                case "watch_me":
+                    if (m.watch_out) {
+                        m.watch_me = r.id;
+                        m.watch_out = false;
+                    } else { log_recieve = false; }
+                    break;
             }
-            if (message.command === "event_complete") {
-                event_complete_flag = true;
-            }
-            if (message.command === "castle_killed") {
-                let c_id = Object.keys(m.friendly_castles)[message.args[0]];
-                m.log(`CASTLE OPPOSITE ${c_id} WAS KILLED`);
-                delete m.enemy_castles[c_id];
-            }
-
-            if (m.me.turn === 1)
-                m.church_flag = constants.FIRST_NOT_CHURCH;
-
+            if (log_recieve)
+                m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
         }
-        if (m.friendly_castles[r.id] !== undefined) {
-            alive_castle[r.id] = true;
-        }
+        alive[r.id] = true;
     }
 
+    // delete dead castles
     let to_delete = [];
     for (let id in m.friendly_castles) {
         if (id - 0 === m.me.id) continue;
-        if (alive_castle[id] === undefined) {
+        if (alive[id] === undefined) {
             to_delete.push(id);
             if (m.event !== undefined && m.event.who === id - 0)
                 event_complete_flag = true;
@@ -175,6 +177,13 @@ function handle_castle_talk(m) {
         m.log("DEATH OF " + id);
     }
 
+    // check on m.watch_me
+    if (m.watch_me !== undefined && alive[m.watch_me] === undefined) {
+        m.watch_me = undefined;
+        event_complete_flag = true;
+    }
+
+    // complete the event!
     if (event_complete_flag) {
         event_complete(m);
     }
@@ -192,6 +201,8 @@ function event_complete(m) {
     // load new event
     m.event = m.event_handler.next_event(m);
     m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
+    // clear watch_me
+    m.watch_me = undefined;
     // initial reaction to event
     if (m.event.who === m.me.id) {
         switch (m.event.what) {
@@ -201,6 +212,7 @@ function event_complete(m) {
                 }
                 break;
             case constants.BUILD_CHURCH:
+                m.watch_out = true;
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY));
                 break;
             default:

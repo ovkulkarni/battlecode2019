@@ -13,7 +13,7 @@ export class EventHandler {
     next_event(m) {
         let result;
         if (this.past.length === 2) {
-            let who = Math.min(Object.keys(m.friendly_castles));
+            let who = Math.min(...Object.keys(m.friendly_castles));
             result = Event(who, constants.BUILD_CHURCH, undefined, true);
         } else {
             let best_a_id;

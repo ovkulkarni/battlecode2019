@@ -6,7 +6,7 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { get_stats, get_mission, dis, open_neighbors2 } from './helpers.js';
+import { get_stats, get_mission, dis, open_neighbors2, idx } from './helpers.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
@@ -50,13 +50,11 @@ class MyRobot extends BCAbstractRobot {
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
             let diff = undefined;
-            let min_allies = this.visible_allies.filter(r => dis(this.me.x, this.me.y, r.x, r.y) <= 2).length;
-            if (min_allies < 3)
-                return;
+            let min_allies = this.visible_allies.filter(r => dis(this.me.x, this.me.y, r.x, r.y) <= 1).length;
             for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
                 let count = 0;
                 for (let ally of this.visible_allies) {
-                    if (dis(ally.x, ally.y, opt[0], opt[1]) <= 2)
+                    if (dis(ally.x, ally.y, opt[0], opt[1]) <= 1)
                         count++;
                 }
                 if (count < min_allies) {
@@ -67,6 +65,12 @@ class MyRobot extends BCAbstractRobot {
             if (diff !== undefined) {
                 //this.log(`DIFFUSING by ${JSON.stringify(diff)}`);
                 return this.move(...diff);
+            } else if (idx(this.karbonite_map, this.me.x, this.me.y) || idx(this.karbonite_map, this.me.x, this.me.y)){
+                // move off or karbonite
+                for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
+                    diff = [opt[0] - this.me.x, opt[1] - this.me.y];
+                    return this.move(...diff);
+                }
             }
         }
         return ret;

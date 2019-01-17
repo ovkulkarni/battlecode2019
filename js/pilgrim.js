@@ -41,6 +41,7 @@ export function runPilgrim(m) {
                 m.initial_mission = m.mission;
                 break;
             case constants.CHURCH_KARB:
+                m.castleTalk(encode8("watch_me"));
                 m.pathfinder = new Pathfinder(m, karbonite_pred_church(m, m.me.x, m.me.y));
                 break;
             case constants.GATHER_FUEL:
@@ -48,6 +49,7 @@ export function runPilgrim(m) {
                 m.initial_mission = m.mission;
                 break;
             case constants.CHURCH_FUEL:
+                m.castleTalk(encode8("watch_me"));
                 m.pathfinder = new Pathfinder(m, fuel_pred_church(m, m.me.x, m.me.y));
                 break;
             default:
