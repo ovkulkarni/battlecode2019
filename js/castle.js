@@ -143,22 +143,23 @@ function handle_castle_talk(m) {
                 m.church_flag = constants.FIRST_NOT_CHURCH;
             
         }
-        if (r.unit === SPECS.CASTLE) {
+        if (m.friendly_castles[r.id] !== undefined) {
             alive_castle[r.id] = true;
         }
     }
-    
-    if (m.me.turn > 48 && m.me.turn < 53) {
-        m.log(JSON.stringify(alive_castle));
-    }
 
+    let to_delete = [];
     for (let id in m.friendly_castles) {
-        if (alive_castle[id] !== undefined) {
-            delete m.friendly_castles.id;
-            m.log("DEATH OF" + id);
+        if (id - 0 === m.me.id) continue;
+        if (alive_castle[id] === undefined) {
+            to_delete.push(id);
             if (m.event !== undefined && m.event.who === id - 0)
                 event_complete_flag = true;
         }
+    }
+    for (let id of to_delete) {
+        delete m.friendly_castles[id];
+        m.log("DEATH OF " + id);
     }
 
     if (event_complete_flag) {
