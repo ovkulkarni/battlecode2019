@@ -81,16 +81,16 @@ function update_queue(m) {
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
         //m.log("QUEUE PILGRIM!");
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 10));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
     }
 }
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 1.5));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
-    m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+    m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
 }
 
 function handle_horde(m) {
@@ -200,15 +200,15 @@ function event_complete(m) {
     }
     // load new event
     m.event = m.event_handler.next_event(m);
-    m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
     // clear watch_me
     m.watch_me = undefined;
     // initial reaction to event
     if (m.event.who === m.me.id) {
+        m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
-                    m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 8));
+                    m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 2));
                 }
                 break;
             case constants.BUILD_CHURCH:
