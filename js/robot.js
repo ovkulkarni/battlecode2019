@@ -63,17 +63,9 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
             if (diff !== undefined) {
-                //this.log(`DIFFUSING by ${JSON.stringify(diff)}`);
+                if (idx(this.karbonite_map, this.me.x + diff[0], this.me.y + diff[1]) || idx(this.fuel_map, this.me.x + diff[0], this.me.y + diff[1]))
+                    return;
                 return this.move(...diff);
-            } else if (
-                this.me.unit !== SPECS.PILGRIM &&
-                (idx(this.karbonite_map, this.me.x, this.me.y) || idx(this.karbonite_map, this.me.x, this.me.y))
-            ) {
-                // move off or karbonite
-                for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
-                    diff = [opt[0] - this.me.x, opt[1] - this.me.y];
-                    return this.move(...diff);
-                }
             }
         }
         return ret;
