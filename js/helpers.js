@@ -35,6 +35,12 @@ export function create_augmented_obj(m, x, y) {
     return o;
 }
 
+export function all_neighbors2(m, x, y) {
+    const choices = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+    return choices.map(s => [x + s[0], y + s[1]])
+        .filter(passable_loc_lambda(m));
+}
+
 export function open_neighbors2(m, x, y) {
     const choices = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
@@ -52,6 +58,15 @@ export function valid_loc(m) {
             return false;
         let visMapIx = idx(m.visible_map, x, y);
         return idx(m.map, x, y) && (visMapIx == 0 || visMapIx == -1);
+    });
+}
+export function passable_loc_lambda(m) {
+    return (l => {
+        let x = l[0];
+        let y = l[1];
+        if (!(x >= 0 && y >= 0 && x < m.map[0].length && y < m.map.length))
+            return false;
+        return idx(m.map, x, y);
     });
 }
 
@@ -128,7 +143,5 @@ export function centricity(m, x, y) {
 }
 
 export function current_stash(m) {
-    if (m.me.turn > 200)
-        return 30;
-    return 0;
+    return 101;
 }

@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, most_central_loc, calcOpposite, dis } from './helpers.js';
+import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
@@ -44,6 +44,7 @@ export function runCastle(m) {
             build_opts.length > 0 &&
             leftover_k >= 0 && leftover_f >= 0 &&
             (m.event === undefined || (m.event.who === m.me.id && leftover_k >= m.event.blocking)
+                || leftover_k >= (m.event.blocking + current_stash(m))
                 || unit.priority >= constants.EMERGENCY_PRIORITY)
         ) {
             let build_loc = most_central_loc(m, build_opts);
@@ -108,16 +109,14 @@ function handle_horde(m) {
     if (check_horde(m) && m.event.who === m.me.id) {
         let best_e_loc;
         let min_distance = 64 * 64 + 1;
-        for (let a_id in m.friendly_castles) {
-            for (let e_id in m.enemy_castles) {
-                let distance = dis(
-                    m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
-                    m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
-                );
-                if (distance < min_distance) {
-                    min_distance = distance;
-                    best_e_loc = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
-                }
+        for (let e_id in m.enemy_castles) {
+            let distance = dis(
+                m.me.x, m.me.y,
+                m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
+            );
+            if (distance < min_distance) {
+                min_distance = distance;
+                best_e_loc = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
             }
         }
         m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)}`);

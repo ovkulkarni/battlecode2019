@@ -6,7 +6,7 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { get_stats, get_mission, dis, open_neighbors2, idx } from './helpers.js';
+import { get_stats, get_mission, dis, open_neighbors2, idx, all_neighbors2 } from './helpers.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
@@ -49,26 +49,38 @@ class MyRobot extends BCAbstractRobot {
                 break;
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
-            let diff = undefined;
-            let min_allies = this.visible_allies.filter(r => dis(this.me.x, this.me.y, r.x, r.y) <= 1).length;
-            for (let opt of open_neighbors2(this, this.me.x, this.me.y)) {
-                let count = 0;
-                for (let ally of this.visible_allies) {
-                    if (dis(ally.x, ally.y, opt[0], opt[1]) <= 1)
-                        count++;
-                }
-                if (count < min_allies) {
-                    min_allies = count;
-                    diff = [opt[0] - this.me.x, opt[1] - this.me.y];
-                }
-            }
-            if (diff !== undefined) {
-                if (idx(this.karbonite_map, this.me.x + diff[0], this.me.y + diff[1]) || idx(this.fuel_map, this.me.x + diff[0], this.me.y + diff[1]))
-                    return;
-                return this.move(...diff);
-            }
+            return diffuse(this);
         }
         return ret;
+    }
+}
+
+function neighbor_score(m, x, y) {
+    let count = 0;
+    for (let loc of all_neighbors2(m, x, y)) {
+        let dist = dis(x, y, loc[0], loc[1]);
+        if (idx(m.visible_map, ...loc) > 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+function diffuse(m) {
+    let diff = undefined;
+
+    let min_allies = neighbor_score(m, m.me.x, m.me.y);
+    for (let opt of open_neighbors2(m, m.me.x, m.me.y)) {
+        let count = neighbor_score(m, ...opt);
+        if (count < min_allies) {
+            min_allies = count;
+            diff = [opt[0] - m.me.x, opt[1] - m.me.y];
+        }
+    }
+    if (diff !== undefined) {
+        if (idx(m.karbonite_map, m.me.x + diff[0], m.me.y + diff[1]) || idx(m.fuel_map, m.me.x + diff[0], m.me.y + diff[1]))
+            return;
+        return m.move(...diff);
     }
 }
 

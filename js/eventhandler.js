@@ -37,7 +37,8 @@ export class EventHandler {
                     );
                     if (distance < min_distance) {
                         min_distance = distance;
-                        best_a_id = a_id;
+                        if (best_a_id === undefined || this.random() > 0.25)
+                            best_a_id = a_id;
                     }
                 }
             }

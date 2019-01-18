@@ -21,7 +21,7 @@ export class Pathfinder {
             return o;
         }
         let next = this.path[this.path.length - 1];
-        if (m.fuel <= (m.stats.FUEL_PER_MOVE * dis(m.me.x, m.me.y, ...next) * 30)) {
+        if (m.fuel < m.stats.FUEL_PER_MOVE * dis(m.me.x, m.me.y, ...next)) {
             o.wait = true;
             return o;
         }

@@ -70,14 +70,23 @@ function initialize_queue(m) {
 }
 
 function determine_mission(m) {
+    let prev_mission = m.mission;
     if (m.visible_enemies.length > 0) {
-        if (m.mission !== constants.DEFEND) {
-            m.log("I'm under attacked!");
-        }
         m.mission = constants.DEFEND;
+        if (prev_mission !== constants.DEFEND) {
+            m.log("I'm under attack!");
+        }
     }
     else {
         m.mission = constants.NEUTRAL;
+        while (!m.queue.isEmpty()) {
+            let unit = m.queue.peek();
+            if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
+                m.queue.pop();
+            } else {
+                break;
+            }
+        }
     }
 }
 
