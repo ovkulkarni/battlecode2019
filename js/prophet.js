@@ -1,7 +1,7 @@
 import { Pathfinder } from './pathfinder.js';
-import { prophet_pred, attack_pred } from "./predicates.js";
+import { prophet_pred, attack_pred, around_pred } from "./predicates.js";
 import { constants } from './constants.js';
-import { calcOpposite, dis } from './helpers.js';
+import { calcOpposite, dis, create_augmented_obj } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
 
 export function runProphet(m) {
@@ -45,10 +45,10 @@ export function runProphet(m) {
     if (m.mission === constants.HORDE) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
-                m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
+                //m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
                 let pf = new Pathfinder(create_augmented_obj(m, m.spawn_castle.x, m.spawn_castle.y), attack_pred(m, m.horde_loc.x, m.horde_loc.y));
                 if (pf.path === undefined) {
-                    m.log(`NO PATH FROM CASTLE TO OPPOSITE :(`);
+                    //m.log(`NO PATH FROM CASTLE TO OPPOSITE :(`);
                     return;
                 }
                 m.intermediate_point = pf.path[Math.floor(pf.path.length / 2)];

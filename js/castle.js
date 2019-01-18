@@ -247,7 +247,7 @@ function new_event(m) {
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
-                    m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 2));
+                    m.queue.push(Unit(SPECS.CRUSADER, constants.HORDE, 2));
                 }
                 break;
             case constants.BUILD_CHURCH:
