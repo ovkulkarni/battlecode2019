@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash } from './helpers.js';
+import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
@@ -52,8 +52,7 @@ export function runCastle(m) {
             //m.log(`SENDING TASK ${unit.task}`);
             switch (unit.task) {
                 case constants.HORDE:
-                    m.current_horde++;
-                    break;
+                    m.current_horde++; break;
             }
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
@@ -81,18 +80,23 @@ function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        const current_defenders = m.visible_allies.length;
+        const current_defenders = visible_ally_attackers(m).length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
         while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
-            //m.log("QUEUE DEFENDER!");
             m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
+    // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
-        //m.log("QUEUE PILGRIM!");
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
+    }
+    // restore defense
+    const current_defenders = visible_ally_attackers(m).length - m.current_horde;
+    const desired_defenders = 4;
+    while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
     }
 }
 
@@ -122,7 +126,7 @@ function handle_horde(m) {
         m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)}`);
 
         //todo only send as far as u have to
-        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 20*20);
+        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 20 * 20);
         m.max_horde_size += 2;
         m.current_horde = 0;
 
@@ -136,20 +140,20 @@ function determine_mission(m) {
     if (m.visible_enemies.length > 0) {
         m.mission = constants.DEFEND;
         if (prev_mission !== constants.DEFEND) {
-            m.log("I'm under attack!");
+            m.log(`I'm under attack! (${m.me.turn})`);
             m.my_pause = true;
             m.castleTalk(encode8("pause"));
         }
     }
     else {
         m.mission = constants.NEUTRAL;
+        if (prev_mission !== constants.NEUTRAL)
+            m.log(`NEUTRAL (${m.me.turn})`);
         while (!m.queue.isEmpty()) {
             let unit = m.queue.peek();
             if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
                 m.queue.pop();
-            } else {
-                break;
-            }
+            } else { break; }
         }
         if (m.my_pause) {
             m.castleTalk(encode8("unpause"));
@@ -252,7 +256,7 @@ function new_event(m) {
                 break;
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
-                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY));
+                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY - 1));
                 break;
             case constants.CLEAR_QUEUE:
                 break;

@@ -145,3 +145,8 @@ export function centricity(m, x, y) {
 export function current_stash(m) {
     return 101;
 }
+
+export function visible_ally_attackers(m) {
+    return m.visible_allies
+        .filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CASTLE && r.unit !== SPECS.CHURCH);
+}
