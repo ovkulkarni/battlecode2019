@@ -122,7 +122,7 @@ function handle_horde(m) {
         m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)}`);
 
         //todo only send as far as u have to
-        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 100);
+        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 20*20);
         m.max_horde_size += 2;
         m.current_horde = 0;
 

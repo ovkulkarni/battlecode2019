@@ -59,7 +59,7 @@ function neighbor_score(m, x, y) {
     let count = 0;
     for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
-        if (idx(m.visible_map, ...loc) > 0) {
+        if (dist === 1 && idx(m.visible_map, ...loc) > 0) {   
             count++;
         }
     }
