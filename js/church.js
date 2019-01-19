@@ -15,8 +15,10 @@ export function runChurch(m) {
     }
 
     // first turn logic
-    if (m.me.turn === 5 || m.queue.isEmpty()) {
+    if (!m.send_complete && (m.me.turn === 5 || m.queue.isEmpty())) {
+        m.log("[CHURCH] Sending Event_complete");
         m.castleTalk(encode8("event_complete"));
+        m.send_complete = true
     }
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
