@@ -2,7 +2,7 @@ import { Pathfinder } from './pathfinder.js';
 import { attack_pred, around_pred, prophet_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
-import { wander } from './analyzemap.js';
+import { wander, compact_horde } from './analyzemap.js';
 import { decode16, encode8 } from './communication.js';
 
 export function runPreacher(m) {
@@ -87,17 +87,20 @@ export function runPreacher(m) {
                 } else {
                     m.mission = constants.RETURN;
                     m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
-                    let message = encode8("castle_killed", m.sending_castle);
-                    m.castleTalk(message)
-                    m.begin_horde = undefined;
-                    m.intermediate_point = undefined;
-                    m.on_intermediate = undefined;
-                    m.started = undefined;
-                    m.sending_castle = undefined;
+                    if (dis(m.horde_loc.x, m.horde_loc.y, m.me.x, m.me.y) <= m.stats.VISION_RADIUS && m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
+                        let message = encode8("castle_killed", m.sending_castle);
+                        m.castleTalk(message)
+                    }
+                    delete m.begin_horde;
+                    delete m.intermediate_point;
+                    delete m.on_intermediate;
+                    delete m.started;
                     return;
                 }
             case constants.RETURN:
                 m.mission = constants.HORDE;
+                m.castleTalk(encode8("came_back", m.sending_castle));
+                delete m.sending_castle;
                 return;
             case constants.DEFEND:
                 return;
@@ -108,6 +111,9 @@ export function runPreacher(m) {
                 return;
         }
     }
+    compact_horde(m, next);
+    if (idx(m.visible_map, ...next.res) >= 1 || !passable_loc(m, ...next.res))
+        return;
     return m.move(...next.diff);
 
 }
