@@ -131,6 +131,7 @@ export function runPilgrim(m) {
                     }
                     else if (nextt.fail) {
                         m.log("PILGRIM CANNOT MOVE BACK");
+                        m.pathfinder.recalculate(m);
                         return true;
                     }
                     else if (nextt.wait) {
@@ -186,15 +187,16 @@ export function runPilgrim(m) {
         }
     }
     else if (next.wait) {
-        //m.log("WAITING");
+        m.log("WAITING");
         return;
     }
     else if (next.fail) {
-        //m.log("FAILED TO MOVE");
+        m.log("FAILED TO MOVE");
+        m.pathfinder.recalculate(m);
         return;
     }
     else {
-        //m.log("PILGRIM MOVING: " + next.res);
+        m.log("PILGRIM MOVING: " + next.res);
         return m.move(...next.diff);
     }
 }

@@ -45,6 +45,10 @@ export class Pathfinder {
         }
         let result = this.path.pop();
         //m.log("NEXT MOVE: " + result);
+        if(result === undefined) {
+            o.fail = true;
+            return o;
+        }
         o.res = result;
         o.diff = [o.res[0] - m.me.x, o.res[1] - m.me.y];
         return o;
