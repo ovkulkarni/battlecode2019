@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc, getDef } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, getDef, visible_ally_attackers } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
@@ -62,7 +62,7 @@ function update_queue(m) {
             if (m.karbonite >= unit_cost(d)[0]) {
                 m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
                 break;
-            }  
+            }
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
@@ -82,7 +82,7 @@ function initialize_queue(m) {
 
 function determine_mission(m) {
     let prev_mission = m.mission;
-    if (m.visible_enemies.length > 0) {
+    if (m.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM).length + 2 >= visible_ally_attackers(m).length) {
         m.mission = constants.DEFEND;
         if (prev_mission !== constants.DEFEND) {
             m.log("I'm under attack!");

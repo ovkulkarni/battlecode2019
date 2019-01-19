@@ -77,7 +77,7 @@ export class EventHandler {
                     m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
                     ...candidate
                 );
-                if (dist <= 25)
+                if (dist <= 49)
                     too_close = true;
                 else if (min_dist === undefined || dist < min_dist) {
                     min_dist_castle_id = a_id;
@@ -90,7 +90,7 @@ export class EventHandler {
                     m.friendly_churches[a_id].x, m.friendly_churches[a_id].y,
                     ...candidate
                 );
-                if (dist <= 25)
+                if (dist <= 49)
                     too_close = true;
             }
             //compare distance to enemy castles
@@ -99,7 +99,7 @@ export class EventHandler {
                     m.enemy_castles[a_id].x, m.enemy_castles[a_id].y,
                     ...candidate
                 );
-                if (dist <= 100)
+                if (dist <= 225)
                     too_close = true;
             }
             if (too_close) continue;
