@@ -92,7 +92,7 @@ function determine_mission(m) {
             let unit = m.queue.peek();
             if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
                 m.queue.pop();
-                
+
             } else {
                 break;
             }

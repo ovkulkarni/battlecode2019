@@ -3,6 +3,7 @@ import { Pathfinder } from './pathfinder.js';
 import { karbonite_pred, around_pred, fuel_pred, karbonite_pred_church, fuel_pred_church } from './predicates.js';
 import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
+//import { get_symmetry } from './analyzemap.js';
 import { encode8, decode8 } from './communication.js';
 import { open_neighbors2, idx, dis } from './helpers.js';
 
@@ -13,6 +14,7 @@ export function runPilgrim(m) {
         //m.log("INITIAL MISSION: " + m.mission);
         switch (m.mission) {
             case constants.GATHER:
+                /*
                 if (m.fuel < constants.MIN_FUEL) {
                     m.mission = constants.GATHER_FUEL;
                     m.pathfinder = new Pathfinder(m, fuel_pred(m));
@@ -31,6 +33,9 @@ export function runPilgrim(m) {
                         m.mission = constants.GATHER_KARB;
                     }
                 }
+                */
+                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+                m.mission = constants.GATHER_KARB;
                 break;
             case constants.DEPOSIT:
                 m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
@@ -127,6 +132,14 @@ export function runPilgrim(m) {
                         //m.log("HERE");
                         m.mission === constants.GATHER;
                         return m.give(m.pathfinder.final_loc[0]-m.me.x, m.pathfinder.final_loc[1]-m.me.y, m.me.karbonite, m.me.fuel);
+                    }
+                    else if(nextt.fail) {
+                        m.log("PILGRIM CANNOT MOVE BACK");
+                        return true;
+                    }
+                    else if(nextt.wait) {
+                        m.log("PILGRIM WAITING TO MOVE");
+                        return true;
                     }
                     else {
                         return m.move(...nextt.diff);

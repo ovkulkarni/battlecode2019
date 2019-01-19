@@ -134,3 +134,40 @@ export function horde(m) {
         }
     }
 }
+// CRUDE IMPLEMENTATION
+export function karbChurchGroup(m) {
+    var karbLocs = [];
+    for(let i = 0; i < this.karbonite_map.length; i++) {
+        for(let j = 0; j < this.karbonite_map.length; j++) {
+            if(idx(this.karbonite_map, i, j)) {
+                karbLocs.push([i,j]);
+            }
+        }
+    }
+    let MAX_DIS = 200;
+    var finLoc = [];
+    while(karbLocs.length !== 0) {
+        var compLoc = [];
+        compLoc.push(karbLocs[0]);
+        for(let i = 0; i < karbLocs.length; i++) {
+            var tempLoc = karbLocs[i];
+            let flag = false;
+            for(let j = 0; j < compLoc.length; j++) {
+                if(dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
+                    flag = true;
+                    break;
+                }
+            }
+            if(flag) {
+                compLoc.push(tempLoc);
+                karbLocs.splice(i,1);
+                i--; // SHIFT BACK INDEX
+            }
+        }
+    }
+    var answer = [];
+    for(let i = 0; i < finLoc.length; i++) {
+        answer.push(finLoc[i][0]);
+    }
+    return answer;
+}
