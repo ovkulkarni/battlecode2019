@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { karbonite_pred, around_pred, fuel_pred, karbonite_pred_church, fuel_pred_church } from './predicates.js';
+import { karbonite_pred, around_pred, fuel_pred, exact_pred } from './predicates.js';
 import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
 //import { get_symmetry } from './analyzemap.js';
@@ -45,17 +45,14 @@ export function runPilgrim(m) {
                 m.pathfinder = new Pathfinder(m, karbonite_pred(m));
                 m.initial_mission = m.mission;
                 break;
-            case constants.CHURCH_KARB:
+            case constants.CHURCH:
                 m.castleTalk(encode8("watch_me"));
-                m.pathfinder = new Pathfinder(m, karbonite_pred_church(m, m.me.x, m.me.y));
+                m.log("CHURCH PILGRIM   CHURCH: " + m.church);
+                m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
                 break;
             case constants.GATHER_FUEL:
                 m.pathfinder = new Pathfinder(m, fuel_pred(m));
                 m.initial_mission = m.mission;
-                break;
-            case constants.CHURCH_FUEL:
-                m.castleTalk(encode8("watch_me"));
-                m.pathfinder = new Pathfinder(m, fuel_pred_church(m, m.me.x, m.me.y));
                 break;
             default:
                 m.log("ERROR SHOULDNT HAPPEN");
@@ -78,32 +75,31 @@ export function runPilgrim(m) {
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {
-        if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH_KARB) || (m.mission === constants.CHURCH_FUEL)) {
+        if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH)) {
             if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
-                if (m.mission === constants.CHURCH_KARB || m.mission === constants.CHURCH_FUEL) {
-                    if (m.church === undefined) {
+                if (m.mission === constants.CHURCH) {
+                    if (m.church_loc === undefined) {
                         let dir = open_neighbors2(m, m.me.x, m.me.y);
                         if (dir.length === 0) {
                             //m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
-                            m.mission = (m.mission === constants.CHURCH_KARB) ? constants.GATHER_KARB : constants.GATHER_FUEL;
                             m.mission = constants.DEPOSIT;
                             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
                             m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
                             return;
                         }
                         let dr = dir[0];
-                        m.church = [dr[0] - m.me.x, dr[1] - m.me.y];
+                        m.church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
                         if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
-                            //m.log("BUILDING CHURCH: " + dr);
-                            return m.buildUnit(SPECS.CHURCH, ...m.church);
+                            m.log("BUILDING CHURCH: " + dr);
+                            return m.buildUnit(SPECS.CHURCH, ...m.church_loc);
                         }
-                        m.church = undefined;
+                        m.church_loc = undefined;
                         //m.log("NOT ENOUGH RESOURCES");
                         // Tell Castle to Send more Harvesters if Feasable
                         return;
                     }
-                    //m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
-                    return m.give(...m.church, m.me.karbonite, m.me.fuel);
+                    m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
+                    return m.give(...m.church_loc, m.me.karbonite, m.me.fuel);
                 }
                 else {
                     //m.log("GOING BACK");

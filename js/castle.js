@@ -2,7 +2,7 @@ import { SPECS } from 'battlecode';
 import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers, getDef } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs, find_optimal_churches } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 import { EventHandler } from './eventhandler.js';
 
@@ -21,6 +21,7 @@ export function runCastle(m) {
     send_castle_coord(m);
 
     if (m.me.turn === 3) {
+        m.karb_groups = find_optimal_churches(m);
         create_event_handler(m);
     }
     determine_mission(m);
@@ -62,9 +63,15 @@ export function runCastle(m) {
                 case constants.HORDE:
                     m.current_horde++; break;
             }
-            let msg = encode16("task", unit.task);
+            let msg = 0;
+            if(unit.task === constants.CHURCH) {
+                m.log("UNIT LOC: " + unit.loc);
+                msg = encode16("build_church", ...unit.loc);
+            }
+            else {
+                msg = encode16("task", unit.task);
+            }
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
-
             result = m.buildUnit(unit.unit, ...build_loc);
         } else {
             //m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
@@ -294,7 +301,7 @@ function new_event(m) {
                 break;
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
-                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH_KARB, constants.EMERGENCY_PRIORITY - 1));
+                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 1, m.event.where));
                 break;
             case constants.CLEAR_QUEUE:
                 break;
@@ -368,8 +375,8 @@ export function check_horde(m) {
     return m.current_horde >= m.max_horde_size;
 }
 
-function Unit(unit, task, priority) {
-    return { unit: unit, task: task, priority: priority };
+function Unit(unit, task, priority, loc) {
+    return { unit: unit, task: task, priority: priority, loc:loc }
 }
 
 export function unit_cost(b) {

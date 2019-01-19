@@ -23,8 +23,7 @@ let task_constant_bins = [
         "GATHER",
         "GATHER_FUEL",
         "GATHER_KARB",
-        "CHURCH_KARB",
-        "CHURCH_FUEL",
+        "CHURCH",
         "DEPOSIT",
         "NEUTRAL"
     ],

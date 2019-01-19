@@ -17,10 +17,25 @@ export function get_symmetry(m) {
                 }
             }
         }
-        if (horizontal)
+        if (horizontal) {
             return constants.HORIZONTAL;
-        else
+        }
+        else {
             return constants.VERTICAL;
+        }
+    }
+}
+
+export function on_ally_side(m, xx, yy, x, y) {
+    let sym = get_symmetry(m);
+    let half = Math.floor(m.karbonite_map.length/2);
+    if(sym === constants.HORIZONTAL) {
+        // x stays same
+        return !(y < half)^(m.me.y < half);
+    }
+    else {
+        // y stays same
+        return !(x < half)^(m.me.x < half);
     }
 }
 
@@ -78,6 +93,98 @@ export function get_visible_base(m) {
 }
 
 export function find_optimal_churches(m) {
+    /*
+    Set karbLocs = new Set();
+    for(let i = 0; i < m.karbonite_map.length; i++) {
+        for(let j = 0; j < m.karbonite_map.length; j++) {
+            if(idx(m.karbonite_map, i, j)) {
+                karbLocs.add(i + " " + j);
+            }
+        }
+    }
+    let MAX_DIS = 200;
+    var finLoc = [];
+    while(karbLocs.size !== 0) {
+        var compLoc = [];
+        compLoc.push(karbLocs[0]);
+        for(let i = 0; i < karbLocs.length; i++) {
+            var tempLoc = karbLocs[i];
+            let flag = false;
+            for(let j = 0; j < compLoc.length; j++) {
+                if(dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
+                    flag = true;
+                    break;
+                }
+            }
+            if(flag) {
+                compLoc.push(tempLoc);
+                karbLocs.splice(i,1);
+                i--; // SHIFT BACK INDEX
+            }
+        }
+    }
+    var answer = [];
+    for(let i = 0; i < finLoc.length; i++) {
+        answer.push(finLoc[i][0]);
+    }
+    return answer.sort((a, b) => dis(...a, m.me.x, m.me.y) - dis(...b, m.me.x, m.me.y));
+    */
+    let width = m.karbonite_map.length;
+    let squareLen = Math.floor(width/8);
+    //m.log("SQUARE LENGTH: " + squareLen);
+    let numSquares = Math.ceil(width/squareLen);
+    //m.log("NUM SQUARES: " + numSquares);
+    var matrix = []; // Marix of the  fuel/karb locations in each square
+    for(let i = 0; i < numSquares; i++) {
+        matrix.push([]);
+        for(let j = 0; j < numSquares; j++) {
+            matrix[i].push([]);
+        }
+    }
+    let goodRegions = [];
+    for(let i = 0; i < m.karbonite_map.length; i++) {
+        for(let j = 0; j < m.karbonite_map.length; j++) {
+            if(idx(m.karbonite_map, i, j) || idx(m.fuel_map, i, j)) {
+                let numCol = Math.floor(i/squareLen);
+                let numRow = Math.floor(j/squareLen);
+                //m.log("KARB/FUEL FOUND IN SQUARE: " + numCol + " " + numRow);
+                matrix[numCol][numRow].push([i,j]);
+                //m.log("LENGTH OF SQUARE: " + matrix[numCol][numRow].length);
+                if(matrix[numCol][numRow].length === 2) {
+                    goodRegions.push([numCol,numRow]);
+                    //m.log("PUSHED REGION: " + numCol + " " + numRow);
+                }
+            }
+        }
+    }
+    var answer = [];
+    var friendlies = m.friendly_castles;
+    for(let i = 0; i < goodRegions.length; i++) {
+        var r = goodRegions[i][0];
+        var c = goodRegions[i][1];
+        let flag = true; // Determines if it is far enough from the castle
+        let flag2 = false; // Is some of this on our side?
+        for(let j = 0; j < matrix[r][c].length; j++) {
+            for(let a_id in m.friendly_castles) {
+                if(dis(...matrix[r][c][j], m.friendly_castles[a_id].x, m.friendly_castles[a_id].y) <= 50) {
+                    flag = false;
+                    break;
+                }
+                if(on_ally_side(m, m.friendly_castles[a_id].x, m.friendly_castles[a_id].y, ...matrix[r][c][j])) {
+                    flag2 = true;
+                }
+            }
+            if(flag === false) break;
+        }
+        if(flag && flag2) answer.push(matrix[r][c]);
+    }
+    answer = answer.sort((a, b) => dis(...a[0], m.me.x, m.me.y) - dis(...b[0], m.me.x, m.me.y));
+    m.log("PRINTING THE CHURCH LOCATIONS")
+    for(let i = 0; i < answer.length; i++) {
+        m.log((i+1) + ": " + answer[i]);
+    }
+    m.log("FINISHED PRINTING CHURCH LOCATIONS");
+    return answer;
 
 }
 
@@ -132,66 +239,5 @@ export function horde(m) {
         else {
             m.pathfinder = new Pathfinder(m, around_pred(...m.intermediate_point, 1, 2));
         }
-    }
-}
-// CRUDE IMPLEMENTATION
-export function karbChurchGroup(m) {
-    var karbLocs = [];
-    for (let i = 0; i < this.karbonite_map.length; i++) {
-        for (let j = 0; j < this.karbonite_map.length; j++) {
-            if (idx(this.karbonite_map, i, j)) {
-                karbLocs.push([i, j]);
-            }
-        }
-    }
-    let MAX_DIS = 200;
-    var finLoc = [];
-    while (karbLocs.length !== 0) {
-        var compLoc = [];
-        compLoc.push(karbLocs[0]);
-        for (let i = 0; i < karbLocs.length; i++) {
-            var tempLoc = karbLocs[i];
-            let flag = false;
-            for (let j = 0; j < compLoc.length; j++) {
-                if (dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag) {
-                compLoc.push(tempLoc);
-                karbLocs.splice(i, 1);
-                i--; // SHIFT BACK INDEX
-            }
-        }
-    }
-    var answer = [];
-    for (let i = 0; i < finLoc.length; i++) {
-        answer.push(finLoc[i][0]);
-    }
-    return answer;
-}
-
-export function front_back_ratio(m) {
-    if (!m.started || m.on_intermediate || m.horde_loc === undefined || m.mission !== constants.HORDE) {
-        return -1;
-    }
-    let count_front = 1;
-    let count_back = 1;
-    for (let r of visible_ally_attackers(m))
-        if (dis(r.x, r.y, m.horde_loc.x, m.horde_loc.y) < dis(m.me.x, m.me.y, m.horde_loc.x, m.horde_loc.y)) {
-            count_front++;
-        }
-        else {
-            count_back++;
-        }
-    return count_front / count_back;
-}
-
-
-export function compact_horde(m, next) {
-    let fbr = front_back_ratio(m);
-    if (0 <= fbr && fbr < 1) {
-        next.diff = slow_down(m, next.diff);
     }
 }

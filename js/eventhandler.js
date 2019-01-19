@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { dis } from "./helpers.js";
+import { dis, idx } from "./helpers.js";
 
 export var mask = 0xffffffff;
 
@@ -18,9 +18,12 @@ export class EventHandler {
         let event;
         if ((this.past.length - 3) % 2 === 0) {
             event = clear;
+        } else if ((this.past.length - 2) % 5 === 0 && church !== undefined) {
+            m.karb_groups.shift();
+            event = church;
         } else {
             event = church;
-        } 
+        }
         this.handle_chosen_event(m, event);
         this.past.push(event);
         return event;
@@ -62,7 +65,21 @@ export class EventHandler {
     }
     next_church(m) {
         let who = Math.min(...Object.keys(m.friendly_castles));
-        return Event(who, constants.BUILD_CHURCH, undefined, 50);
+        let where = m.karb_groups[0];
+        m.log("LIST FOR BUILD_CHURCH: " + where);
+        if(where === undefined) {
+            //m.log("OUT OF OPTIONS");
+            // TODO: What to do?
+            return undefined;
+        }
+        else {
+            for(let i = 0; i < where.length; i++) {
+                if(idx(m.karbonite_map, ...where[i])) {
+                    return Event(who, constants.BUILD_CHURCH, where[i], 50); // Set it to a Karbonite Location
+                }
+            }
+        }
+        return Event(who, constants.BUILD_CHURCH, where[0], 50); // No Karbonite Locations --> set it to fuel loc
     }
     random() {
         this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & mask;

@@ -111,6 +111,10 @@ export function get_mission(m) {
             //m.log(`GOT MISSION ${message.args[0]} FROM ${r.id}`);
             if (message.command === "task")
                 return message.args[0];
+            if(message.command === "build_church") {
+                m.church = message.args;
+                return constants.CHURCH;
+            }
         }
     }
 }
