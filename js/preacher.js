@@ -2,7 +2,7 @@ import { Pathfinder } from './pathfinder.js';
 import { attack_pred, around_pred, prophet_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
-import { wander, compact_horde } from './analyzemap.js';
+import { wander, compact_horde, optimal_attack_diff } from './analyzemap.js';
 import { decode16, encode8 } from './communication.js';
 
 export function runPreacher(m) {
@@ -39,12 +39,9 @@ export function runPreacher(m) {
             }
         }
     }
-    for (let r of m.visible_enemies) {
-        let dist = dis(m.me.x, m.me.y, r.x, r.y);
-        if (shouldAttack(m, r.x - m.me.x, r.y - m.me.y) && m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            return m.attack(r.x - m.me.x, r.y - m.me.y);
-        }
-    }
+    let att = optimal_attack_diff(m);
+    if (att)
+        return m.attack(...att);
     if (m.mission === constants.HORDE) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
@@ -116,25 +113,4 @@ export function runPreacher(m) {
         return;
     return m.move(...next.diff);
 
-}
-
-export function shouldAttack(m, x, y) {
-
-    let count = 0
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if (passable_loc(m, m.me.x + i + x, m.me.y + j + y)) {
-                let id = idx(m.visible_map, m.me.x + i + x, m.me.y + j + y);
-                if (id !== 0 && id !== -1) {
-                    if (m.getRobot(id).team === m.me.team) {
-                        count = count - 1;
-                    }
-                    else {
-                        count = count + 1;
-                    }
-                }
-            }
-        }
-    }
-    return count > 0;
 }

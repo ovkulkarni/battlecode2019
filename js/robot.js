@@ -13,6 +13,7 @@ class MyRobot extends BCAbstractRobot {
         this.visible_map = this.getVisibleRobotMap();
         this.visible_robots = this.getVisibleRobots();
         this.visible_others = this.visible_robots.filter(r => this.me.id !== r.id);
+        this.visible_others.map(r => r.dist = dis(r.x, r.y, this.me.x, this.me.y))
         if (this.me.unit === SPECS.CASTLE) {
             this.visible_allies = this.visible_others.filter(r => r.team === this.me.team);
             this.visible_enemies = this.visible_others.filter(r => r.team !== this.me.team);
@@ -49,7 +50,7 @@ class MyRobot extends BCAbstractRobot {
                 ret = runProphet(this);
                 break;
         }
-        if(ret === true && this.me.unit === SPECS.PILGRIM) {
+        if (ret === true && this.me.unit === SPECS.PILGRIM) {
             return;
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
@@ -63,7 +64,7 @@ function neighbor_score(m, x, y) {
     let count = 0;
     for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
-        if (dist === 1 && idx(m.visible_map, ...loc) > 0) {   
+        if (dist === 1 && idx(m.visible_map, ...loc) > 0) {
             count++;
         }
     }

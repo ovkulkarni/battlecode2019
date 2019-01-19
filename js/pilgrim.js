@@ -110,8 +110,8 @@ export function runPilgrim(m) {
                         let ally = m.visible_allies[i];
                         if (ally.unit <= 1) {
                             foundDrop = true;
-                            if (dis(ally.x, ally.y, m.me.x, m.me.y) < minr) {
-                                minr = dis(ally.x, ally.y, m.me.x, m.me.y);
+                            if (ally.dist < minr) {
+                                minr = ally.dist;
                                 //m.log("FOUND CLOSER DROPOFF: X:" + ally.x + "Y: " + ally.y + "UNIT: " + ally.unit);
                                 m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
                                 m.pathfinder.final_loc = [ally.x, ally.y];
@@ -124,17 +124,17 @@ export function runPilgrim(m) {
                         m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
                     }
                     let nextt = m.pathfinder.next_loc(m);
-                    if(nextt.fin) {
+                    if (nextt.fin) {
                         //m.log("HERE");
                         m.mission === constants.GATHER;
-                        return m.give(m.pathfinder.final_loc[0]-m.me.x, m.pathfinder.final_loc[1]-m.me.y, m.me.karbonite, m.me.fuel);
+                        return m.give(m.pathfinder.final_loc[0] - m.me.x, m.pathfinder.final_loc[1] - m.me.y, m.me.karbonite, m.me.fuel);
                     }
-                    else if(nextt.fail) {
-                        //m.log("PILGRIM CANNOT MOVE BACK");
+                    else if (nextt.fail) {
+                        m.log("PILGRIM CANNOT MOVE BACK");
                         return true;
                     }
-                    else if(nextt.wait) {
-                        //m.log("PILGRIM WAITING TO MOVE");
+                    else if (nextt.wait) {
+                        m.log("PILGRIM WAITING TO MOVE");
                         return true;
                     }
                     else {

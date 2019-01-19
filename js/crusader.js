@@ -2,7 +2,7 @@ import { Pathfinder } from './pathfinder.js';
 import { attack_pred, around_pred, prophet_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, get_mission, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
-import { wander, compact_horde } from './analyzemap.js';
+import { wander, compact_horde, optimal_attack_diff } from './analyzemap.js';
 import { decode16, encode8 } from './communication.js';
 
 export function runCrusader(m) {
@@ -36,13 +36,9 @@ export function runCrusader(m) {
             }
         }
     }
-    for (let r of m.visible_enemies) {
-        let dist = dis(m.me.x, m.me.y, r.x, r.y);
-        if (m.stats.ATTACK_RADIUS[0] < dist && dist < m.stats.ATTACK_RADIUS[1]) {
-            //m.log(`ATTACKING: (${r.x}, ${r.y})`);
-            return m.attack(r.x - m.me.x, r.y - m.me.y);
-        }
-    }
+    let att = optimal_attack_diff(m);
+    if (att)
+        return m.attack(...att);
     if (m.mission === constants.HORDE) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {

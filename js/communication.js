@@ -4,7 +4,7 @@ const commands8 = [
     command("castle_coord", [6]),
     command("event_complete", []),
     command("castle_killed", [2]),
-    command("came_back", [2]),
+    command("came_back", []),
     command("watch_me", []),
     command("pause", []),
     command("unpause", [])

@@ -2,7 +2,7 @@ import { SPECS } from 'battlecode';
 import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers, getDef } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs, find_optimal_churches } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs, find_optimal_churches, optimal_attack_diff } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 import { EventHandler } from './eventhandler.js';
 
@@ -31,12 +31,9 @@ export function runCastle(m) {
         initialize_queue(m);
     }
 
-    for (let r of m.visible_enemies) {
-        let dist = dis(m.me.x, m.me.y, r.x, r.y);
-        if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            return m.attack(r.x - m.me.x, r.y - m.me.y);
-        }
-    }
+    let att = optimal_attack_diff(m);
+    if (att)
+        return m.attack(...att);
 
     if (handle_horde(m)) {
         return;
@@ -214,7 +211,7 @@ function handle_castle_talk(m) {
                     m.paused = false;
                     break;
                 case "came_back":
-                    if (parseInt(Object.keys(m.friendly_castles).indexOf(`${message.args[0]}`)) === m.me.id)
+                    if (r.dist <= 36)
                         m.current_horde++;
                     break;
             }
@@ -297,7 +294,7 @@ function new_event(m) {
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
-                    m.queue.push(Unit(SPECS.PROPHET, constants.HORDE, 2));
+                    m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 2));
                 }
                 break;
             case constants.BUILD_CHURCH:

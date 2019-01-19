@@ -4,7 +4,7 @@ import { prophet_pred, attack_pred, around_pred, lattice_pred } from "./predicat
 import { constants } from './constants.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
-import { compact_horde } from './analyzemap.js';
+import { compact_horde, optimal_attack_diff } from './analyzemap.js';
 
 export function runProphet(m) {
     //m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
@@ -37,13 +37,9 @@ export function runProphet(m) {
             }
         }
     }
-    for (let r of m.visible_enemies) {
-        let dist = dis(m.me.x, m.me.y, r.x, r.y);
-        if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
-            //m.log(`ATTACKING: (${r.x}, ${r.y})`);
-            return m.attack(r.x - m.me.x, r.y - m.me.y);
-        }
-    }
+    let att = optimal_attack_diff(m);
+    if (att)
+        return m.attack(...att);
     if (m.mission === constants.HORDE) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
@@ -87,12 +83,12 @@ export function runProphet(m) {
                         delete m.intermediate_point;
                         delete m.on_intermediate;
                         delete m.started;
+                        delete m.sending_castle;
                         return;
                     }
                 case constants.RETURN:
                     m.mission = constants.HORDE;
-                    m.castleTalk(encode8("came_back", m.sending_castle));
-                    delete m.sending_castle;
+                    m.castleTalk(encode8("came_back"));
                     return;
                 default:
                     m.mission = constants.DEFEND;

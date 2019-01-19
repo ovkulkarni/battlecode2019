@@ -226,3 +226,52 @@ export function compact_horde(m, next) {
         next.res = [m.me.x + next.diff[0], m.me.y + next.diff[1]];
     }
 }
+
+export function optimal_attack_diff(m) {
+    if (m.visible_enemies.length === 0) return;
+    switch (m.unit) {
+        case SPECS.PREACHER:
+            let castles = m.visible_enemies.filter(r => r.unit === SPECS.CASTLE);
+            if (castles.length > 0 && m.stats.ATTACK_RADIUS[0] <= castles[0].dist && castles[0].dist <= m.stats.ATTACK_RADIUS[1]) {
+                return [castles[0].x - m.me.x, castles[0].y - m.me.y];
+            }
+            let max_diff = 0;
+            let optimal;
+            for (let x = m.me.x - m.stats.ATTACK_RADIUS[1]; x < m.me.x + m.stats.ATTACK_RADIUS[1]; x++) {
+                for (let y = m.me.y - m.stats.ATTACK_RADIUS[1]; y < m.me.y + m.stats.ATTACK_RADIUS[1]; y++) {
+                    let d = dis(x, y, m.me.x, m.me.y);
+                    let diff = 0;
+                    if (m.stats.ATTACK_RADIUS[0] > d || m.stats.ATTACK_RADIUS[1] < d)
+                        continue;
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            if (passable_loc(m, x + i, y + j)) {
+                                let id = idx(m.visible_map, x + i, y + j);
+                                if (id > 0) {
+                                    if (m.getRobot(id).team === m.me.team) {
+                                        diff--;
+                                    }
+                                    else {
+                                        diff++
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (diff > max_diff) {
+                        max_diff = diff;
+                        optimal = { x: x, y: y }
+                    }
+                }
+            }
+            return [optimal.x - m.me.x, optimal.y - m.me.y];
+        default:
+            let castles_in_vision = m.visible_enemies.filter(r => r.unit === SPECS.CASTLE);
+            if (castles_in_vision.length > 0 && m.stats.ATTACK_RADIUS[0] <= castles_in_vision[0].dist && castles_in_vision[0].dist <= m.stats.ATTACK_RADIUS[1]) {
+                return [castles_in_vision[0].x - m.me.x, castles_in_vision[0].y - m.me.y];
+            }
+            let closest = m.visible_enemies.concat().sort((r1, r2) => r1.dist - r2.dist)[0];
+            if (m.stats.ATTACK_RADIUS[0] <= closest.dist && closest.dist <= m.stats.ATTACK_RADIUS[1])
+                return [closest.x - m.me.x, closest.y - m.me.y];
+    }
+}
