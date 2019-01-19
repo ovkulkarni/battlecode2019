@@ -57,7 +57,7 @@ export function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
+        const defenders = [SPECS.PROPHET];
         for (let d of defenders) {
             if (m.karbonite >= unit_cost(d)[0]) {
                 m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));

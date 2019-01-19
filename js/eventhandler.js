@@ -109,7 +109,6 @@ export class EventHandler {
             }     
         }
         if (who !== undefined && where !== undefined) {
-            m.log(`${who} ${where}`)
             return Event(who - 0, constants.BUILD_CHURCH, where, 50);
         }
         return;
