@@ -7,13 +7,13 @@ const commands8 = [
     command("watch_me", []),
     command("pause", []),
     command("unpause", []),
-    command("received_horde", [])
+    command("came_back", [])
 ]
 
 const commands16 = [
     command("task", [4]),
     command("send_horde", [6, 6, 2]),
-    command("build_church", [6,6])
+    command("build_church", [6, 6])
 ]
 
 function command(name, bit_list) {

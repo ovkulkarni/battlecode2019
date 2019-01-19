@@ -64,7 +64,7 @@ export function runCastle(m) {
                     m.current_horde++; break;
             }
             let msg = 0;
-            if(unit.task === constants.CHURCH) {
+            if (unit.task === constants.CHURCH) {
                 m.log("UNIT LOC: " + unit.loc);
                 msg = encode16("build_church", ...unit.loc);
             }
@@ -215,6 +215,9 @@ function handle_castle_talk(m) {
                     break;
                 case "unpause":
                     m.paused = false;
+                    break;
+                case "came_back":
+                    m.current_horde++;
                     break;
             }
             if (log_recieve)
@@ -377,7 +380,7 @@ export function check_horde(m) {
 }
 
 function Unit(unit, task, priority, loc) {
-    return { unit: unit, task: task, priority: priority, loc:loc }
+    return { unit: unit, task: task, priority: priority, loc: loc }
 }
 
 export function unit_cost(b) {

@@ -32,7 +32,6 @@ export function runProphet(m) {
                 m.horde_loc.y = message.args[1];
                 m.sending_castle = message.args[2];
                 m.begin_horde = true;
-                m.castleTalk(encode8("received_horde", m.sending_castle));
             } else if (message.command === "update_task") {
                 m.mission = message.args[0];
             }
@@ -93,6 +92,7 @@ export function runProphet(m) {
                     }
                 case constants.RETURN:
                     m.mission = constants.HORDE;
+                    m.castleTalk(encode8("came_back"));
                     return;
                 default:
                     m.mission = constants.DEFEND;

@@ -22,7 +22,7 @@ export class EventHandler {
             m.karb_groups.shift();
             event = church;
         } else {
-            event = church;
+            event = horde;
         }
         this.handle_chosen_event(m, event);
         this.past.push(event);
