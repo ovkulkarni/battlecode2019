@@ -49,7 +49,7 @@ export function best_fuel_locs(m) {
 
 export function best_karb_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist = 2 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
+    let max_dist = 3 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let karbonite_locs = [];

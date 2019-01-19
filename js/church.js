@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, random_from, most_central_loc } from './helpers.js';
+import { open_neighbors_diff, random_from, most_central_loc, getDef } from './helpers.js';
 import { encode8, decode8, encode16, decode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
@@ -8,17 +8,20 @@ import { PriorityQueue } from './pqueue.js';
 export function runChurch(m) {
     //m.log(`CHURCH: (${m.me.x}, ${m.me.y})`);
 
-    set_globals(m);
+    if (m.me.turn === 1) {
+        set_globals(m);
+    }
+
     determine_mission(m);
     if (m.me.turn === 1) {
         initialize_queue(m);
     }
 
     // first turn logic
-    if (!m.send_complete && (m.me.turn === 5 || m.queue.isEmpty())) {
+    if (!m.send_complete && m.queue.isEmpty()) {
         m.log("[CHURCH] Sending Event_complete");
         m.castleTalk(encode8("event_complete"));
-        m.send_complete = true
+        m.send_complete = true;
     }
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
@@ -60,17 +63,19 @@ function update_queue(m) {
             m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
-    const visible_pilgrims = m.visible_allies.filter(r => r.unit == SPECS.PILGRIM);
-    const desired_pilgrims = m.karb_locs.length + m.fuel_locs.length;
-    while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 1));
+    const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
+    const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
     }
 }
 
 function initialize_queue(m) {
-    for (let i = 0; i < m.karb_locs.length + m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 1.5));
     m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 3));
+    for (let i = 0; i < m.karb_locs.length - 1; i++)
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
+    for (let i = 0; i < m.fuel_locs.length; i++)
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
 }
 
 function determine_mission(m) {
@@ -87,6 +92,7 @@ function determine_mission(m) {
             let unit = m.queue.peek();
             if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
                 m.queue.pop();
+                
             } else {
                 break;
             }

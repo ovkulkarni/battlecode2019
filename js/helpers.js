@@ -150,3 +150,7 @@ export function visible_ally_attackers(m) {
     return m.visible_allies
         .filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CASTLE && r.unit !== SPECS.CHURCH);
 }
+
+export function getDef(map, key, value) {
+    return map.has(key) ? map.get(key) : value
+}

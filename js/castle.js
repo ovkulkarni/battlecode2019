@@ -1,5 +1,5 @@
 import { SPECS } from 'battlecode';
-import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers } from './helpers.js';
+import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers, getDef } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
 import { best_fuel_locs, best_karb_locs } from './analyzemap.js';
@@ -82,20 +82,20 @@ function update_queue(m) {
     if (m.mission === constants.DEFEND) {
         const current_defenders = visible_ally_attackers(m).length;
         const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
-        while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
+        while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
             m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
         }
     }
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
-    while (m.queue.unit_count.get(SPECS.PILGRIM) + visible_pilgrims < desired_pilgrims) {
+    while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
     const desired_defenders = 4;
-    while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
+    while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
     }
 }
