@@ -16,9 +16,9 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m);
         let event;
-        if ((this.past.length - 3) % 2 === 0) {
+        if (this.past.length > 2 && this.past.length % 2 === 0) {
             event = clear;
-        } else if (church !== undefined) {
+        } else if (this.past.length > 2 && this.past.length % 3 === 0 && church !== undefined) {
             event = church;
         } else {
             event = horde;

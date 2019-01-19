@@ -61,7 +61,7 @@ export function runCastle(m) {
                     m.current_horde++; break;
             }
             let msg = 0;
-            if(unit.task === constants.CHURCH)
+            if (unit.task === constants.CHURCH)
                 msg = encode16("build_church", ...unit.loc);
             else
                 msg = encode16("task", unit.task);
@@ -105,7 +105,7 @@ function update_queue(m) {
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
     const desired_defenders = 4;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
     }
 }
 
@@ -113,7 +113,7 @@ function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
     for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 5));
     for (let i = 0; i < 3; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
 }
@@ -294,7 +294,7 @@ function new_event(m) {
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
-                    m.queue.push(Unit(SPECS.PREACHER, constants.HORDE, 2));
+                    m.queue.push(Unit(SPECS.PROPHET, constants.HORDE, 2));
                 }
                 break;
             case constants.BUILD_CHURCH:

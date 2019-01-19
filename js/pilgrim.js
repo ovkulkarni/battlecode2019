@@ -16,7 +16,7 @@ export function runPilgrim(m) {
     if (m.mission === constants.GATHER) {
         get_pathfinder(m);
     }
-    if(m.pathfinder === undefined) {
+    if (m.pathfinder === undefined) {
         m.log("PATHFINDER DOESNT EXIST");
         m.log("MISSION: " + m.mission);
         get_pathfinder(m);
@@ -117,8 +117,13 @@ export function runPilgrim(m) {
 export function get_start_pathfinder(m) {
     switch (m.mission) {
         case constants.GATHER:
-            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-            m.mission = constants.GATHER_KARB;
+            if (m.fuel > constants.MIN_FUEL) {
+                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+            }
+            else {
+                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            }
+            m.mission = constants.GATHER;
             break;
         case constants.DEPOSIT:
             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
