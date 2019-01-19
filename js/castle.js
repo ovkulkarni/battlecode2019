@@ -21,7 +21,7 @@ export function runCastle(m) {
     send_castle_coord(m);
 
     if (m.me.turn === 3) {
-        m.karb_groups = find_optimal_churches(m);
+        m.resource_groups = find_optimal_churches(m);
         create_event_handler(m);
     }
     determine_mission(m);
@@ -64,13 +64,10 @@ export function runCastle(m) {
                     m.current_horde++; break;
             }
             let msg = 0;
-            if (unit.task === constants.CHURCH) {
-                m.log("UNIT LOC: " + unit.loc);
+            if(unit.task === constants.CHURCH)
                 msg = encode16("build_church", ...unit.loc);
-            }
-            else {
+            else
                 msg = encode16("task", unit.task);
-            }
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             result = m.buildUnit(unit.unit, ...build_loc);
         } else {
@@ -195,7 +192,7 @@ function handle_castle_talk(m) {
                     event_complete_flag = true;
                     if (m.friendly_castles[r.id] === undefined) {
                         m.log("CHURCH LOCATED");
-                        m.friendly_churches[r.id] = m.event.where;
+                        m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
                     }
                     break;
                 case "castle_killed":
@@ -280,7 +277,7 @@ function handle_castle_talk(m) {
 
 function event_complete(m, failed = false) {
     if (m.event !== undefined) {
-        if (m.event.who === m.me.id) {
+        if (m.event.who === m.me.id && !(m.event.what === constants.BUILD_CHURCH && !failed)) {
             m.log("Sending event_complete");
             m.castleTalk(encode8("event_complete"));
         }

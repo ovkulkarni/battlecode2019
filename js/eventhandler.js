@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { dis, idx } from "./helpers.js";
+import { dis, idx, dis_opp_side } from "./helpers.js";
 
 export var mask = 0xffffffff;
 
@@ -18,8 +18,7 @@ export class EventHandler {
         let event;
         if ((this.past.length - 3) % 2 === 0) {
             event = clear;
-        } else if ((this.past.length - 2) % 5 === 0 && church !== undefined) {
-            m.karb_groups.shift();
+        } else if (church !== undefined) {
             event = church;
         } else {
             event = horde;
@@ -64,22 +63,56 @@ export class EventHandler {
         return Event(best_a_id - 0, constants.ATTACK, undefined, 0);
     }
     next_church(m) {
-        let who = Math.min(...Object.keys(m.friendly_castles));
-        let where = m.karb_groups[0];
-        m.log("LIST FOR BUILD_CHURCH: " + where);
-        if (where === undefined) {
-            //m.log("OUT OF OPTIONS");
-            // TODO: What to do?
-            return undefined;
-        }
-        else {
-            for (let i = 0; i < where.length; i++) {
-                if (idx(m.karbonite_map, ...where[i])) {
-                    return Event(who, constants.BUILD_CHURCH, where[i], 50); // Set it to a Karbonite Location
+        let where;
+        let who;
+        for (let group of m.resource_groups) {
+            let group_karbs = group.filter(l => idx(m.karbonite_map, ...l));
+            let candidate = group_karbs.length !== 0 ? group_karbs[0] : group[0];
+            let too_close = false;
+            let min_dist_castle_id;
+            let min_dist;
+            // compare distance to castles
+            for (let a_id in m.friendly_castles) {
+                let dist = dis(
+                    m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
+                    ...candidate
+                );
+                if (dist <= 25)
+                    too_close = true;
+                else if (min_dist === undefined || dist < min_dist) {
+                    min_dist_castle_id = a_id;
+                    min_dist = dist;
                 }
             }
+            //compare distance to churches
+            for (let a_id in m.friendly_churches) {
+                let dist = dis(
+                    m.friendly_churches[a_id].x, m.friendly_churches[a_id].y,
+                    ...candidate
+                );
+                if (dist <= 25)
+                    too_close = true;
+            }
+            //compare distance to enemy castles
+            for (let a_id in m.enemy_castles) {
+                let dist = dis(
+                    m.enemy_castles[a_id].x, m.enemy_castles[a_id].y,
+                    ...candidate
+                );
+                if (dist <= 100)
+                    too_close = true;
+            }
+            if (too_close) continue;
+            if (where === undefined || dis_opp_side(m, ...where) < dis_opp_side(m, ...candidate)) {
+                where = candidate;
+                who = min_dist_castle_id;
+            }     
         }
-        return Event(who, constants.BUILD_CHURCH, where[0], 50); // No Karbonite Locations --> set it to fuel loc
+        if (who !== undefined && where !== undefined) {
+            m.log(`${who} ${where}`)
+            return Event(who - 0, constants.BUILD_CHURCH, where, 50);
+        }
+        return;
     }
     random() {
         this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & mask;

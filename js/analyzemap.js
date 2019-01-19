@@ -93,42 +93,6 @@ export function get_visible_base(m) {
 }
 
 export function find_optimal_churches(m) {
-    /*
-    Set karbLocs = new Set();
-    for(let i = 0; i < m.karbonite_map.length; i++) {
-        for(let j = 0; j < m.karbonite_map.length; j++) {
-            if(idx(m.karbonite_map, i, j)) {
-                karbLocs.add(i + " " + j);
-            }
-        }
-    }
-    let MAX_DIS = 200;
-    let finLoc = [];
-    while(karbLocs.size !== 0) {
-        let compLoc = [];
-        compLoc.push(karbLocs[0]);
-        for(let i = 0; i < karbLocs.length; i++) {
-            let tempLoc = karbLocs[i];
-            let flag = false;
-            for(let j = 0; j < compLoc.length; j++) {
-                if(dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
-                    flag = true;
-                    break;
-                }
-            }
-            if(flag) {
-                compLoc.push(tempLoc);
-                karbLocs.splice(i,1);
-                i--; // SHIFT BACK INDEX
-            }
-        }
-    }
-    let answer = [];
-    for(let i = 0; i < finLoc.length; i++) {
-        answer.push(finLoc[i][0]);
-    }
-    return answer.sort((a, b) => dis(...a, m.me.x, m.me.y) - dis(...b, m.me.x, m.me.y));
-    */
     let width = m.karbonite_map.length;
     let squareLen = Math.floor(width / 8);
     //m.log("SQUARE LENGTH: " + squareLen);
@@ -162,28 +126,24 @@ export function find_optimal_churches(m) {
     for (let i = 0; i < goodRegions.length; i++) {
         let r = goodRegions[i][0];
         let c = goodRegions[i][1];
-        let flag = true; // Determines if it is far enough from the castle
-        let flag2 = false; // Is some of this on our side?
-        for (let j = 0; j < matrix[r][c].length; j++) {
-            for (let a_id in m.friendly_castles) {
-                if (dis(...matrix[r][c][j], m.friendly_castles[a_id].x, m.friendly_castles[a_id].y) <= 50) {
-                    flag = false;
-                    break;
-                }
-                if (on_ally_side(m, m.friendly_castles[a_id].x, m.friendly_castles[a_id].y, ...matrix[r][c][j])) {
-                    flag2 = true;
-                }
+        let merge = false;
+        for (let a in answer) {
+            if (dis(...a, ...matrix[r][c][0]) <= 25) {
+                merge = true;
+                a.push(...matrix[r][c]);
+                break;
             }
-            if (flag === false) break;
         }
-        if (flag && flag2) answer.push(matrix[r][c]);
+        if (!merge)
+            answer.push(matrix[r][c]);
     }
-    answer = answer.sort((a, b) => dis(...a[0], m.me.x, m.me.y) - dis(...b[0], m.me.x, m.me.y));
-    m.log("PRINTING THE CHURCH LOCATIONS")
+    /*
+    m.log("PRINTING THE CHURCH LOCATIONS");
     for (let i = 0; i < answer.length; i++) {
         m.log((i + 1) + ": " + answer[i]);
     }
     m.log("FINISHED PRINTING CHURCH LOCATIONS");
+    */
     return answer;
 
 }
@@ -240,43 +200,6 @@ export function horde(m) {
             m.pathfinder = new Pathfinder(m, around_pred(...m.intermediate_point, 1, 2));
         }
     }
-}
-// CRUDE IMPLEMENTATION
-export function karbChurchGroup(m) {
-    let karbLocs = [];
-    for (let i = 0; i < this.karbonite_map.length; i++) {
-        for (let j = 0; j < this.karbonite_map.length; j++) {
-            if (idx(this.karbonite_map, i, j)) {
-                karbLocs.push([i, j]);
-            }
-        }
-    }
-    let MAX_DIS = 200;
-    let finLoc = [];
-    while (karbLocs.length !== 0) {
-        let compLoc = [];
-        compLoc.push(karbLocs[0]);
-        for (let i = 0; i < karbLocs.length; i++) {
-            let tempLoc = karbLocs[i];
-            let flag = false;
-            for (let j = 0; j < compLoc.length; j++) {
-                if (dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag) {
-                compLoc.push(tempLoc);
-                karbLocs.splice(i, 1);
-                i--; // SHIFT BACK INDEX
-            }
-        }
-    }
-    let answer = [];
-    for (let i = 0; i < finLoc.length; i++) {
-        answer.push(finLoc[i][0]);
-    }
-    return answer;
 }
 
 export function front_back_ratio(m) {

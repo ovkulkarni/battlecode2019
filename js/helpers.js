@@ -165,3 +165,15 @@ export function slow_down(m, diff) {
         return [0, 0];
     return [Math.floor(diff[0] / magnitude), Math.floor(diff[1] / magnitude)];
 }
+
+export function dis_opp_side(m, x, y) {
+    let center_x = Math.floor(m.map[0].length / 2);
+    let center_y = Math.floor(m.map.length / 2);
+    let x_far = m.me.x > center_x ? 0 : m.map[0].length;
+    let y_far = m.me.x > center_y ? 0 : m.map.length;
+    if (m.symmetry === constants.VERTICAL) {
+        return dis(x, y, x_far, y);
+    } else if (m.symmetry === constants.HORIZONTAL) {
+        return dis(x, y, x, y_far);
+    }
+}

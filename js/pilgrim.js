@@ -47,7 +47,7 @@ export function runPilgrim(m) {
                 break;
             case constants.CHURCH:
                 m.castleTalk(encode8("watch_me"));
-                m.log("CHURCH PILGRIM   CHURCH: " + m.church);
+                //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
                 m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
                 break;
             case constants.GATHER_FUEL:
@@ -90,7 +90,7 @@ export function runPilgrim(m) {
                         let dr = dir[0];
                         m.church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
                         if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
-                            m.log("BUILDING CHURCH: " + dr);
+                            //m.log("BUILDING CHURCH: " + dr);
                             return m.buildUnit(SPECS.CHURCH, ...m.church_loc);
                         }
                         m.church_loc = undefined;
@@ -98,7 +98,7 @@ export function runPilgrim(m) {
                         // Tell Castle to Send more Harvesters if Feasable
                         return;
                     }
-                    m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
+                    //m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
                     return m.give(...m.church_loc, m.me.karbonite, m.me.fuel);
                 }
                 else {
@@ -130,11 +130,11 @@ export function runPilgrim(m) {
                         return m.give(m.pathfinder.final_loc[0]-m.me.x, m.pathfinder.final_loc[1]-m.me.y, m.me.karbonite, m.me.fuel);
                     }
                     else if(nextt.fail) {
-                        m.log("PILGRIM CANNOT MOVE BACK");
+                        //m.log("PILGRIM CANNOT MOVE BACK");
                         return true;
                     }
                     else if(nextt.wait) {
-                        m.log("PILGRIM WAITING TO MOVE");
+                        //m.log("PILGRIM WAITING TO MOVE");
                         return true;
                     }
                     else {
