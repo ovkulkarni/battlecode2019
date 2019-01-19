@@ -41,14 +41,14 @@ export function no_depots(m) {
 
 export function on_ally_side_pred(m, xx, yy, x, y) {
     let sym = m.symmetry;
-    let half = Math.floor(m.karbonite_map.length/2);
-    if(sym === constants.HORIZONTAL) {
+    let half = Math.floor(m.karbonite_map.length / 2);
+    if (sym === constants.HORIZONTAL) {
         // x stays same
-        return !(y < half)^(m.me.y < half);
+        return !(y < half) ^ (m.me.y < half);
     }
     else {
         // y stays same
-        return !(x < half)^(m.me.x < half);
+        return !(x < half) ^ (m.me.x < half);
     }
 }
 

@@ -79,20 +79,20 @@ export function runProphet(m) {
                     } else {
                         m.mission = constants.RETURN;
                         m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
-                        if (m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
+                        if (dis(m.horde_loc.x, m.horde_loc.y, m.me.x, m.me.y) <= m.stats.VISION_RADIUS && m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
                             let message = encode8("castle_killed", m.sending_castle);
                             m.castleTalk(message)
                         }
-                        m.begin_horde = undefined;
-                        m.intermediate_point = undefined;
-                        m.on_intermediate = undefined;
-                        m.started = undefined;
-                        m.sending_castle = undefined;
+                        delete m.begin_horde;
+                        delete m.intermediate_point;
+                        delete m.on_intermediate;
+                        delete m.started;
                         return;
                     }
                 case constants.RETURN:
                     m.mission = constants.HORDE;
-                    m.castleTalk(encode8("came_back"));
+                    m.castleTalk(encode8("came_back", m.sending_castle));
+                    delete m.sending_castle;
                     return;
                 default:
                     m.mission = constants.DEFEND;

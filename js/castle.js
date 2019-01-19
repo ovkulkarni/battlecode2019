@@ -217,7 +217,8 @@ function handle_castle_talk(m) {
                     m.paused = false;
                     break;
                 case "came_back":
-                    m.current_horde++;
+                    if (parseInt(Object.keys(m.friendly_castles).indexOf(`${message.args[0]}`)) === m.me.id)
+                        m.current_horde++;
                     break;
             }
             if (log_recieve)
