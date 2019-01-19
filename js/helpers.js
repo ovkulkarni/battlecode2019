@@ -154,3 +154,10 @@ export function visible_ally_attackers(m) {
 export function getDef(map, key, value) {
     return map.has(key) ? map.get(key) : value
 }
+
+export function slow_down(m, diff) {
+    let magnitude = Math.sqrt(diff[0] ** 2 + diff[1] ** 2);
+    if (Math.min(...visible_ally_attackers(m).map(r => dis(r.x, r.y, m.me.x, m.me.y))) > 4)
+        return [0, 0];
+    return [Math.floor(diff[0] / magnitude), Math.floor(diff[1] / magnitude)];
+}

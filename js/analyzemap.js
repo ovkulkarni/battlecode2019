@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { constants } from './constants.js';
-import { idx, dis, passable_loc, valid_loc, calcOpposite, create_augmented_obj } from './helpers.js';
+import { idx, dis, passable_loc, valid_loc, calcOpposite, create_augmented_obj, visible_ally_attackers, slow_down } from './helpers.js';
 import { Pathfinder } from './pathfinder.js';
 import { around_pred, attack_pred } from './predicates.js';
 
@@ -137,37 +137,61 @@ export function horde(m) {
 // CRUDE IMPLEMENTATION
 export function karbChurchGroup(m) {
     var karbLocs = [];
-    for(let i = 0; i < this.karbonite_map.length; i++) {
-        for(let j = 0; j < this.karbonite_map.length; j++) {
-            if(idx(this.karbonite_map, i, j)) {
-                karbLocs.push([i,j]);
+    for (let i = 0; i < this.karbonite_map.length; i++) {
+        for (let j = 0; j < this.karbonite_map.length; j++) {
+            if (idx(this.karbonite_map, i, j)) {
+                karbLocs.push([i, j]);
             }
         }
     }
     let MAX_DIS = 200;
     var finLoc = [];
-    while(karbLocs.length !== 0) {
+    while (karbLocs.length !== 0) {
         var compLoc = [];
         compLoc.push(karbLocs[0]);
-        for(let i = 0; i < karbLocs.length; i++) {
+        for (let i = 0; i < karbLocs.length; i++) {
             var tempLoc = karbLocs[i];
             let flag = false;
-            for(let j = 0; j < compLoc.length; j++) {
-                if(dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
+            for (let j = 0; j < compLoc.length; j++) {
+                if (dis(tempLoc[0], tempLoc[1], compLoc[j][0], compLoc[j][1]) < MAX_DIS) {
                     flag = true;
                     break;
                 }
             }
-            if(flag) {
+            if (flag) {
                 compLoc.push(tempLoc);
-                karbLocs.splice(i,1);
+                karbLocs.splice(i, 1);
                 i--; // SHIFT BACK INDEX
             }
         }
     }
     var answer = [];
-    for(let i = 0; i < finLoc.length; i++) {
+    for (let i = 0; i < finLoc.length; i++) {
         answer.push(finLoc[i][0]);
     }
     return answer;
+}
+
+export function front_back_ratio(m) {
+    if (!m.started || m.on_intermediate || m.horde_loc === undefined || m.mission !== constants.HORDE) {
+        return -1;
+    }
+    let count_front = 1;
+    let count_back = 1;
+    for (let r of visible_ally_attackers(m))
+        if (dis(r.x, r.y, m.horde_loc.x, m.horde_loc.y) < dis(m.me.x, m.me.y, m.horde_loc.x, m.horde_loc.y)) {
+            count_front++;
+        }
+        else {
+            count_back++;
+        }
+    return count_front / count_back;
+}
+
+
+export function compact_horde(m, next) {
+    let fbr = front_back_ratio(m);
+    if (0 <= fbr && fbr < 1) {
+        next.diff = slow_down(m, next.diff);
+    }
 }

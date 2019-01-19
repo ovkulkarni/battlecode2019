@@ -120,6 +120,7 @@ function initialize_queue(m) {
 function handle_horde(m) {
     if (check_horde(m) && m.event.who === m.me.id) {
         let best_e_loc;
+        let best_e_id;
         let min_distance = 64 * 64 + 1;
         for (let e_id in m.enemy_castles) {
             let distance = dis(
@@ -129,13 +130,14 @@ function handle_horde(m) {
             if (distance < min_distance) {
                 min_distance = distance;
                 best_e_loc = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
+                best_e_id = e_id;
             }
         }
-        m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)}`);
+        m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)} opposite ${best_e_id} (${JSON.stringify(m.friendly_ids)}`);
 
         //todo only send as far as u have to
-        m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 20 * 20);
-        if(m.max_horde_size < m.ultimate_horde_size)
+        m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
+        if (m.max_horde_size < m.ultimate_horde_size)
             m.max_horde_size += 2;
         m.current_horde = 0;
 
@@ -190,9 +192,10 @@ function handle_castle_talk(m) {
                     }
                     break;
                 case "castle_killed":
-                    let c_id = Object.keys(m.friendly_castles)[message.args[0]];
+                    let c_id = m.friendly_ids[message.args[0]];
                     m.log(`CASTLE OPPOSITE ${c_id} WAS KILLED`);
-                    delete m.enemy_castles[c_id]; break;
+                    delete m.enemy_castles[c_id];
+                    break;
                 case "watch_me":
                     if (m.watch_out) {
                         m.watch_me = r.id;
@@ -264,7 +267,7 @@ function handle_castle_talk(m) {
     }
 }
 
-function event_complete(m, failed=false) {
+function event_complete(m, failed = false) {
     if (m.event !== undefined) {
         if (m.event.who === m.me.id) {
             m.log("Sending event_complete");
@@ -320,8 +323,9 @@ function send_castle_coord(m) {
 }
 
 function handle_castle_coord(m, r, message) {
-    if (m.friendly_castles[r.id] === undefined)
+    if (m.friendly_castles[r.id] === undefined) {
         m.friendly_castles[r.id] = {}
+    }
     if (m.friendly_castles[r.id].x === undefined)
         m.friendly_castles[r.id].x = message.args[0];
     else if (m.friendly_castles[r.id].y === undefined) {
@@ -331,7 +335,8 @@ function handle_castle_coord(m, r, message) {
         let opp = calcOpposite(m, x, y);
         m.enemy_castles[r.id] = { x: opp[0], y: opp[1] };
     }
-
+    if (m.friendly_ids.indexOf(`${r.id}`) === -1)
+        m.friendly_ids.push(`${r.id}`);
 }
 
 function create_event_handler(m) {
@@ -356,6 +361,7 @@ function set_globals(m) {
     m.max_horde_size = 4;
     m.ultimate_horde_size = Math.ceil(Math.max(m.map.length, m.map[0].length) / 4);
     m.current_horde = 0;
+    m.friendly_ids = [`${m.me.id}`];
 }
 
 export function check_horde(m) {

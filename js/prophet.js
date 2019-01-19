@@ -1,8 +1,10 @@
+import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
 import { prophet_pred, attack_pred, around_pred, lattice_pred } from "./predicates.js";
 import { constants } from './constants.js';
 import { calcOpposite, dis, create_augmented_obj } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
+import { compact_horde } from './analyzemap.js';
 
 export function runProphet(m) {
     //m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
@@ -77,8 +79,10 @@ export function runProphet(m) {
                     } else {
                         m.mission = constants.RETURN;
                         m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
-                        let message = encode8("castle_killed", m.sending_castle);
-                        m.castleTalk(message)
+                        if (m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
+                            let message = encode8("castle_killed", m.sending_castle);
+                            m.castleTalk(message)
+                        }
                         m.begin_horde = undefined;
                         m.intermediate_point = undefined;
                         m.on_intermediate = undefined;
@@ -95,5 +99,8 @@ export function runProphet(m) {
             }
         }
     }
+    compact_horde(m, next);
+    if (next.diff.every((v) => v === 0))
+        return;
     return m.move(...next.diff);
 }
