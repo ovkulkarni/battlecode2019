@@ -92,7 +92,7 @@ function update_queue(m) {
             if (m.karbonite >= unit_cost(d)[0]) {
                 m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
                 break;
-            }  
+            }
         }*/
     }
     // restore pilgrims

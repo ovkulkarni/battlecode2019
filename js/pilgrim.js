@@ -27,21 +27,13 @@ export function runPilgrim(m) {
             if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
                 if (m.mission === constants.CHURCH) {
                     if (m.church_loc === undefined) {
-                        let dir = open_neighbors2(m, m.me.x, m.me.y);
-                        if (dir.length === 0) {
-                            m.mission = constants.DEPOSIT;
-                            get_pathfinder(m);
-                            return;
-                        }
-                        let dr = dir[0];
-                        m.church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
-                        if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
-                            return m.buildUnit(SPECS.CHURCH, ...m.church_loc);
-                        }
-                        m.church_loc = undefined;
-                        return;
+                        return build_church(m);
                     }
-                    return m.give(...m.church_loc, m.me.karbonite, m.me.fuel);
+                    m.log(m.church_loc);
+                    if(idx(m.visible_map, ...m.church_loc) === 0) {
+                        return build_church(m);
+                    }
+                    return m.give(...m.diff_church_loc, m.me.karbonite, m.me.fuel);
                 }
                 else {
                     m.mission = constants.DEPOSIT;
@@ -83,8 +75,13 @@ export function runPilgrim(m) {
                         // Altenratively tell remaining
                     }
                 }
-                if (m.fuel > SPECS.MINE_FUEL_COST)
-                    return m.mine();
+                if (m.fuel > SPECS.MINE_FUEL_COST) {
+                    if(idx(m.fuel_map, m.me.x, m.me.y) || idx(m.karbonite_map, m.me.x, m.me.y))
+                        return m.mine();
+                    else {
+                        m.pathfinder.recalculate(m);
+                    }
+                }
 
             }
         }
@@ -95,6 +92,10 @@ export function runPilgrim(m) {
             m.mission = constants.GATHER;
             get_pathfinder(m);
             //m.log("GIVING IN DIRECTION: " + dx + " " + dy);
+            if(idx(m.visible_map, m.me.x+dx, m.me.y+dy) === 0) {
+                m.log("CASTLE DIED: BUILDING CHURCH");
+                m.buildUnit(SPECS.CHURCH, dx, dy);
+            }
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }
@@ -179,4 +180,27 @@ export function get_pathfinder(m) {
         default:
             m.log("ERROR SHOULDNT HAPPEN");
     }
+}
+
+export function build_church(m) {
+    let dir = open_neighbors2(m, m.me.x, m.me.y);
+    if (dir.length === 0) {
+        m.mission = constants.DEPOSIT;
+        get_pathfinder(m);
+        return;
+    }
+    let dr = dir[0];
+    for(let i = 0; i < dir.length; i++) {
+        m.log("CHOICE: " + dir[i]);
+        if(idx(m.karbonite_map, ...dir[i]) || idx(m.fuel_map, ...dir[i])) continue;
+        dr = dir[i];
+        break;
+    }
+    m.church_loc = dr;
+    m.diff_church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
+    if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
+        return m.buildUnit(SPECS.CHURCH, ...m.diff_church_loc);
+    }
+    m.church_loc = undefined;
+    return;
 }

@@ -66,7 +66,7 @@ function update_queue(m) {
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
-    const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    const desired_pilgrims = 1 + Math.floor((m.fuel_locs.length + m.karb_locs.length)/2);
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
     }
