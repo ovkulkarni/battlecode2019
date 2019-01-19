@@ -106,7 +106,7 @@ export class EventHandler {
             if (where === undefined || dis_opp_side(m, ...where) < dis_opp_side(m, ...candidate)) {
                 where = candidate;
                 who = min_dist_castle_id;
-            }     
+            }
         }
         if (who !== undefined && where !== undefined) {
             return Event(who - 0, constants.BUILD_CHURCH, where, 50);

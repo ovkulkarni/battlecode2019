@@ -20,16 +20,24 @@ export function attack_pred(m, fx, fy) {
     return around_pred(fx, fy, m.stats.ATTACK_RADIUS[0], m.stats.ATTACK_RADIUS[1]);
 }
 
-export function fuel_pred(m) {
+export function fuel_pred_helper(m) {
     return ((x, y) => idx(m.fuel_map, x, y));
+}
+
+export function fuel_pred(m) {
+    return pand(fuel_pred_helper(m),on_ally_side_pred(m));
 }
 
 export function fuel_pred_church(m, xx, yy) {
     return ((x, y) => idx(m.fuel_map, x, y) /*&& dis(x, y, xx, yy) >= constants.FUEL_MIN_DIS*/);
 }
 
-export function karbonite_pred(m) {
+export function karbonite_pred_helper(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
+}
+
+export function karbonite_pred(m) {
+    return pand(karbonite_pred_helper(m),on_ally_side_pred(m));
 }
 
 export function karbonite_pred_church(m, xx, yy) {
@@ -39,16 +47,16 @@ export function no_depots(m) {
     return ((x, y) => !idx(m.karbonite_map, x, y) && !idx(m.fuel_map, x, y));
 }
 
-export function on_ally_side_pred(m, xx, yy, x, y) {
+export function on_ally_side_pred(m) {
     let sym = m.symmetry;
     let half = Math.floor(m.karbonite_map.length / 2);
     if (sym === constants.HORIZONTAL) {
         // x stays same
-        return !(y < half) ^ (m.me.y < half);
+        return ((x,y) => !(y < half) ^ (m.me.y < half));
     }
     else {
         // y stays same
-        return !(x < half) ^ (m.me.x < half);
+        return ((x,y) => !(x < half) ^ (m.me.x < half));
     }
 }
 

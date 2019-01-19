@@ -11,67 +11,15 @@ export function runPilgrim(m) {
     //m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     //m.log("INITIAL MISSION: " + m.mission);
     if (m.me.turn === 1) {
-        //m.log("INITIAL MISSION: " + m.mission);
-        switch (m.mission) {
-            case constants.GATHER:
-                /*
-                if (m.fuel < constants.MIN_FUEL) {
-                    m.mission = constants.GATHER_FUEL;
-                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                }
-                else if (m.karbonite < constants.MIN_KARB) {
-                    m.mission = constants.GATHER_KARB;
-                    m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                }
-                else {
-                    if (Math.random() < constants.FUEL_KARB_RATIO) {
-                        m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                        m.mission = constants.GATHER_FUEL;
-                    }
-                    else {
-                        m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                        m.mission = constants.GATHER_KARB;
-                    }
-                }
-                */
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                m.mission = constants.GATHER_KARB;
-                break;
-            case constants.DEPOSIT:
-                m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
-                m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
-                break;
-            case constants.GATHER_KARB:
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                m.initial_mission = m.mission;
-                break;
-            case constants.CHURCH:
-                m.castleTalk(encode8("watch_me"));
-                //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
-                m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
-                break;
-            case constants.GATHER_FUEL:
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                m.initial_mission = m.mission;
-                break;
-            default:
-                m.log("ERROR SHOULDNT HAPPEN");
-        }
+        get_start_pathfinder(m);
     }
     if (m.mission === constants.GATHER) {
-        if (m.fuel > constants.MIN_FUEL) {
-            if (Math.random() < constants.FUEL_KARB_RATIO) {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                m.mission = constants.GATHER_FUEL;
-            }
-            else {
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                m.mission = constants.GATHER_KARB;
-            }
-        } else {
-            m.mission = constants.GATHER_FUEL;
-            m.pathfinder = new Pathfinder(m, fuel_pred(m));
-        }
+        get_pathfinder(m);
+    }
+    if(m.pathfinder === undefined) {
+        m.log("PATHFINDER DOESNT EXIST");
+        m.log("MISSION: " + m.mission);
+        get_pathfinder(m);
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fin) {
@@ -81,48 +29,23 @@ export function runPilgrim(m) {
                     if (m.church_loc === undefined) {
                         let dir = open_neighbors2(m, m.me.x, m.me.y);
                         if (dir.length === 0) {
-                            //m.log("CANNOT BUILD CHURCH ANYWHERE, GOING BACK TO DROP OFF");
                             m.mission = constants.DEPOSIT;
-                            m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
-                            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+                            get_pathfinder(m);
                             return;
                         }
                         let dr = dir[0];
                         m.church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
                         if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
-                            //m.log("BUILDING CHURCH: " + dr);
                             return m.buildUnit(SPECS.CHURCH, ...m.church_loc);
                         }
                         m.church_loc = undefined;
-                        //m.log("NOT ENOUGH RESOURCES");
-                        // Tell Castle to Send more Harvesters if Feasable
                         return;
                     }
-                    //m.log("DEPOSITING RESOURCES IN LOCAL CHURCH" + m.church);
                     return m.give(...m.church_loc, m.me.karbonite, m.me.fuel);
                 }
                 else {
-                    //m.log("GOING BACK");
                     m.mission = constants.DEPOSIT;
-                    let foundDrop = false;
-                    let minr = 10000000;
-                    for (let i = 0; i < m.visible_allies.length; i++) {
-                        let ally = m.visible_allies[i];
-                        if (ally.unit <= 1) {
-                            foundDrop = true;
-                            if (ally.dist < minr) {
-                                minr = ally.dist;
-                                //m.log("FOUND CLOSER DROPOFF: X:" + ally.x + "Y: " + ally.y + "UNIT: " + ally.unit);
-                                m.pathfinder = new Pathfinder(m, around_pred(ally.x, ally.y, 1, 2));
-                                m.pathfinder.final_loc = [ally.x, ally.y];
-                            }
-                        }
-                    }
-                    if (foundDrop === false) {
-                        //m.log("DID NOT FIND CLOSER DROPOFF");
-                        m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
-                        m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
-                    }
+                    get_pathfinder(m);
                     let nextt = m.pathfinder.next_loc(m);
                     if (nextt.fin) {
                         //m.log("HERE");
@@ -130,12 +53,12 @@ export function runPilgrim(m) {
                         return m.give(m.pathfinder.final_loc[0] - m.me.x, m.pathfinder.final_loc[1] - m.me.y, m.me.karbonite, m.me.fuel);
                     }
                     else if (nextt.fail) {
-                        m.log("PILGRIM CANNOT MOVE BACK");
+                        // m.log("PILGRIM CANNOT MOVE BACK");
                         m.pathfinder.recalculate(m);
                         return true;
                     }
                     else if (nextt.wait) {
-                        m.log("PILGRIM WAITING TO MOVE");
+                        // m.log("PILGRIM WAITING TO MOVE");
                         return true;
                     }
                     else {
@@ -170,33 +93,90 @@ export function runPilgrim(m) {
             let dy = m.pathfinder.final_loc[1] - m.me.y;
 
             m.mission = constants.GATHER;
-            if (m.initial_mission === constants.GATHER_FUEL) {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                m.mission = m.initial_mission;
-            } else if (m.initial_mission === constants.GATHER_KARB) {
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                m.mission = m.initial_mission;
-            }
-            else if (m.fuel > constants.MIN_FUEL) {
-                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
-            } else {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-            }
+            get_pathfinder(m);
             //m.log("GIVING IN DIRECTION: " + dx + " " + dy);
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
     }
     else if (next.wait) {
-        m.log("WAITING");
+        // m.log("WAITING");
         return;
     }
     else if (next.fail) {
-        m.log("FAILED TO MOVE");
+        // m.log("FAILED TO MOVE");
         m.pathfinder.recalculate(m);
         return;
     }
     else {
-        m.log("PILGRIM MOVING: " + next.res);
+        // m.log("PILGRIM MOVING: " + next.res);
         return m.move(...next.diff);
+    }
+}
+
+export function get_start_pathfinder(m) {
+    switch (m.mission) {
+        case constants.GATHER:
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            m.mission = constants.GATHER_KARB;
+            break;
+        case constants.DEPOSIT:
+            m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+            break;
+        case constants.GATHER_KARB:
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            m.initial_mission = m.mission;
+            break;
+        case constants.CHURCH:
+            m.castleTalk(encode8("watch_me"));
+            //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
+            m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
+            break;
+        case constants.GATHER_FUEL:
+            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            m.initial_mission = m.mission;
+            break;
+        default:
+            m.log("ERROR SHOULDNT HAPPEN");
+    }
+}
+
+export function get_pathfinder(m) {
+    switch (m.mission) {
+        case constants.GATHER:
+            if (m.initial_mission === constants.GATHER_FUEL) {
+                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+                m.mission = m.initial_mission;
+            }
+            else if (m.initial_mission === constants.GATHER_KARB) {
+                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+                m.mission = m.initial_mission;
+            }
+            else if (m.fuel > constants.MIN_FUEL) {
+                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
+            }
+            else {
+                m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            }
+            break;
+        case constants.DEPOSIT:
+            m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
+            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+            break;
+        case constants.GATHER_KARB:
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            m.initial_mission = m.mission;
+            break;
+        case constants.CHURCH:
+            m.castleTalk(encode8("watch_me"));
+            //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
+            m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
+            break;
+        case constants.GATHER_FUEL:
+            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            m.initial_mission = m.mission;
+            break;
+        default:
+            m.log("ERROR SHOULDNT HAPPEN");
     }
 }
