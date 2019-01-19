@@ -67,14 +67,14 @@ export class EventHandler {
         let who = Math.min(...Object.keys(m.friendly_castles));
         let where = m.karb_groups[0];
         m.log("LIST FOR BUILD_CHURCH: " + where);
-        if(where === undefined) {
+        if (where === undefined) {
             //m.log("OUT OF OPTIONS");
             // TODO: What to do?
             return undefined;
         }
         else {
-            for(let i = 0; i < where.length; i++) {
-                if(idx(m.karbonite_map, ...where[i])) {
+            for (let i = 0; i < where.length; i++) {
+                if (idx(m.karbonite_map, ...where[i])) {
                     return Event(who, constants.BUILD_CHURCH, where[i], 50); // Set it to a Karbonite Location
                 }
             }

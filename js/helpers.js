@@ -76,8 +76,8 @@ export function passable_loc(m, x, y) {
 
 export function list_dir(r) {
     let pos = []
-    for (var i = Math.floor(-1 * Math.sqrt(r)); i <= Math.sqrt(r); i++) {
-        for (var j = Math.floor(-1 * Math.sqrt(r)); j <= Math.sqrt(r); j++) {
+    for (let i = Math.floor(-1 * Math.sqrt(r)); i <= Math.sqrt(r); i++) {
+        for (let j = Math.floor(-1 * Math.sqrt(r)); j <= Math.sqrt(r); j++) {
             if (i * i + j * j <= r && i * i + j * j != 0) {
                 pos.push([i, j]);
             }
@@ -111,7 +111,7 @@ export function get_mission(m) {
             //m.log(`GOT MISSION ${message.args[0]} FROM ${r.id}`);
             if (message.command === "task")
                 return message.args[0];
-            if(message.command === "build_church") {
+            if (message.command === "build_church") {
                 m.church = message.args;
                 return constants.CHURCH;
             }

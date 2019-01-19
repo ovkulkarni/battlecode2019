@@ -6,7 +6,8 @@ const commands8 = [
     command("castle_killed", [2]),
     command("watch_me", []),
     command("pause", []),
-    command("unpause", [])
+    command("unpause", []),
+    command("received_horde", [])
 ]
 
 const commands16 = [

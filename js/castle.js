@@ -344,6 +344,7 @@ function handle_castle_coord(m, r, message) {
     }
     if (m.friendly_ids.indexOf(`${r.id}`) === -1)
         m.friendly_ids.push(`${r.id}`);
+    m.friendly_ids.sort((a, b) => parseInt(a) - parseInt(b));
 }
 
 function create_event_handler(m) {

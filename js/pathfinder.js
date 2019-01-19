@@ -1,4 +1,3 @@
-import { SPECS } from 'battlecode';
 import { open_neighbors, idx, dis } from './helpers.js';
 
 export class Pathfinder {

@@ -2,7 +2,7 @@ import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
 import { prophet_pred, attack_pred, around_pred, lattice_pred } from "./predicates.js";
 import { constants } from './constants.js';
-import { calcOpposite, dis, create_augmented_obj } from './helpers.js';
+import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
 import { compact_horde } from './analyzemap.js';
 
@@ -32,6 +32,7 @@ export function runProphet(m) {
                 m.horde_loc.y = message.args[1];
                 m.sending_castle = message.args[2];
                 m.begin_horde = true;
+                m.castleTalk(encode8("received_horde", m.sending_castle));
             } else if (message.command === "update_task") {
                 m.mission = message.args[0];
             }
@@ -100,7 +101,7 @@ export function runProphet(m) {
         }
     }
     compact_horde(m, next);
-    if (next.diff.every((v) => v === 0))
+    if (idx(m.visible_map, ...next.res) >= 1 || !passable_loc(m, ...next.res))
         return;
     return m.move(...next.diff);
 }
