@@ -1,5 +1,5 @@
 import { Pathfinder } from './pathfinder.js';
-import { prophet_pred, attack_pred, around_pred } from "./predicates.js";
+import { prophet_pred, attack_pred, around_pred, lattice_pred } from "./predicates.js";
 import { constants } from './constants.js';
 import { calcOpposite, dis, create_augmented_obj } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
@@ -16,7 +16,7 @@ export function runProphet(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] }
                 break;
             default:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                m.pathfinder = new Pathfinder(m, lattice_pred(m));
                 break;
         }
     }

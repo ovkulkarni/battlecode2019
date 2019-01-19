@@ -30,6 +30,13 @@ export function runCastle(m) {
         initialize_queue(m);
     }
 
+    for (let r of m.visible_enemies) {
+        let dist = dis(m.me.x, m.me.y, r.x, r.y);
+        if (m.stats.ATTACK_RADIUS[0] <= dist && dist <= m.stats.ATTACK_RADIUS[1]) {
+            return m.attack(r.x - m.me.x, r.y - m.me.y);
+        }
+    }
+
     if (handle_horde(m)) {
         return;
     }
@@ -43,6 +50,7 @@ export function runCastle(m) {
         if (!m.paused &&
             build_opts.length > 0 &&
             leftover_k >= 0 && leftover_f >= 0 &&
+            !(m.mission === constants.DEFEND && unit.task !== constants.DEFEND) &&
             (m.event === undefined || (m.event.who === m.me.id && leftover_k >= m.event.blocking)
                 || leftover_k >= (m.event.blocking + current_stash(m))
                 || unit.priority >= constants.EMERGENCY_PRIORITY)
@@ -74,17 +82,17 @@ function pick_unit(m) {
     if (!m.queue.isEmpty()) {
         return m.queue.pop();
     }
-    // TODO: Remove this once we have better logic for when to spawn a crusader
-    // return Unit(SPECS.PREACHER, constants.HORDE, 8);
 }
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        const current_defenders = visible_ally_attackers(m).length;
-        const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
-        while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
-            m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
-        }
+        /*const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
+        for (let d of defenders) {
+            if (m.karbonite >= unit_cost(d)[0]) {
+                m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+                break;
+            }  
+        }*/
     }
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
@@ -105,7 +113,7 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 1));
-    for (let i = 0; i < 4; i++)
+    for (let i = 0; i < 3; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
 }
 
@@ -127,7 +135,8 @@ function handle_horde(m) {
 
         //todo only send as far as u have to
         m.signal(encode16("send_horde", ...best_e_loc, Object.keys(m.friendly_castles).indexOf(`${m.me.id}`)), 20 * 20);
-        m.max_horde_size += 2;
+        if(m.max_horde_size < m.ultimate_horde_size)
+            m.max_horde_size += 2;
         m.current_horde = 0;
 
         event_complete(m);
@@ -165,6 +174,7 @@ function determine_mission(m) {
 function handle_castle_talk(m) {
     let alive = {};
     let event_complete_flag;
+    let event_failed_flag = false;
     for (let r of m.visible_allies) {
         if (r.castle_talk !== 0) {
             let message = decode8(r.castle_talk);
@@ -173,7 +183,12 @@ function handle_castle_talk(m) {
                 case "castle_coord":
                     handle_castle_coord(m, r, message); break;
                 case "event_complete":
-                    event_complete_flag = true; break;
+                    event_complete_flag = true;
+                    if (m.friendly_castles[r.id] === undefined) {
+                        m.log("CHURCH LOCATED");
+                        m.friendly_churches[r.id] = m.event.where;
+                    }
+                    break;
                 case "castle_killed":
                     let c_id = Object.keys(m.friendly_castles)[message.args[0]];
                     m.log(`CASTLE OPPOSITE ${c_id} WAS KILLED`);
@@ -217,19 +232,39 @@ function handle_castle_talk(m) {
         }
     }
 
+    // delete dead churches
+    to_delete = [];
+    for (let id in m.friendly_churches) {
+        if (id - 0 === m.me.id) continue;
+        if (alive[id] === undefined) {
+            to_delete.push(id);
+            if (m.event !== undefined && m.event.who === id - 0)
+                event_complete_flag = true;
+        }
+    }
+    for (let id of to_delete) {
+        delete m.friendly_churches[id];
+        m.log("DEATH OF " + id);
+        if (m.paused && m.paused_by === (id - 0)) {
+            m.paused = false;
+            m.log("UNPAUSED");
+        }
+    }
+
     // check on m.watch_me
     if (m.watch_me !== undefined && alive[m.watch_me] === undefined) {
         m.watch_me = undefined;
         event_complete_flag = true;
+        event_failed_flag = true;
     }
 
     // complete the event!
     if (event_complete_flag) {
-        event_complete(m);
+        event_complete(m, event_failed_flag);
     }
 }
 
-function event_complete(m) {
+function event_complete(m, failed=false) {
     if (m.event !== undefined) {
         if (m.event.who === m.me.id) {
             m.log("Sending event_complete");
@@ -308,6 +343,7 @@ function set_globals(m) {
     m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
 
     m.friendly_castles = {};
+    m.friendly_churches = {};
     m.friendly_castles[m.me.id] = { x: m.me.x, y: m.me.y };
 
     m.enemy_castles = {};
@@ -318,6 +354,7 @@ function set_globals(m) {
     m.karb_locs = best_karb_locs(m);
     m.mission = constants.NEUTRAL;
     m.max_horde_size = 4;
+    m.ultimate_horde_size = Math.ceil(Math.max(m.map.length, m.map[0].length) / 4);
     m.current_horde = 0;
 }
 

@@ -12,12 +12,13 @@ class MyRobot extends BCAbstractRobot {
     turn() {
         this.visible_map = this.getVisibleRobotMap();
         this.visible_robots = this.getVisibleRobots();
+        this.visible_others = this.visible_robots.filter(r => this.me.id !== r.id);
         if (this.me.unit === SPECS.CASTLE) {
-            this.visible_allies = this.visible_robots.filter(r => r.castle_talk !== undefined).filter(r => this.me.id !== r.id);
-            this.visible_enemies = this.visible_robots.filter(r => r.castle_talk === undefined);
+            this.visible_allies = this.visible_others.filter(r => r.team === this.me.team);
+            this.visible_enemies = this.visible_others.filter(r => r.team !== this.me.team);
         } else {
-            this.visible_allies = this.visible_robots.filter(r => r.team === this.me.team).filter(r => r.id !== this.me.id);
-            this.visible_enemies = this.visible_robots.filter(r => r.team !== this.me.team);
+            this.visible_allies = this.visible_others.filter(r => r.team !== undefined && r.team === this.me.team);
+            this.visible_enemies = this.visible_others.filter(r => r.team !== undefined && r.team !== this.me.team);
         }
         if (this.mission === undefined)
             this.mission = get_mission(this);

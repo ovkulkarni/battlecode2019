@@ -35,6 +35,9 @@ export function karbonite_pred(m) {
 export function karbonite_pred_church(m, xx, yy) {
     return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) >= constants.KARB_MIN_DIS);
 }
+export function no_depots(m) {
+    return ((x, y) => !idx(m.karbonite_map, x, y) && !idx(m.fuel_map, x, y));
+}
 
 export function on_path(path) {
     let spath = path.map(a => a.toString());
@@ -68,5 +71,13 @@ export function prophet_pred(m, cx, cy) {
     return pand(
         around_pred(cx, cy, 16, 36),
         opposite_of_pred_by(m, cx, cy, 3)
+    );
+}
+
+export function lattice_pred(m) {
+    let modulus = (m.spawn_castle.x + m.spawn_castle.y) % 2;
+    return pand(
+        no_depots(m),
+        ((x, y) => (x + y) % 2 === modulus)
     );
 }

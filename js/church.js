@@ -31,7 +31,8 @@ export function runChurch(m) {
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
         if (
             build_opts.length > 0 &&
-            leftover_k >= 0 && leftover_f >= 0
+            leftover_k >= 0 && leftover_f >= 0 &&
+            !(m.mission === constants.DEFEND && unit.task !== constants.DEFEND)
         ) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
@@ -56,11 +57,12 @@ export function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        const current_defenders = m.visible_allies.length;
-        const desired_defenders = Math.floor(m.visible_enemies.length * constants.DEFENSE_RATIO);
-        while (m.queue.task_count.get(constants.DEFEND) + current_defenders < desired_defenders) {
-            //m.log("QUEUE DEFENDER!");
-            m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+        const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
+        for (let d of defenders) {
+            if (m.karbonite >= unit_cost(d)[0]) {
+                m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+                break;
+            }  
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;

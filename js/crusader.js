@@ -1,5 +1,5 @@
 import { Pathfinder } from './pathfinder.js';
-import { attack_pred, around_pred } from './predicates.js';
+import { attack_pred, around_pred, prophet_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, get_mission } from './helpers.js';
 import { constants } from './constants.js';
 import { wander } from './analyzemap.js';
@@ -12,6 +12,9 @@ export function runCrusader(m) {
         switch (m.mission) {
             case constants.ATTACK:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
+                break;
+            case constants.DEFEND:
+                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] }

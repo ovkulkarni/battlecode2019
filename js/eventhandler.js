@@ -18,11 +18,9 @@ export class EventHandler {
         let event;
         if ((this.past.length - 3) % 2 === 0) {
             event = clear;
-        } else if ((this.past.length - 2) % 5 === 0) {
-            event = church;
         } else {
-            event = horde;
-        }
+            event = church;
+        } 
         this.handle_chosen_event(m, event);
         this.past.push(event);
         return event;
