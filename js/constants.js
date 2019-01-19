@@ -8,7 +8,7 @@ export let constants = {
     EMERGENCY_PRIORITY: 10,
     DEFENSE_RATIO: 1.5,
     HORDE_SIZE: 4,
-    ATTACKING_TROOPS: new Set([SPECS.CRUSADER, SPECS.PREACHER, SPECS.PROPHET])
+    ATTACKING_TROOPS: new Set([SPECS.CRUSADER, SPECS.PREACHER])
 }
 
 let name_constants = [
