@@ -27,7 +27,7 @@ export class EventHandler {
             }
         }
         else {
-            if(this.past.length % 2 === 2) {
+            if(this.past.length % 3 === 0) {
                 event = horde;
                 //m.log("HORDING V2");
             }
