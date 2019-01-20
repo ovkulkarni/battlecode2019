@@ -103,8 +103,11 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 100)*2 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 100)*4 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
+    }
+    if (m.karbonite > 100) {
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
     }
 }
@@ -114,7 +117,7 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 5));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
-    for (let i = 0; i < 8; i++)
+    for (let i = 0; i < 3; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
 }
 
@@ -216,8 +219,8 @@ function handle_castle_talk(m) {
                         m.current_horde++;
                     break;
             }
-            //if (log_recieve)
-                //m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
+            if (log_recieve)
+                m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
         }
         alive[r.id] = true;
     }

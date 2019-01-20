@@ -14,10 +14,10 @@ export class EventHandler {
     next_event(m) {
         let clear = this.next_clear(m);
         let church = this.next_church(m);
-        let horde = this.next_horde(m);
+        let horde = this.next_horde(m, 0.2);
         let event;
-        if(this.past.length < 8) {
-            if(this.past.length % 3 === 0 && church !== undefined) {
+        if(this.past.length < 12) {
+            if(this.past.length % 4 === 0 && church !== undefined) {
                 event = church;
                 //m.log("CHURCH V1");
             }
@@ -36,20 +36,6 @@ export class EventHandler {
                 //m.log("CLEARING V2");
             }
         }
-        /*if (this.past.length % 2 === 0) {
-            event = clear;
-            m.log("CLEARING EVENT ON TURN: " + m.me.turn);
-        } else if (this.past.length % 3 === 0 && church !== undefined) {
-            event = church;
-            m.log("CHURCH EVENT ON TURN: " + m.me.turn);
-        } else if(this.past.length >= 8) {
-            event = horde;
-            m.log("HORDE EVENT ON TURN: " + m.me.turn);
-        }
-        else {
-            event = clear;
-            m.log("CLEARING EVENT V2 ON TURN: " + m.me.turn);
-        }*/
         this.handle_chosen_event(m, event);
         this.past.push(event);
         return event;
@@ -63,31 +49,22 @@ export class EventHandler {
     }
     next_clear(m) {
         let nc;
+        let first_flag = false;
         for (let id in m.friendly_castles) {
-            if (this.last_clear[id] === undefined)
+            if (this.last_clear[id] === undefined) {
                 this.last_clear[id] = -1;
+                first_flag = true;
+            }
             if (nc === undefined || this.last_clear[id] < this.last_clear[nc])
                 nc = id;
+        }
+        if (first_flag) {
+            return Event(this.closest_to_enemy(m, -1), constants.CLEAR_QUEUE, undefined, 0);
         }
         return Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
     }
     next_horde(m, random_factor) {
-        let best_a_id;
-        let min_distance = 64 * 64 + 1;
-        for (let a_id in m.friendly_castles) {
-            for (let e_id in m.enemy_castles) {
-                let distance = dis(
-                    m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
-                    m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
-                );
-                if (distance < min_distance) {
-                    min_distance = distance;
-                    if (best_a_id === undefined || this.random() > random_factor)
-                        best_a_id = a_id;
-                }
-            }
-        }
-        return Event(best_a_id - 0, constants.ATTACK, undefined, 0);
+        return Event(this.closest_to_enemy(m, 0.2), constants.ATTACK, undefined, 0);
     }
     next_church(m) {
         let where;
@@ -139,6 +116,24 @@ export class EventHandler {
             return Event(who - 0, constants.BUILD_CHURCH, where, 50);
         }
         return;
+    }
+    closest_to_enemy(m, random_factor) {
+        let best_a_id;
+        let min_distance = 64 * 64 + 1;
+        for (let a_id in m.friendly_castles) {
+            for (let e_id in m.enemy_castles) {
+                let distance = dis(
+                    m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
+                    m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
+                );
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    if (best_a_id === undefined || this.random() > random_factor)
+                        best_a_id = a_id;
+                }
+            }
+        }
+        return best_a_id - 0;
     }
     random() {
         this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & mask;
