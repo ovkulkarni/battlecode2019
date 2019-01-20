@@ -99,7 +99,7 @@ function update_queue(m) {
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 4));
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
@@ -111,9 +111,9 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, constants.EMERGENCY_PRIORITY));
     for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 2));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, constants.EMERGENCY_PRIORITY));
     for (let i = 0; i < 8; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
 }
