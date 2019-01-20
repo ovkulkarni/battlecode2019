@@ -103,7 +103,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50)*4 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50) * 4 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }

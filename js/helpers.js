@@ -41,7 +41,7 @@ export function all_neighbors2(m, x, y) {
         .filter(passable_loc_lambda(m));
 }
 
-export function all_neighbors(m,x,y, speed = undefined) {
+export function all_neighbors(m, x, y, speed = undefined) {
     return speed !== undefined ? list_dir(speed) : m.stats.DIRECTIONS;
 }
 
@@ -156,7 +156,7 @@ export function current_stash(m) {
 
 export function visible_ally_attackers(m) {
     return m.visible_allies
-        .filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CASTLE && r.unit !== SPECS.CHURCH);
+        .filter(r => r.unit !== undefined && r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CASTLE && r.unit !== SPECS.CHURCH);
 }
 
 export function getDef(map, key, value) {
