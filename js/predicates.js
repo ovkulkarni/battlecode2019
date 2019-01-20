@@ -90,8 +90,8 @@ export function opposite_of_pred_by(m, fx, fy, v) {
 }
 export function prophet_pred(m, cx, cy) {
     return pand(
-        around_pred(cx, cy, 16, 36),
-        opposite_of_pred_by(m, cx, cy, 3)
+        around_pred(cx, cy, 16, 25),
+        opposite_of_pred_by(m, cx, cy, 2)
     );
 }
 
