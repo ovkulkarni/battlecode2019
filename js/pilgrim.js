@@ -42,6 +42,7 @@ export function runPilgrim(m) {
                     if (nextt.fin) {
                         //m.log("HERE");
                         m.mission === constants.GATHER;
+                        //m.log("GIVING TO: " + m.pathfinder.final_loc);
                         return m.give(m.pathfinder.final_loc[0] - m.me.x, m.pathfinder.final_loc[1] - m.me.y, m.me.karbonite, m.me.fuel);
                     }
                     else if (nextt.fail) {
@@ -86,6 +87,7 @@ export function runPilgrim(m) {
             }
         }
         else if (m.mission === constants.DEPOSIT) {
+            //m.log("GIVING TO: " + m.pathfinder.final_loc);
             let dx = m.pathfinder.final_loc[0] - m.me.x;
             let dy = m.pathfinder.final_loc[1] - m.me.y;
 
@@ -94,7 +96,7 @@ export function runPilgrim(m) {
             //m.log("GIVING IN DIRECTION: " + dx + " " + dy);
             if(idx(m.visible_map, m.me.x+dx, m.me.y+dy) === 0) {
                 m.log("CASTLE DIED: BUILDING CHURCH");
-                m.buildUnit(SPECS.CHURCH, dx, dy);
+                return m.buildUnit(SPECS.CHURCH, dx, dy);
             }
             return m.give(dx, dy, m.me.karbonite, m.me.fuel);
         }
@@ -196,7 +198,7 @@ export function build_church(m) {
     }
     let dr = dir[0];
     for(let i = 0; i < dir.length; i++) {
-        m.log("CHOICE: " + dir[i]);
+        // m.log("CHOICE: " + dir[i]);
         if(idx(m.karbonite_map, ...dir[i]) || idx(m.fuel_map, ...dir[i])) continue;
         dr = dir[i];
         break;

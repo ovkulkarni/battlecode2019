@@ -16,12 +16,19 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m);
         let event;
-        if (this.past.length > 2 && this.past.length % 2 === 0) {
+        if (this.past.length % 2 === 0) {
             event = clear;
-        } else if (this.past.length > 2 && this.past.length % 3 === 0 && church !== undefined) {
+            m.log("CLEARING EVENT ON TURN: " + m.me.turn);
+        } else if (this.past.length % 3 === 0 && church !== undefined) {
             event = church;
-        } else {
+            m.log("CHURCH EVENT ON TURN: " + m.me.turn);
+        } else if(this.past.length >= 10) {
             event = horde;
+            m.log("HORDE EVENT ON TURN: " + m.me.turn);
+        }
+        else {
+            event = clear;
+            m.log("CLEARING EVENT V2 ON TURN: " + m.me.turn);
         }
         this.handle_chosen_event(m, event);
         this.past.push(event);

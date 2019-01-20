@@ -103,7 +103,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = 4;
+    const desired_defenders = 8;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
     }
@@ -113,8 +113,8 @@ function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 3));
     for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 5));
-    for (let i = 0; i < 3; i++)
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 2));
+    for (let i = 0; i < 8; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
 }
 
@@ -137,6 +137,7 @@ function handle_horde(m) {
         m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)} opposite ${best_e_id} (${JSON.stringify(m.friendly_ids)}`);
 
         //todo only send as far as u have to
+        m.log("SENDING HORDE OF SIZE: " + m.current_horde);
         m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
         if (m.max_horde_size < m.ultimate_horde_size)
             m.max_horde_size += 2;
@@ -188,7 +189,7 @@ function handle_castle_talk(m) {
                 case "event_complete":
                     event_complete_flag = true;
                     if (m.friendly_castles[r.id] === undefined) {
-                        m.log("CHURCH LOCATED");
+                        m.log("CHURCH LOCATED  EVENT: " + JSON.stringify(m.event));
                         m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
                     }
                     break;
@@ -215,8 +216,8 @@ function handle_castle_talk(m) {
                         m.current_horde++;
                     break;
             }
-            if (log_recieve)
-                m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
+            //if (log_recieve)
+                //m.log(`RECEIVED (${message.command} ${message.args}) FROM ${r.id}`);
         }
         alive[r.id] = true;
     }
@@ -364,7 +365,7 @@ function set_globals(m) {
     m.fuel_locs = best_fuel_locs(m);
     m.karb_locs = best_karb_locs(m);
     m.mission = constants.NEUTRAL;
-    m.max_horde_size = 4;
+    m.max_horde_size = 8;
     m.ultimate_horde_size = Math.ceil(Math.max(m.map.length, m.map[0].length) / 4);
     m.current_horde = 0;
     m.friendly_ids = [`${m.me.id}`];

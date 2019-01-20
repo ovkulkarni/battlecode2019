@@ -41,7 +41,7 @@ export function on_ally_side(m, xx, yy, x, y) {
 
 export function best_fuel_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist = pilgrim.FUEL_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
+    let max_dist =  50; // pilgrim.FUEL_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let fuel_locs = [];
@@ -64,7 +64,8 @@ export function best_fuel_locs(m) {
 
 export function best_karb_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist = 3 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
+    let max_dist = 50; //3 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
+    // m.log("MAX DIST: " + max_dist);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let karbonite_locs = [];
