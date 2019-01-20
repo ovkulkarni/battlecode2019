@@ -95,24 +95,11 @@ export function prophet_pred(m, cx, cy) {
     );
 }
 
-export function def_pred(m) {
-    let sym = m.symmetry;
-    let half = Math.floor(m.karbonite_map.length / 2);
-    if (sym === constants.HORIZONTAL) {
-        // x stays same
-        return ((x, y) => Math.abs(y - half) < Math.abs(half - m.spawn_castle.y));
-    }
-    else {
-        // y stays same
-        return ((x, y) => Math.abs(x - half) < Math.abs(half - m.spawn_castle.x));
-    }
-}
-
 export function lattice_pred(m) {
     let modulus = (m.spawn_castle.x + m.spawn_castle.y) % 2;
     /*return pand(pand(
         no_depots(m),
         ((x, y) => (x + y) % 2 === modulus)
     ),def_pred(m)); */
-    return pand(no_depots(m), def_pred(m));
+    return pand(no_depots(m), prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
 }
