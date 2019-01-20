@@ -72,6 +72,7 @@ function neighbor_score(m, x, y) {
 }
 
 function diffuse(m) {
+    if(m.me.unit === 2) return;
     let diff = undefined;
 
     let min_allies = neighbor_score(m, m.me.x, m.me.y);
@@ -88,6 +89,7 @@ function diffuse(m) {
     }
     if (diff !== undefined) {
         m.diffused = true;
+        m.log("DIFFUSING");
         return m.move(...diff);
     }
 }

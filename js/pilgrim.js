@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { karbonite_pred, around_pred, fuel_pred, exact_pred } from './predicates.js';
+import { karbonite_pred, around_pred, fuel_pred, exact_pred, every_pred } from './predicates.js';
 import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
 //import { get_symmetry } from './analyzemap.js';
@@ -60,6 +60,7 @@ export function runPilgrim(m) {
                         return true;
                     }
                     else {
+                        // m.log("MOVING: " + next.diff);
                         return m.move(...nextt.diff);
                     }
                 }
@@ -116,7 +117,7 @@ export function runPilgrim(m) {
         return;
     }
     else {
-        // m.log("PILGRIM MOVING: " + next.res);
+        //m.log("PILGRIM MOVING: " + next.res);
         return m.move(...next.diff);
     }
 }
@@ -124,12 +125,7 @@ export function runPilgrim(m) {
 export function get_start_pathfinder(m) {
     switch (m.mission) {
         case constants.GATHER:
-            if (m.fuel > constants.MIN_FUEL) {
-                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
-            }
-            else {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-            }
+            m.pathfinder = new Pathfinder(m, every_pred(m));
             m.mission = constants.GATHER;
             break;
         case constants.DEPOSIT:
@@ -157,20 +153,8 @@ export function get_start_pathfinder(m) {
 export function get_pathfinder(m) {
     switch (m.mission) {
         case constants.GATHER:
-            if (m.initial_mission === constants.GATHER_FUEL) {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-                m.mission = m.initial_mission;
-            }
-            else if (m.initial_mission === constants.GATHER_KARB) {
-                m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-                m.mission = m.initial_mission;
-            }
-            else if (m.fuel > constants.MIN_FUEL) {
-                m.pathfinder = Math.random() < constants.FUEL_KARB_RATIO ? new Pathfinder(m, fuel_pred(m)) : new Pathfinder(m, karbonite_pred(m));
-            }
-            else {
-                m.pathfinder = new Pathfinder(m, fuel_pred(m));
-            }
+            m.pathfinder = new Pathfinder(m, every_pred(m));
+            m.mission = constants.GATHER;
             break;
         case constants.DEPOSIT:
             m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));

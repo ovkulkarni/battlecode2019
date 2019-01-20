@@ -87,7 +87,7 @@ function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
+        const defenders = [SPECS.PREACHER, SPECS.PROPHET];
         for (let d of defenders) {
             if (m.karbonite >= unit_cost(d)[0]) {
                 m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
@@ -114,7 +114,7 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 5));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
-    for (let i = 0; i < 3; i++)
+    for (let i = 0; i < 6; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
 }
 

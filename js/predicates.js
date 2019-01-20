@@ -40,6 +40,10 @@ export function karbonite_pred(m) {
     return pand(karbonite_pred_helper(m), on_ally_side_pred(m));
 }
 
+export function every_pred(m) {
+    return por(karbonite_pred_helper(m), fuel_pred_helper(m));
+}
+
 export function karbonite_pred_church(m, xx, yy) {
     return ((x, y) => idx(m.karbonite_map, x, y) && dis(x, y, xx, yy) >= constants.KARB_MIN_DIS);
 }
