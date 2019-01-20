@@ -79,11 +79,16 @@ export function runCrusader(m) {
                     m.pathfinder = new Pathfinder(m, attack_pred(m, m.horde_loc.x, m.horde_loc.y));
                     return;
                 } else {
-                    m.mission = constants.RETURN;
-                    m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 25));
-                    if (dis(m.horde_loc.x, m.horde_loc.y, m.me.x, m.me.y) <= m.stats.VISION_RADIUS && m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
-                        let message = encode8("castle_killed", m.sending_castle);
-                        m.castleTalk(message)
+                    if (m.sending_castle < 3) {
+                        m.mission = constants.RETURN;
+                        m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 25));
+                        if (dis(m.horde_loc.x, m.horde_loc.y, m.me.x, m.me.y) <= m.stats.VISION_RADIUS && m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
+                            let message = encode8("castle_killed", m.sending_castle);
+                            m.castleTalk(message)
+                        }
+                    } else {
+                        m.mission = constants.DEFEND;
+                        m.pathfinder = new Pathfinder(m, prophet_pred(m, m.horde_loc.x, m.horde_loc.y));
                     }
                     delete m.begin_horde;
                     delete m.intermediate_point;
