@@ -26,9 +26,11 @@ export function runPilgrim(m) {
         m.log("MISSION: " + m.mission);
         get_pathfinder(m);
     }
+    //m.log("PATHFINDER: " + JSON.stringify(m.pathfinder));
     let next = m.pathfinder.next_loc(m);
+    //m.log("NEXT MOVE: " + JSON.stringify(next));
     if (next.fin) {
-        if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH)) {
+        if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH) || (m.mission === constants.GATHER)) {
             if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
                 if (m.mission === constants.CHURCH) {
                     if (m.church_loc === undefined) {
