@@ -103,7 +103,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 100)*4 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 100) * 4 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
     }
@@ -167,7 +167,7 @@ function determine_mission(m) {
             m.log(`NEUTRAL (${m.me.turn})`);
         while (!m.queue.isEmpty()) {
             let unit = m.queue.peek();
-            if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
+            if (unit.priority >= constants.EMERGENCY_PRIORITY && unit.task === constants.DEFEND) {
                 m.queue.pop();
             } else { break; }
         }

@@ -66,7 +66,7 @@ function update_queue(m) {
         }
     }
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
-    const desired_pilgrims = 1 + Math.floor((m.fuel_locs.length + m.karb_locs.length)/2);
+    const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 3));
     }
@@ -92,7 +92,7 @@ function determine_mission(m) {
         m.mission = constants.NEUTRAL;
         while (!m.queue.isEmpty()) {
             let unit = m.queue.peek();
-            if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
+            if (unit.priority >= constants.EMERGENCY_PRIORITY && unit.task === constants.DEFEND) {
                 m.queue.pop();
 
             } else {

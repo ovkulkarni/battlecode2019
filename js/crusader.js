@@ -101,6 +101,8 @@ export function runCrusader(m) {
                 m.castleTalk(encode8("came_back", m.sending_castle));
                 delete m.sending_castle;
                 return;
+            case constants.DEFEND:
+                return;
             default:
                 m.mission = constants.NEUTRAL;
                 //m.log("WANDERING");
