@@ -103,12 +103,9 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 100)*4 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50)*4 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
-    }
-    if (m.karbonite > 100) {
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
+        m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
 }
 
@@ -167,7 +164,7 @@ function determine_mission(m) {
             m.log(`NEUTRAL (${m.me.turn})`);
         while (!m.queue.isEmpty()) {
             let unit = m.queue.peek();
-            if (unit.priority >= constants.EMERGENCY_PRIORITY && m.task === constants.DEFEND) {
+            if (unit.priority >= constants.EMERGENCY_PRIORITY && unit.task === constants.DEFEND) {
                 m.queue.pop();
             } else { break; }
         }
@@ -384,4 +381,12 @@ function Unit(unit, task, priority, loc) {
 
 export function unit_cost(b) {
     return [SPECS.UNITS[b].CONSTRUCTION_KARBONITE, SPECS.UNITS[b].CONSTRUCTION_FUEL];
+}
+
+export function random_defender(m) {
+    let preachers = m.visible_allies.filter(r => r.unit === SPECS.PREACHER).length;
+    let prophets = m.visible_allies.filter(r => r.unit === SPECS.PROPHET).length;
+    if ((preachers / prophets) < 0.5)
+        return SPECS.PREACHER;
+    return SPECS.PROPHET;
 }

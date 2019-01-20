@@ -16,7 +16,7 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
         let event;
-        if(this.past.length < 12) {
+        if(this.past.length < 100) {
             if(this.past.length % 4 === 0 && church !== undefined) {
                 event = church;
                 //m.log("CHURCH V1");
@@ -27,7 +27,7 @@ export class EventHandler {
             }
         }
         else {
-            if(this.past.length % 2 === 2) {
+            if(this.past.length % 3 === 2) {
                 event = horde;
                 //m.log("HORDING V2");
             }
@@ -64,7 +64,7 @@ export class EventHandler {
         return Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
     }
     next_horde(m, random_factor) {
-        return Event(this.closest_to_enemy(m, 0.2), constants.ATTACK, undefined, 0);
+        return Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
     }
     next_church(m) {
         let where;
