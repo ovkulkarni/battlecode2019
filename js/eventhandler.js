@@ -19,21 +19,21 @@ export class EventHandler {
         if(this.past.length < 8) {
             if(this.past.length % 3 === 0 && church !== undefined) {
                 event = church;
-                m.log("CHURCH V1");
+                //m.log("CHURCH V1");
             }
             else {
                 event = clear;
-                m.log("CLEARING V1");
+                //m.log("CLEARING V1");
             }
         }
         else {
-            if(this.past.length % 2 === 0) {
+            if(this.past.length % 2 === 2) {
                 event = horde;
-                m.log("HORDING V2");
+                //m.log("HORDING V2");
             }
             else {
                 event = clear;
-                m.log("CLEARING V2");
+                //m.log("CLEARING V2");
             }
         }
         /*if (this.past.length % 2 === 0) {

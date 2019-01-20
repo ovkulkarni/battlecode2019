@@ -87,13 +87,13 @@ function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
-        /*const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
+        const defenders = [SPECS.PREACHER, SPECS.CRUSADER, SPECS.PROPHET];
         for (let d of defenders) {
             if (m.karbonite >= unit_cost(d)[0]) {
                 m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
                 break;
             }
-        }*/
+        }
     }
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
@@ -103,7 +103,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = 8;
+    const desired_defenders = Math.floor(m.me.turn / 100)*2 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
     }
@@ -111,11 +111,11 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, constants.EMERGENCY_PRIORITY));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 5));
     for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, constants.EMERGENCY_PRIORITY));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
     for (let i = 0; i < 8; i++)
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 0));
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
 }
 
 function handle_horde(m) {
