@@ -10,9 +10,9 @@ import { open_neighbors2, idx, dis } from './helpers.js';
 export function runPilgrim(m) {
     //m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     //m.log("INITIAL MISSION: " + m.mission);
-    if(m.diffused) {
+    if (m.diffused) {
         m.diffused = false;
-        if(m.pathfinder === undefined)
+        if (m.pathfinder === undefined)
             m.pathfinder.recalculate(m);
     }
     if (m.me.turn === 1) {
@@ -34,8 +34,8 @@ export function runPilgrim(m) {
                     if (m.church_loc === undefined) {
                         return build_church(m);
                     }
-                    m.log(m.church_loc);
-                    if(idx(m.visible_map, ...m.church_loc) === 0) {
+                    // m.log(m.church_loc);
+                    if (idx(m.visible_map, ...m.church_loc) === 0) {
                         return build_church(m);
                     }
                     return m.give(...m.diff_church_loc, m.me.karbonite, m.me.fuel);
@@ -82,7 +82,7 @@ export function runPilgrim(m) {
                     }
                 }
                 if (m.fuel > SPECS.MINE_FUEL_COST) {
-                    if(idx(m.fuel_map, m.me.x, m.me.y) || idx(m.karbonite_map, m.me.x, m.me.y))
+                    if (idx(m.fuel_map, m.me.x, m.me.y) || idx(m.karbonite_map, m.me.x, m.me.y))
                         return m.mine();
                     else {
                         m.pathfinder.recalculate(m);
@@ -99,7 +99,7 @@ export function runPilgrim(m) {
             m.mission = constants.GATHER;
             get_pathfinder(m);
             //m.log("GIVING IN DIRECTION: " + dx + " " + dy);
-            if(idx(m.visible_map, m.me.x+dx, m.me.y+dy) === 0) {
+            if (idx(m.visible_map, m.me.x + dx, m.me.y + dy) === 0) {
                 m.log("CASTLE DIED: BUILDING CHURCH");
                 return m.buildUnit(SPECS.CHURCH, dx, dy);
             }
@@ -202,9 +202,9 @@ export function build_church(m) {
         return;
     }
     let dr = dir[0];
-    for(let i = 0; i < dir.length; i++) {
+    for (let i = 0; i < dir.length; i++) {
         // m.log("CHOICE: " + dir[i]);
-        if(idx(m.karbonite_map, ...dir[i]) || idx(m.fuel_map, ...dir[i])) continue;
+        if (idx(m.karbonite_map, ...dir[i]) || idx(m.fuel_map, ...dir[i])) continue;
         dr = dir[i];
         break;
     }

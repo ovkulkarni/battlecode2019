@@ -74,7 +74,7 @@ export function runProphet(m) {
                         return;
                     } else {
                         m.mission = constants.RETURN;
-                        m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 3));
+                        m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 25));
                         if (dis(m.horde_loc.x, m.horde_loc.y, m.me.x, m.me.y) <= m.stats.VISION_RADIUS && m.visible_enemies.filter(r => r.unit === SPECS.CASTLE).length === 0) {
                             let message = encode8("castle_killed", m.sending_castle);
                             m.castleTalk(message)

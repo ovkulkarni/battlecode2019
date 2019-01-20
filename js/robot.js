@@ -6,9 +6,7 @@ import { runChurch } from './church.js';
 import { runPilgrim } from './pilgrim.js';
 import { runPreacher } from './preacher.js';
 import { runProphet } from './prophet.js';
-import { def_pred } from './predicates.js';
-import { constants} from './constants.js';
-import { get_stats, get_mission, dis, open_neighbors2, idx, all_neighbors2, open_neighbors, all_neighbors } from './helpers.js';
+import { get_stats, get_mission, dis, open_neighbors, idx, all_neighbors2 } from './helpers.js';
 
 class MyRobot extends BCAbstractRobot {
     turn() {
@@ -64,10 +62,9 @@ class MyRobot extends BCAbstractRobot {
 
 function neighbor_score(m, x, y) {
     let count = 0;
-    //for (let loc of all_neighbors2(m, x, y)) {
-    for(let loc of all_neighbors(m,x,y,4)) {
+    for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
-        if (dist === 1 && idx(m.visible_map, ...loc) > 0) {
+        if (dist === 1 && idx(m.visible_map, ...loc) > 0 && idx(m.visible_map, ...loc) !== m.me.id) {
             count++;
         }
     }
@@ -76,38 +73,22 @@ function neighbor_score(m, x, y) {
 
 function diffuse(m) {
     let diff = undefined;
-    if(m.me.unit === 4 && m.mission === constants.DEFEND) {
-        let min_allies = neighbor_score(m, m.me.x, m.me.y);
-        let d = def_pred(m);
-        for (let opt of open_neighbors(m, m.me.x, m.me.y)) {
-            let count = neighbor_score(m, ...opt);
-            if (count < min_allies && d(...opt)) {
-                min_allies = count;
+
+    let min_allies = neighbor_score(m, m.me.x, m.me.y);
+    for (let opt of open_neighbors(m, m.me.x, m.me.y).filter(opt => !idx(m.karbonite_map, opt[0], opt[1]) && !idx(m.fuel_map, opt[0], opt[1]))) {
+        let count = neighbor_score(m, ...opt);
+        if (count < min_allies) {
+            min_allies = count;
+            diff = [opt[0] - m.me.x, opt[1] - m.me.y];
+        } else if (count === min_allies) {
+            if ((diff === undefined && dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) < 3) || (diff !== undefined && dis(opt[0], opt[1], m.spawn_castle.x, m.spawn_castle.y) > dis(m.me.x + diff[0], m.me.y + diff[1], m.spawn_castle.x, m.spawn_castle.y))) {
                 diff = [opt[0] - m.me.x, opt[1] - m.me.y];
             }
-        }
-        if (diff !== undefined) {
-            if (idx(m.karbonite_map, m.me.x + diff[0], m.me.y + diff[1]) || idx(m.fuel_map, m.me.x + diff[0], m.me.y + diff[1]))
-                return;
-            m.diffused = true;
-            return m.move(...diff);
         }
     }
-    else {
-        let min_allies = neighbor_score(m, m.me.x, m.me.y);
-        for (let opt of open_neighbors(m, m.me.x, m.me.y)) {
-            let count = neighbor_score(m, ...opt);
-            if (count < min_allies) {
-                min_allies = count;
-                diff = [opt[0] - m.me.x, opt[1] - m.me.y];
-            }
-        }
-        if (diff !== undefined) {
-            if (idx(m.karbonite_map, m.me.x + diff[0], m.me.y + diff[1]) || idx(m.fuel_map, m.me.x + diff[0], m.me.y + diff[1]))
-                return;
-            m.diffused = true;
-            return m.move(...diff);
-        }
+    if (diff !== undefined) {
+        m.diffused = true;
+        return m.move(...diff);
     }
 }
 

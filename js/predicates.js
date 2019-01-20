@@ -25,7 +25,7 @@ export function fuel_pred_helper(m) {
 }
 
 export function fuel_pred(m) {
-    return pand(fuel_pred_helper(m),on_ally_side_pred(m));
+    return pand(fuel_pred_helper(m), on_ally_side_pred(m));
 }
 
 export function fuel_pred_church(m, xx, yy) {
@@ -37,7 +37,7 @@ export function karbonite_pred_helper(m) {
 }
 
 export function karbonite_pred(m) {
-    return pand(karbonite_pred_helper(m),on_ally_side_pred(m));
+    return pand(karbonite_pred_helper(m), on_ally_side_pred(m));
 }
 
 export function karbonite_pred_church(m, xx, yy) {
@@ -52,11 +52,11 @@ export function on_ally_side_pred(m) {
     let half = Math.floor(m.karbonite_map.length / 2);
     if (sym === constants.HORIZONTAL) {
         // x stays same
-        return ((x,y) => !(y < half) ^ (m.me.y < half));
+        return ((x, y) => !(y < half) ^ (m.me.y < half));
     }
     else {
         // y stays same
-        return ((x,y) => !(x < half) ^ (m.me.x < half));
+        return ((x, y) => !(x < half) ^ (m.me.x < half));
     }
 }
 
@@ -96,16 +96,15 @@ export function prophet_pred(m, cx, cy) {
 }
 
 export function def_pred(m) {
-    let cen = Math.floor(m.karbonite_map.length/2);
     let sym = m.symmetry;
     let half = Math.floor(m.karbonite_map.length / 2);
     if (sym === constants.HORIZONTAL) {
         // x stays same
-        return ((x,y) => Math.abs(y-half) < Math.abs(half-m.spawn_castle.y));
+        return ((x, y) => Math.abs(y - half) < Math.abs(half - m.spawn_castle.y));
     }
     else {
         // y stays same
-        return ((x,y) => Math.abs(x-half) < Math.abs(half-m.spawn_castle.x));
+        return ((x, y) => Math.abs(x - half) < Math.abs(half - m.spawn_castle.x));
     }
 }
 
