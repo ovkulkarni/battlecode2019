@@ -50,7 +50,7 @@ class MyRobot extends BCAbstractRobot {
                 ret = runProphet(this);
                 break;
         }
-        if (ret === true && this.me.unit === SPECS.PILGRIM) {
+        if (ret === true && (this.me.unit === SPECS.PILGRIM || this.me.unit === SPECS.PILGRIM)) {
             return;
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {

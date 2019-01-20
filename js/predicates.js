@@ -94,16 +94,17 @@ export function opposite_of_pred_by(m, fx, fy, v) {
 }
 export function prophet_pred(m, cx, cy) {
     return pand(
-        around_pred(cx, cy, 16, 25),
-        opposite_of_pred_by(m, cx, cy, 2)
+        no_depots(m),
+        around_pred(cx, cy, 16, 36),
+        opposite_of_pred_by(m, cx, cy, 3)
     );
 }
 
 export function lattice_pred(m) {
     let modulus = (m.spawn_castle.x + m.spawn_castle.y) % 2;
-    /*return pand(pand(
+    return pand(
         no_depots(m),
         ((x, y) => (x + y) % 2 === modulus)
-    ),def_pred(m)); */
-    return pand(no_depots(m), prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+    );
+    //return pand(no_depots(m), prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
 }

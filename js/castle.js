@@ -103,7 +103,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50) * 4 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50)*1 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
@@ -111,7 +111,7 @@ function update_queue(m) {
 
 function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 5));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 6));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
     for (let i = 0; i < 6; i++)
@@ -291,7 +291,7 @@ function new_event(m) {
     m.watch_me = undefined;
     // initial reaction to event
     if (m.event.who === m.me.id) {
-        m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
+        m.log(`[${m.me.turn}] NEW EVENT ${JSON.stringify(m.event)}`);
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
@@ -386,7 +386,8 @@ export function unit_cost(b) {
 export function random_defender(m) {
     let preachers = m.visible_allies.filter(r => r.unit === SPECS.PREACHER).length;
     let prophets = m.visible_allies.filter(r => r.unit === SPECS.PROPHET).length;
-    if ((preachers / prophets) < 0.5)
+    /*if ((preachers / prophets) < 0.5)
         return SPECS.PREACHER;
+    */
     return SPECS.PROPHET;
 }
