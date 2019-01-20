@@ -10,6 +10,11 @@ import { open_neighbors2, idx, dis } from './helpers.js';
 export function runPilgrim(m) {
     //m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     //m.log("INITIAL MISSION: " + m.mission);
+    if(m.diffused) {
+        m.diffused = false;
+        if(m.pathfinder === undefined)
+            m.pathfinder.recalculate(m);
+    }
     if (m.me.turn === 1) {
         get_start_pathfinder(m);
     }

@@ -22,7 +22,7 @@ export class EventHandler {
         } else if (this.past.length % 3 === 0 && church !== undefined) {
             event = church;
             m.log("CHURCH EVENT ON TURN: " + m.me.turn);
-        } else if(this.past.length >= 10) {
+        } else if(this.past.length >= 8) {
             event = horde;
             m.log("HORDE EVENT ON TURN: " + m.me.turn);
         }

@@ -41,6 +41,10 @@ export function all_neighbors2(m, x, y) {
         .filter(passable_loc_lambda(m));
 }
 
+export function all_neighbors(m,x,y, speed = undefined) {
+    return speed !== undefined ? list_dir(speed) : m.stats.DIRECTIONS;
+}
+
 export function open_neighbors2(m, x, y) {
     const choices = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
