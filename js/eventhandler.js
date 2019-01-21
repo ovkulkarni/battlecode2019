@@ -16,24 +16,24 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
         let event;
-        if (this.past.length < 50) {
-            if (this.past.length % 4 === 3 && church !== undefined) {
+        if(this.past.length < 50) {
+            if(this.past.length % 4 === 3 && church !== undefined) {
                 event = church;
-                //m.log("CHURCH V1");
+                m.log("CHURCH V1");
             }
             else {
                 event = clear;
-                //m.log("CLEARING V1");
+                m.log("CLEARING V1");
             }
         }
         else {
             if (this.past.length % 3 === 2 && m.fuel > (m.me.turn / 50) * 500) {
                 event = horde;
-                //m.log("HORDING V2");
+                m.log("HORDING V2");
             }
             else {
                 event = clear;
-                //m.log("CLEARING V2");
+                m.log("CLEARING V2");
             }
         }
         this.handle_chosen_event(m, event);
