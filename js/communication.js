@@ -94,6 +94,8 @@ function setup(bits, cs) {
             }
             len++;
         }
+        if (command === undefined)
+            return { command: "ERROR", args: [] };
         let denom = 2 ** name_header_len.get(command);
         let args = d_funcs[command](Math.floor(x / denom));
         return { command: command, args: args };

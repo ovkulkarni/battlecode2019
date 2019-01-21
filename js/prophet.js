@@ -18,7 +18,7 @@ export function runProphet(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
             default:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m));
+                m.pathfinder = new Pathfinder(m, prophet_pred(m), 2);
                 break;
         }
     }
