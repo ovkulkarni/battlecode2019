@@ -50,7 +50,7 @@ class MyRobot extends BCAbstractRobot {
                 ret = runProphet(this);
                 break;
         }
-        if (ret === true && (this.me.unit === SPECS.PILGRIM || this.me.unit === SPECS.PILGRIM)) {
+        if (ret === true) {
             return;
         }
         if (ret === undefined && this.me.unit !== SPECS.CHURCH && this.me.unit !== SPECS.CASTLE) {
@@ -72,7 +72,7 @@ function neighbor_score(m, x, y) {
 }
 
 function diffuse(m) {
-    if(m.me.unit === 2) return;
+    if (m.me.unit === SPECS.PILGRIM) return;
     let diff = undefined;
 
     let min_allies = neighbor_score(m, m.me.x, m.me.y);
