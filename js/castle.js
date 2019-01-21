@@ -87,6 +87,7 @@ function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
+        //m.log("DEFENDING");
         const defenders = [SPECS.PREACHER, SPECS.PROPHET];
         for (let d of defenders) {
             if (m.karbonite >= unit_cost(d)[0]) {
@@ -98,6 +99,9 @@ function update_queue(m) {
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    //m.log("VISIBLE: " + (visible_pilgrims+getDef(m.queue.unit_count, SPECS.PILGRIM, 0)) + " DESIRED: " + desired_pilgrims);
+    if(visible_pilgrims === 0) initialize_queue(m);
+    else
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 4));
     }
