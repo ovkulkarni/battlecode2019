@@ -1,4 +1,4 @@
-import { idx, dis } from './helpers.js';
+import { idx, dis, calcOpposite } from './helpers.js';
 import { constants } from './constants.js';
 
 // predicate combinators
@@ -95,9 +95,17 @@ export function opposite_of_pred_by(m, fx, fy, v) {
 export function prophet_pred(m, cx, cy) {
     return pand(
         no_depots(m),
-        around_pred(cx, cy, 16, 36),
-        opposite_of_pred_by(m, cx, cy, 3)
+        around_pred(cx, cy, 16, 49),
+        def_pred(m)
     );
+}
+
+export function def_pred(m) {
+    let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
+    if (m.symmetry === constants.HORIZONTAL) {
+        return ((x, y) => Math.abs(opp[0] - x) < Math.abs(m.spawn_castle.x - opp[0]))
+    }
+    return ((x, y) => Math.abs(opp[1] - y) < Math.abs(m.spawn_castle.y - opp[1]))
 }
 
 export function lattice_pred(m) {
