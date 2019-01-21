@@ -96,7 +96,8 @@ export function prophet_pred(m, cx, cy) {
     return pand(
         no_depots(m),
         around_pred(cx, cy, 16, 49),
-        def_pred(m)
+        def_pred(m),
+        opposite_of_pred_by(m, cx, cy, 3)
     );
 }
 
