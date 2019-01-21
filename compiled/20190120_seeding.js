@@ -1980,7 +1980,7 @@ function runPilgrim(m) {
                 //m.log("DEPOSITING RESOURCES IN CASTLE");
                 m.mission = constants.GATHER;
                 if (m.initial_mission === constants.GATHER_FUEL || m.initial_mission === constants.GATHER_KARB)
-                    m.initial_mission = constants.GATHER;
+                    m.initial_mission = m.initial_mission;
                 else
                     m.mission = constants.GATHER;
                 return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
