@@ -69,7 +69,7 @@ export function runPilgrim(m) {
             }
             else if (m.mission === constants.DEPOSIT) {
                 //m.log("DEPOSITING RESOURCES IN CASTLE");
-                m.mission === constants.GATHER;
+                m.mission = constants.GATHER;
                 return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
             }
             else {

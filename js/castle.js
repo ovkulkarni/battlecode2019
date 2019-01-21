@@ -107,7 +107,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50)*1 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50) * 1 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
@@ -144,7 +144,7 @@ function handle_horde(m) {
         m.log("SENDING HORDE OF SIZE: " + m.current_horde);
         m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
         if (m.max_horde_size < m.ultimate_horde_size)
-            m.max_horde_size += 2;
+            m.max_horde_size = Math.floor(m.me.turn / 30);
         m.current_horde = 0;
 
         event_complete(m);
