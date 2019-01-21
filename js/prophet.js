@@ -15,7 +15,7 @@ export function runProphet(m) {
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
                 break;
             case constants.HORDE:
-                m.horde_loc = { x: opp[0], y: opp[1] }
+                m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, prophet_pred(m));

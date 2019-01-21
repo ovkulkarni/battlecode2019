@@ -89,7 +89,7 @@ function diffuse(m) {
     }
     if (diff !== undefined) {
         m.diffused = true;
-        m.log("DIFFUSING");
+        //m.log("DIFFUSING");
         return m.move(...diff);
     }
 }

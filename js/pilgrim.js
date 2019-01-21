@@ -135,7 +135,8 @@ export function get_start_pathfinder(m) {
             m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
             break;
         case constants.GATHER_KARB:
-            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            //m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         case constants.CHURCH:
@@ -144,7 +145,8 @@ export function get_start_pathfinder(m) {
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
             break;
         case constants.GATHER_FUEL:
-            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            //m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         default:
@@ -163,7 +165,8 @@ export function get_pathfinder(m) {
             m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
             break;
         case constants.GATHER_KARB:
-            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            //m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         case constants.CHURCH:
@@ -172,7 +175,8 @@ export function get_pathfinder(m) {
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
             break;
         case constants.GATHER_FUEL:
-            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            //m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         default:

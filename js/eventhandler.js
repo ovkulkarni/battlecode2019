@@ -27,7 +27,7 @@ export class EventHandler {
             }
         }
         else {
-            if (this.past.length % 3 === 2) {
+            if (this.past.length % 3 === 2 && m.fuel >= 5000) {
                 event = horde;
                 //m.log("HORDING V2");
             }
