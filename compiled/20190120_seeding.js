@@ -781,8 +781,16 @@ function fuel_pred_helper(m) {
     return ((x, y) => idx(m.fuel_map, x, y));
 }
 
+function fuel_pred(m) {
+    return pand(fuel_pred_helper(m), on_ally_side_pred(m));
+}
+
 function karbonite_pred_helper(m) {
     return ((x, y) => idx(m.karbonite_map, x, y));
+}
+
+function karbonite_pred(m) {
+    return pand(karbonite_pred_helper(m), on_ally_side_pred(m));
 }
 
 function every_pred(m) {
@@ -790,6 +798,19 @@ function every_pred(m) {
 }
 function no_depots(m) {
     return ((x, y) => !idx(m.karbonite_map, x, y) && !idx(m.fuel_map, x, y));
+}
+
+function on_ally_side_pred(m) {
+    let sym = m.symmetry;
+    let half = Math.floor(m.karbonite_map.length / 2);
+    if (sym === constants.HORIZONTAL) {
+        // x stays same
+        return ((x, y) => !(y < half) ^ (m.me.y < half));
+    }
+    else {
+        // y stays same
+        return ((x, y) => !(x < half) ^ (m.me.x < half));
+    }
 }
 function opposite_of_pred_by(m, fx, fy, v) {
     let center_x = Math.floor(m.map[0].length / 2);
@@ -807,9 +828,18 @@ function opposite_of_pred_by(m, fx, fy, v) {
 function prophet_pred(m, cx, cy) {
     return pand(
         no_depots(m),
-        around_pred(cx, cy, 16, 36),
+        around_pred(cx, cy, 16, 49),
+        def_pred(m),
         opposite_of_pred_by(m, cx, cy, 3)
     );
+}
+
+function def_pred(m) {
+    let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
+    if (m.symmetry === constants.HORIZONTAL) {
+        return ((x, y) => Math.abs(opp[0] - x) < Math.abs(m.spawn_castle.x - opp[0]))
+    }
+    return ((x, y) => Math.abs(opp[1] - y) < Math.abs(m.spawn_castle.y - opp[1]))
 }
 
 function get_symmetry(m) {
@@ -1148,21 +1178,21 @@ class EventHandler {
         if (this.past.length < 50) {
             if (this.past.length % 4 === 3 && church !== undefined) {
                 event = church;
-                //m.log("CHURCH V1");
+                m.log("CHURCH V1");
             }
             else {
                 event = clear;
-                //m.log("CLEARING V1");
+                m.log("CLEARING V1");
             }
         }
         else {
-            if (this.past.length % 3 === 2 && m.fuel > (m.me.turn / 50) * 500) {
+            if (this.past.length % 3 === 2 && m.fuel > Math.floor(m.me.turn / 50) * 500) {
                 event = horde;
-                //m.log("HORDING V2");
+                m.log("HORDING V2");
             }
             else {
                 event = clear;
-                //m.log("CLEARING V2");
+                m.log("CLEARING V2");
             }
         }
         this.handle_chosen_event(m, event);
@@ -1358,6 +1388,7 @@ function pick_unit(m) {
 
 function update_queue(m) {
     if (m.mission === constants.DEFEND) {
+        //m.log("DEFENDING");
         const defenders = [SPECS$1.PREACHER, SPECS$1.PROPHET];
         for (let d of defenders) {
             if (m.karbonite >= unit_cost(d)[0]) {
@@ -1369,12 +1400,15 @@ function update_queue(m) {
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS$1.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
+    //m.log("VISIBLE: " + (visible_pilgrims+getDef(m.queue.unit_count, SPECS.PILGRIM, 0)) + " DESIRED: " + desired_pilgrims);
+    //if(visible_pilgrims === 0) initialize_queue(m);
+    //else
     while (getDef(m.queue.unit_count, SPECS$1.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS$1.PILGRIM, constants.GATHER, 4));
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50)*1 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50) * 1 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
@@ -1385,7 +1419,7 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS$1.PILGRIM, constants.GATHER_KARB, 6));
     for (let i = 0; i < m.fuel_locs.length; i++)
         m.queue.push(Unit(SPECS$1.PILGRIM, constants.GATHER_FUEL, 3));
-    for (let i = 0; i < 6; i++)
+    for (let i = 0; i < 3; i++)
         m.queue.push(Unit(SPECS$1.PROPHET, constants.DEFEND, 4));
 }
 
@@ -1411,7 +1445,7 @@ function handle_horde(m) {
         m.log("SENDING HORDE OF SIZE: " + m.current_horde);
         m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
         if (m.max_horde_size < m.ultimate_horde_size)
-            m.max_horde_size += 2;
+            m.max_horde_size = Math.floor(m.me.turn / 30);
         m.current_horde = 0;
 
         event_complete(m);
@@ -1944,7 +1978,11 @@ function runPilgrim(m) {
             }
             else if (m.mission === constants.DEPOSIT) {
                 //m.log("DEPOSITING RESOURCES IN CASTLE");
-                m.mission === constants.GATHER;
+                m.mission = constants.GATHER;
+                if (m.initial_mission === constants.GATHER_FUEL || m.initial_mission === constants.GATHER_KARB)
+                    m.initial_mission = constants.GATHER;
+                else
+                    m.mission = constants.GATHER;
                 return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
             }
             else {
@@ -2006,8 +2044,8 @@ function get_start_pathfinder(m) {
             m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
             break;
         case constants.GATHER_KARB:
-            //m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-            m.pathfinder = new Pathfinder(m, every_pred(m));
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            //m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         case constants.CHURCH:
@@ -2016,8 +2054,8 @@ function get_start_pathfinder(m) {
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
             break;
         case constants.GATHER_FUEL:
-            //m.pathfinder = new Pathfinder(m, fuel_pred(m));
-            m.pathfinder = new Pathfinder(m, every_pred(m));
+            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            //m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         default:
@@ -2036,8 +2074,8 @@ function get_pathfinder(m) {
             m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
             break;
         case constants.GATHER_KARB:
-            //m.pathfinder = new Pathfinder(m, karbonite_pred(m));
-            m.pathfinder = new Pathfinder(m, every_pred(m));
+            m.pathfinder = new Pathfinder(m, karbonite_pred(m));
+            //m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         case constants.CHURCH:
@@ -2046,8 +2084,8 @@ function get_pathfinder(m) {
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
             break;
         case constants.GATHER_FUEL:
-            //m.pathfinder = new Pathfinder(m, fuel_pred(m));
-            m.pathfinder = new Pathfinder(m, every_pred(m));
+            m.pathfinder = new Pathfinder(m, fuel_pred(m));
+            //m.pathfinder = new Pathfinder(m, every_pred(m));
             m.initial_mission = m.mission;
             break;
         default:
