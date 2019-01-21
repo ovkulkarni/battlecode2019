@@ -812,11 +812,25 @@ function on_ally_side_pred(m) {
         return ((x, y) => !(x < half) ^ (m.me.x < half));
     }
 }
+function opposite_of_pred_by(m, fx, fy, v) {
+    let center_x = Math.floor(m.map[0].length / 2);
+    let center_y = Math.floor(m.map.length / 2);
+    let x_far = fx > center_x ? 0 : m.map[0].length;
+    let y_far = fy > center_y ? 0 : m.map.length;
+    if (m.symmetry === constants.VERTICAL) {
+        let fd = dis(fx, fy, x_far, fy);
+        return ((x, y) => dis(x, y, x_far, y) < fd && Math.abs(fx - x) >= v);
+    } else if (m.symmetry === constants.HORIZONTAL) {
+        let fd = dis(fx, fy, fx, y_far);
+        return ((x, y) => dis(x, y, x, y_far) < fd && Math.abs(fy - y) >= v);
+    }
+}
 function prophet_pred(m, cx, cy) {
     return pand(
         no_depots(m),
         around_pred(cx, cy, 16, 49),
-        def_pred(m)
+        def_pred(m),
+        opposite_of_pred_by(m, cx, cy, 3)
     );
 }
 
@@ -1161,8 +1175,8 @@ class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
         let event;
-        if(this.past.length < 50) {
-            if(this.past.length % 4 === 3 && church !== undefined) {
+        if (this.past.length < 50) {
+            if (this.past.length % 4 === 3 && church !== undefined) {
                 event = church;
                 m.log("CHURCH V1");
             }
@@ -1172,7 +1186,7 @@ class EventHandler {
             }
         }
         else {
-            if (this.past.length % 3 === 2 && m.fuel > (m.me.turn / 50) * 500) {
+            if (this.past.length % 3 === 2 && m.fuel > Math.floor(m.me.turn / 50) * 500) {
                 event = horde;
                 m.log("HORDING V2");
             }
@@ -1394,7 +1408,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50)*1 + 3;
+    const desired_defenders = Math.floor(m.me.turn / 50) * 1 + 3;
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
@@ -1431,7 +1445,7 @@ function handle_horde(m) {
         m.log("SENDING HORDE OF SIZE: " + m.current_horde);
         m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
         if (m.max_horde_size < m.ultimate_horde_size)
-            m.max_horde_size += 2;
+            m.max_horde_size = Math.floor(m.me.turn / 30);
         m.current_horde = 0;
 
         event_complete(m);
@@ -1964,7 +1978,11 @@ function runPilgrim(m) {
             }
             else if (m.mission === constants.DEPOSIT) {
                 //m.log("DEPOSITING RESOURCES IN CASTLE");
-                m.mission === constants.GATHER;
+                m.mission = constants.GATHER;
+                if (m.initial_mission === constants.GATHER_FUEL || m.initial_mission === constants.GATHER_KARB)
+                    m.initial_mission = constants.GATHER;
+                else
+                    m.mission = constants.GATHER;
                 return m.give(m.spawn_castle.x - m.me.x, m.spawn_castle.y - m.me.y, m.me.karbonite, m.me.fuel);
             }
             else {
