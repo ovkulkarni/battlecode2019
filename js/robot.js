@@ -64,7 +64,8 @@ function neighbor_score(m, x, y) {
     let count = 0;
     for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
-        if (dist === 1 && idx(m.visible_map, ...loc) > 0 && idx(m.visible_map, ...loc) !== m.me.id) {
+        let at = idx(m.visible_map, ...loc);
+        if (dist === 1 && at > 0 && at !== m.me.id && m.getRobot(at).unit !== SPECS.PILGRIM) {
             count++;
         }
     }

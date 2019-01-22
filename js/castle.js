@@ -63,6 +63,8 @@ export function runCastle(m) {
             let msg = 0;
             if (unit.task === constants.CHURCH)
                 msg = encode16("build_church", ...unit.loc);
+            else if (unit.task === constants.PROTECT)
+                msg = encode16("send_horde", ...unit.loc, 3);
             else
                 msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
@@ -304,7 +306,10 @@ function new_event(m) {
                 break;
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
-                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 1, m.event.where));
+                for (let i = 0; i < 2; i++) {
+                    m.queue.push(Unit(SPECS.PROPHET, constants.PROTECT, constants.EMERGENCY_PRIORITY - 1, m.event.where))
+                }
+                m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 2, m.event.where));
                 break;
             case constants.CLEAR_QUEUE:
                 break;

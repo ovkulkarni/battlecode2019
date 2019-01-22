@@ -17,6 +17,8 @@ export function runProphet(m) {
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
+            case constants.PROTECT:
+                break;
             default:
                 m.pathfinder = new Pathfinder(m, prophet_pred(m), 2);
                 break;
@@ -26,7 +28,7 @@ export function runProphet(m) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (m.mission === constants.HORDE && message.command === "send_horde") {
+            if ((m.mission === constants.HORDE || m.mission === constants.PROTECT) && message.command === "send_horde") {
                 m.horde_loc = {};
                 m.horde_loc.x = message.args[0];
                 m.horde_loc.y = message.args[1];
@@ -40,7 +42,7 @@ export function runProphet(m) {
     let att = optimal_attack_diff(m);
     if (att)
         return m.attack(...att);
-    if (m.mission === constants.HORDE) {
+    if (m.mission === constants.HORDE || m.mission === constants.PROTECT) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
                 //m.log(`Trying to find path from ${JSON.stringify(m.spawn_castle)} to ${JSON.stringify(m.horde_loc)}`);
@@ -84,6 +86,20 @@ export function runProphet(m) {
                             m.mission = constants.DEFEND;
                             m.pathfinder = new Pathfinder(m, prophet_pred(m, m.horde_loc.x, m.horde_loc.y));
                         }
+                        delete m.begin_horde;
+                        delete m.intermediate_point;
+                        delete m.on_intermediate;
+                        delete m.started;
+                        return;
+                    }
+                case constants.PROTECT:
+                    if (m.on_intermediate) {
+                        m.on_intermediate = false;
+                        m.pathfinder = new Pathfinder(m, around_pred(m.horde_loc.x, m.horde_loc.y, 1, 3));
+                        return;
+                    } else {
+                        m.mission = constants.DEFEND;
+                        m.pathfinder = new Pathfinder(m, prophet_pred(m, m.horde_loc.x, m.horde_loc.y));
                         delete m.begin_horde;
                         delete m.intermediate_point;
                         delete m.on_intermediate;

@@ -119,6 +119,9 @@ export function get_mission(m) {
                 m.church = message.args;
                 return constants.CHURCH;
             }
+            if (message.command === "send_horde") {
+                return constants.PROTECT;
+            }
         }
     }
 }
