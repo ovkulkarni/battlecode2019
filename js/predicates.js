@@ -25,7 +25,8 @@ export function fuel_pred_helper(m) {
 }
 
 export function fuel_pred(m) {
-    return pand(fuel_pred_helper(m), on_ally_side_pred(m));
+    return fuel_pred_helper(m);
+    //return pand(fuel_pred_helper(m), on_ally_side_pred(m));
 }
 
 export function fuel_pred_church(m, xx, yy) {
@@ -37,7 +38,8 @@ export function karbonite_pred_helper(m) {
 }
 
 export function karbonite_pred(m) {
-    return pand(karbonite_pred_helper(m), on_ally_side_pred(m));
+    return karbonite_pred_helper(m);
+    //return pand(karbonite_pred_helper(m), on_ally_side_pred(m));
 }
 
 export function every_pred(m) {
