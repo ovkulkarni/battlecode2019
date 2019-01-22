@@ -306,7 +306,7 @@ function new_event(m) {
                 break;
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < m.event.defenders; i++) {
                     m.queue.push(Unit(SPECS.PROPHET, constants.PROTECT, constants.EMERGENCY_PRIORITY - 1, m.event.where))
                 }
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 2, m.event.where));

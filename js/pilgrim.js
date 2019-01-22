@@ -31,12 +31,14 @@ export function runPilgrim(m) {
     //m.log("NEXT MOVE: " + JSON.stringify(next));
     if (next.fin) {
         if ((m.mission === constants.GATHER_KARB) || (m.mission === constants.GATHER_FUEL) || (m.mission === constants.CHURCH) || (m.mission === constants.GATHER)) {
+            if (m.mission === constants.CHURCH) {
+                if (m.church_loc === undefined) {
+                    return build_church(m);
+                }
+                // m.log(m.church_loc);
+            }
             if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
                 if (m.mission === constants.CHURCH) {
-                    if (m.church_loc === undefined) {
-                        return build_church(m);
-                    }
-                    // m.log(m.church_loc);
                     if (idx(m.visible_map, ...m.church_loc) === 0) {
                         return build_church(m);
                     }
@@ -66,6 +68,7 @@ export function runPilgrim(m) {
                         return m.move(...nextt.diff);
                     }
                 }
+
             }
             else if (m.mission === constants.DEPOSIT) {
                 //m.log("DEPOSITING RESOURCES IN CASTLE");
@@ -208,5 +211,6 @@ export function build_church(m) {
         return m.buildUnit(SPECS.CHURCH, ...m.diff_church_loc);
     }
     m.church_loc = undefined;
+    m.mission = constants.GATHER;
     return;
 }
