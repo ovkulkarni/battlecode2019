@@ -21,7 +21,7 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
-        else if (false && this.past.length > Object.keys(m.friendly_castles).length + 1 && this.past.length % 4 === 1) {
+        else if (this.past.length > Object.keys(m.friendly_castles).length + 1 && this.past.length % 4 === 1) {
             event = constrict;
             m.log("CONSTRICT V1");
         }
