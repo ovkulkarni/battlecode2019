@@ -18,7 +18,7 @@ export function runChurch(m) {
     }
 
     // first turn logic
-    if (!m.send_complete && m.queue.isEmpty()) {
+    if (!m.send_complete && (m.queue.isEmpty() || m.spawned_units === 5)) {
         m.log("[CHURCH] Sending Event_complete");
         m.castleTalk(encode8("event_complete"));
         m.send_complete = true;
@@ -39,6 +39,7 @@ export function runChurch(m) {
             //m.log(`SENDING TASK ${unit.task}`);
             let msg = encode16("task", unit.task);
             m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+            m.spawned_units++;
             return m.buildUnit(unit.unit, ...build_loc);
         } else {
             //m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
@@ -78,7 +79,7 @@ function initialize_queue(m) {
 
 function determine_mission(m) {
     let prev_mission = m.mission;
-    if (m.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM).length + 2 >= visible_ally_attackers(m).length) {
+    if (m.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH && r.unit !== SPECS.CASTLE).length > 0) {
         m.mission = constants.DEFEND;
         if (prev_mission !== constants.DEFEND) {
             m.log("I'm under attack!");
@@ -103,6 +104,7 @@ function set_globals(m) {
     m.mission = constants.NEUTRAL;
     m.fuel_locs = best_fuel_locs(m);
     m.karb_locs = best_karb_locs(m);
+    m.spawned_units = 0;
 }
 
 function Unit(unit, task, priority) {

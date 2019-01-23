@@ -17,9 +17,11 @@ class MyRobot extends BCAbstractRobot {
         if (this.me.unit === SPECS.CASTLE) {
             this.visible_allies = this.visible_others.filter(r => r.team === this.me.team);
             this.visible_enemies = this.visible_others.filter(r => r.team !== this.me.team);
+            this.scary_enemies = this.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
         } else {
             this.visible_allies = this.visible_others.filter(r => r.team !== undefined && r.team === this.me.team);
             this.visible_enemies = this.visible_others.filter(r => r.team !== undefined && r.team !== this.me.team);
+            this.scary_enemies = this.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
         }
         if (this.mission === undefined)
             this.mission = get_mission(this);

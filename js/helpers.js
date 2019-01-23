@@ -22,7 +22,7 @@ export function open_neighbors(m, x, y, speed = undefined) {
     const choices = speed !== undefined ? list_dir(speed) : m.stats.DIRECTIONS; //[[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
     return choices.map(s => [x + s[0], y + s[1]])
         .filter(valid_loc(m))
-        .filter(s => !in_enemy_range(m, ...s));
+        .filter(s => m.unit !== SPECS.PILGRIM || !in_enemy_range(m, ...s));
 }
 
 export function create_augmented_obj(m, x, y) {
@@ -187,8 +187,7 @@ export function dis_opp_side(m, x, y) {
 }
 
 export function in_enemy_range(m, x, y) {
-    let enemies = m.visible_enemies.filter(r => r.unit !== undefined && r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
-    for (let r of enemies) {
+    for (let r of m.scary_enemies) {
         let r_stats = SPECS.UNITS[r.unit];   
         let dist = dis(r.x, r.y, x, y);
         if (dist <= r_stats.ATTACK_RADIUS[1])

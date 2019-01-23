@@ -26,9 +26,7 @@ export class Pathfinder {
             return o;
         }
         let occupied = idx(m.visible_map, ...next);
-        let attackable = in_enemy_range(m, ...next);
-        if (occupied >= 1 || (m.me.unit === SPECS.PILGRIM && attackable)) {
-            if (m.me.unit === SPECS.PILGRIM && attackable)
+        if (occupied >= 1 || (m.me.unit === SPECS.PILGRIM && in_enemy_range(m, ...next))) {
             if (wait) {
                 o.wait = true;
                 return o;
