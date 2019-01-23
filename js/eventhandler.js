@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { dis, idx, dis_opp_side } from "./helpers.js";
+import { dis, idx, dis_opp_side, centricity } from "./helpers.js";
 
 export var mask = 0xffffffff;
 
@@ -16,25 +16,13 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
         let event;
-        if (this.past.length < 50) {
-            if (this.past.length % 4 === 3 && church !== undefined) {
-                event = church;
-                m.log("CHURCH V1");
-            }
-            else {
-                event = clear;
-                m.log("CLEARING V1");
-            }
+        if (this.past.length % 4 === 0 && church !== undefined) {
+            event = church;
+            //m.log("CHURCH");
         }
         else {
-            if (this.past.length % 3 === 2 && m.fuel > Math.floor(m.me.turn / 50) * 500) {
-                event = horde;
-                m.log("HORDING V2");
-            }
-            else {
-                event = clear;
-                m.log("CLEARING V2");
-            }
+            event = clear;
+            //m.log("CLEARING");
         }
         this.handle_chosen_event(m, event);
         this.past.push(event);
@@ -70,8 +58,6 @@ export class EventHandler {
         let where;
         let who;
         for (let group of m.resource_groups) {
-            let group_karbs = group.filter(l => idx(m.karbonite_map, ...l));
-            let candidate = group_karbs.length !== 0 ? group_karbs[0] : group[0];
             let too_close = false;
             let min_dist_castle_id;
             let min_dist;
@@ -79,7 +65,7 @@ export class EventHandler {
             for (let a_id in m.friendly_castles) {
                 let dist = dis(
                     m.friendly_castles[a_id].x, m.friendly_castles[a_id].y,
-                    ...candidate
+                    group.x, group.y
                 );
                 if (dist <= 49)
                     too_close = true;
@@ -92,7 +78,7 @@ export class EventHandler {
             for (let a_id in m.friendly_churches) {
                 let dist = dis(
                     m.friendly_churches[a_id].x, m.friendly_churches[a_id].y,
-                    ...candidate
+                    group.x, group.y
                 );
                 if (dist <= 49)
                     too_close = true;
@@ -101,19 +87,28 @@ export class EventHandler {
             for (let a_id in m.enemy_castles) {
                 let dist = dis(
                     m.enemy_castles[a_id].x, m.enemy_castles[a_id].y,
-                    ...candidate
+                    group.x, group.y
                 );
-                if (dist <= 225)
+                if (dist <= 120)
                     too_close = true;
             }
             if (too_close) continue;
-            if (where === undefined || dis_opp_side(m, ...where) < dis_opp_side(m, ...candidate)) {
-                where = candidate;
+            let dis_curr;
+            if (where !== undefined)
+                dis_curr = centricity(m, where.x, where.y);
+            let dis_cand = centricity(m, group.x, group.y);
+            //m.log(`${JSON.stringify(where)} ${JSON.stringify(group)}`);
+            //m.log(`${dis_cand} ${dis_curr}`);
+            if (where === undefined ||
+                dis_cand + 50 < dis_curr ||
+                (group.size > where.size && Math.abs(dis_cand - dis_curr) < 50)
+            ) {
+                where = group;
                 who = min_dist_castle_id;
             }
         }
         if (who !== undefined && where !== undefined) {
-            return Event(who - 0, constants.BUILD_CHURCH, where, 50);
+            return Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
         }
         return;
     }

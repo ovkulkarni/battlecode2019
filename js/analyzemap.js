@@ -115,7 +115,7 @@ export function find_optimal_churches(m) {
                 //m.log("KARB/FUEL FOUND IN SQUARE: " + numCol + " " + numRow);
                 matrix[numCol][numRow].push([i, j]);
                 //m.log("LENGTH OF SQUARE: " + matrix[numCol][numRow].length);
-                if (matrix[numCol][numRow].length === 2) {
+                if (matrix[numCol][numRow].length === 1) {
                     goodRegions.push([numCol, numRow]);
                     //m.log("PUSHED REGION: " + numCol + " " + numRow);
                 }
@@ -128,8 +128,9 @@ export function find_optimal_churches(m) {
         let r = goodRegions[i][0];
         let c = goodRegions[i][1];
         let merge = false;
-        for (let a in answer) {
-            if (dis(...a, ...matrix[r][c][0]) <= 25) {
+        for (let a of answer) {
+            if (dis(...a[0], ...matrix[r][c][0]) <= 50) {
+                //m.log(`MERGE ${a[0]} ${matrix[r][c][0]}`);
                 merge = true;
                 a.push(...matrix[r][c]);
                 break;
@@ -145,7 +146,21 @@ export function find_optimal_churches(m) {
     }
     m.log("FINISHED PRINTING CHURCH LOCATIONS");
     */
-    return answer;
+    let patches = [];
+    for (let a of answer.filter(a => a.length > 1)) {
+        let cx = 0;
+        let cy = 0;
+        let size = a.length;
+        for (let loc of a) {
+            cx += loc[0];
+            cy += loc[1];
+        }
+        cx = Math.floor(cx / size);
+        cy = Math.floor(cy / size);
+        patches.push({ x: cx, y: cy, size: size });
+    }
+    //m.log(patches);
+    return patches;
 
 }
 
