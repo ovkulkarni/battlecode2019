@@ -10,6 +10,9 @@ import { open_neighbors2, idx, dis } from './helpers.js';
 export function runPilgrim(m) {
     //m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     //m.log("INITIAL MISSION: " + m.mission);
+    if (m.deposit_loc === undefined) {
+        m.deposit_loc = m.spawn_castle;
+    }
     if (m.diffused) {
         m.diffused = false;
         if (m.pathfinder === undefined)
@@ -30,7 +33,7 @@ export function runPilgrim(m) {
     let next = m.pathfinder.next_loc(m);
     //m.log("NEXT MOVE: " + JSON.stringify(next));
     if (next.fin) {
-        switch(m.mission) {
+        switch (m.mission) {
             case constants.CHURCH:
                 if (m.church_loc === undefined) {
                     m.log("BUILDING CHURCH");
@@ -72,8 +75,8 @@ export function get_start_pathfinder(m) {
             m.mission = constants.GATHER;
             break;
         case constants.DEPOSIT:
-            m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
-            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+            m.pathfinder = new Pathfinder(m, around_pred(m.deposit_loc.x, m.deposit_loc.y, 1, 2));
+            m.pathfinder.final_loc = [m.deposit_loc.x, m.deposit_loc.y];
             break;
         case constants.GATHER_KARB:
             m.pathfinder = new Pathfinder(m, karbonite_pred(m));
@@ -98,18 +101,18 @@ export function get_start_pathfinder(m) {
 export function get_pathfinder(m) {
     switch (m.mission) {
         case constants.GATHER:
-            if(m.initial_mission === undefined) {
+            if (m.initial_mission === undefined) {
                 m.initial_mission = m.mission;
             }
             m.pathfinder = new Pathfinder(m, every_pred(m));
             m.mission = constants.GATHER;
             break;
         case constants.DEPOSIT:
-            m.pathfinder = new Pathfinder(m, around_pred(m.spawn_castle.x, m.spawn_castle.y, 1, 2));
-            m.pathfinder.final_loc = [m.spawn_castle.x, m.spawn_castle.y];
+            m.pathfinder = new Pathfinder(m, around_pred(m.deposit_loc.x, m.deposit_loc.y, 1, 2));
+            m.pathfinder.final_loc = [m.deposit_loc.x, m.deposit_loc.y];
             break;
         case constants.GATHER_KARB:
-            if(m.initial_mission === undefined) {
+            if (m.initial_mission === undefined) {
                 m.initial_mission = m.mission;
             }
             m.pathfinder = new Pathfinder(m, karbonite_pred(m));
@@ -120,7 +123,7 @@ export function get_pathfinder(m) {
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
             break;
         case constants.GATHER_FUEL:
-            if(m.initial_mission === undefined) {
+            if (m.initial_mission === undefined) {
                 m.initial_mission = m.mission;
             }
             m.pathfinder = new Pathfinder(m, fuel_pred(m));
@@ -150,6 +153,7 @@ export function build_church(m) {
     m.diff_church_loc = [dr[0] - m.me.x, dr[1] - m.me.y];
     if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
         m.mission = constants.GATHER;
+        m.deposit_loc = { x: dr[0], y: dr[1] };
         return m.buildUnit(SPECS.CHURCH, ...m.diff_church_loc);
     }
     m.church_loc = undefined;
@@ -158,33 +162,25 @@ export function build_church(m) {
 
 export function handleGather(m) {
     if (m.me.karbonite === m.stats.KARBONITE_CAPACITY || m.me.fuel === m.stats.FUEL_CAPACITY) {
-        if (m.hasChurch) {
-            if (idx(m.visible_map, ...m.church_loc) === 0) {
-                return build_church(m);
-            }
-            return m.give(...m.diff_church_loc, m.me.karbonite, m.me.fuel);
+        if (m.initial_mission === undefined) {
+            m.initial_mission = m.mission;
+        }
+        m.mission = constants.DEPOSIT;
+        get_pathfinder(m);
+        let nextt = m.pathfinder.next_loc(m);
+        if (nextt.fin) {
+            m.mission === constants.GATHER;
+            return m.give(m.pathfinder.final_loc[0] - m.me.x, m.pathfinder.final_loc[1] - m.me.y, m.me.karbonite, m.me.fuel);
+        }
+        else if (nextt.fail) {
+            m.pathfinder.recalculate(m);
+            return true;
+        }
+        else if (nextt.wait) {
+            return true;
         }
         else {
-            if(m.initial_mission === undefined) {
-                m.initial_mission = m.mission;
-            }
-            m.mission = constants.DEPOSIT;
-            get_pathfinder(m);
-            let nextt = m.pathfinder.next_loc(m);
-            if (nextt.fin) {
-                m.mission === constants.GATHER;
-                return m.give(m.pathfinder.final_loc[0] - m.me.x, m.pathfinder.final_loc[1] - m.me.y, m.me.karbonite, m.me.fuel);
-            }
-            else if (nextt.fail) {
-                m.pathfinder.recalculate(m);
-                return true;
-            }
-            else if (nextt.wait) {
-                return true;
-            }
-            else {
-                return m.move(...nextt.diff);
-            }
+            return m.move(...nextt.diff);
         }
     }
     else {
