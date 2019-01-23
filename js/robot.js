@@ -1,5 +1,5 @@
 import { BCAbstractRobot, SPECS } from 'battlecode';
-import { get_symmetry, get_visible_base } from './analyzemap.js';
+import { get_symmetry, get_visible_base, get_attackable_map } from './analyzemap.js';
 import { runCastle } from './castle.js';
 import { runCrusader } from './crusader.js';
 import { runChurch } from './church.js';
@@ -22,6 +22,9 @@ class MyRobot extends BCAbstractRobot {
             this.visible_allies = this.visible_others.filter(r => r.team !== undefined && r.team === this.me.team);
             this.visible_enemies = this.visible_others.filter(r => r.team !== undefined && r.team !== this.me.team);
             this.scary_enemies = this.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
+        }
+        if (this.me.unit === SPECS.PILGRIM) {
+            this.attackable_map = get_attackable_map(this);
         }
         if (this.mission === undefined)
             this.mission = get_mission(this);

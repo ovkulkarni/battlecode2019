@@ -291,3 +291,29 @@ export function optimal_attack_diff(m) {
                 return [closest.x - m.me.x, closest.y - m.me.y];
     }
 }
+
+export function get_attackable_map(m) {
+    let amap = [];
+    for (let i = 0; i < m.map.length; i++){
+        amap.push([]);
+        for (let j = 0; j < m.map.length; j++) {
+            amap[i][j] = false;
+        }
+    }
+    for (let r of m.scary_enemies) {
+        let r_stats = SPECS.UNITS[r.unit];
+        let minr = r_stats.ATTACK_RADIUS[0];
+        let maxr = r_stats.ATTACK_RADIUS[1];
+        for (let dx = -Math.sqrt(maxr); dx <= Math.sqrt(maxr); dx++){
+            for (let dy = -Math.sqrt(maxr); dy <= Math.sqrt(maxr); dy++){
+                if (amap[r.x + dx][r.y + dy])
+                    continue;
+                let dist = (dx * dx) + (dy * dy);
+                if (dist >= minr && dist <= maxr) {
+                    amap[r.x + dx][r.y + dy] = true;
+                }
+            }
+        }
+    }
+    return amap;
+}
