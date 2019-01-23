@@ -67,8 +67,10 @@ function neighbor_score(m, x, y) {
     for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
         let at = idx(m.visible_map, ...loc);
-        if (dist === 1 && at > 0 && at !== m.me.id && m.getRobot(at).unit !== SPECS.PILGRIM) {
+        if (dist === 1 && at > 0 && at !== m.me.id) {
             count++;
+            if (m.getRobot(at).unit === SPECS.PILGRIM && dis(m.spawn_castle.x, m.spawn_castle.y) > 9)
+                count--;
         }
     }
     return count;
@@ -85,7 +87,7 @@ function diffuse(m) {
             min_allies = count;
             diff = [opt[0] - m.me.x, opt[1] - m.me.y];
         } else if (count === min_allies) {
-            if ((diff === undefined && dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) < 3) || (diff !== undefined && dis(opt[0], opt[1], m.spawn_castle.x, m.spawn_castle.y) > dis(m.me.x + diff[0], m.me.y + diff[1], m.spawn_castle.x, m.spawn_castle.y))) {
+            if ((diff === undefined && dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) < 4) || (diff !== undefined && dis(opt[0], opt[1], m.spawn_castle.x, m.spawn_castle.y) > dis(m.me.x + diff[0], m.me.y + diff[1], m.spawn_castle.x, m.spawn_castle.y))) {
                 diff = [opt[0] - m.me.x, opt[1] - m.me.y];
             }
         }

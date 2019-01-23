@@ -25,7 +25,8 @@ let task_constant_bins = [
         "GATHER_KARB",
         "CHURCH",
         "DEPOSIT",
-        "NEUTRAL"
+        "NEUTRAL",
+        "SCOUT"
     ],
     [// CRUSADER, PROPHET, PREACHER
         "ATTACK",
@@ -33,7 +34,8 @@ let task_constant_bins = [
         "NEUTRAL",
         "HORDE",
         "RETURN",
-        "PROTECT"
+        "PROTECT",
+        "CONSTRICT"
     ],
 ]
 

@@ -14,6 +14,9 @@ export function runProphet(m) {
             case constants.ATTACK:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
                 break;
+            case constants.CONSTRICT:
+                m.pathfinder = new Pathfinder(m, around_pred(...opp, 10, 11))
+                break;
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
@@ -36,12 +39,18 @@ export function runProphet(m) {
                 m.begin_horde = true;
             } else if (message.command === "update_task") {
                 m.mission = message.args[0];
+            } else if (message.command === "stop") {
+                m.started_constricting = true;
+                let r = SPECS.UNITS[(message.args[2] === 0 ? 0 : message.args[2] + 2)].ATTACK_RADIUS[1];
+                m.pathfinder = new Pathfinder(m, around_pred(message.args[0], message.args[1], r + 4, r + 9));
             }
         }
     }
     let att = optimal_attack_diff(m);
     if (att)
         return m.attack(...att);
+    if (m.mission === constants.CONSTRICT && !m.started_constricting)
+        return;
     if (m.mission === constants.HORDE || m.mission === constants.PROTECT) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {

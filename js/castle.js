@@ -42,6 +42,7 @@ export function runCastle(m) {
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
     let unit = pick_unit(m);
     let result;
+    let msg = 0;
     if (unit !== undefined) {
         let leftover_k = m.karbonite - unit_cost(unit.unit)[0];
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
@@ -60,14 +61,14 @@ export function runCastle(m) {
                 case constants.HORDE:
                     m.current_horde++; break;
             }
-            let msg = 0;
             if (unit.task === constants.CHURCH)
                 msg = encode16("build_church", ...unit.loc);
             else if (unit.task === constants.PROTECT)
                 msg = encode16("send_horde", ...unit.loc, 3);
             else
                 msg = encode16("task", unit.task);
-            m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
+            if (msg !== 0)
+                m.signal(msg, build_loc[0] ** 2 + build_loc[1] ** 2);
             result = m.buildUnit(unit.unit, ...build_loc);
         } else {
             //m.log(`FAILED BUILD ATTEMPT: ${JSON.stringify(unit)}`);
@@ -75,6 +76,11 @@ export function runCastle(m) {
         }
     }
     if (m.event && m.event.who === m.me.id && m.event.what === constants.CLEAR_QUEUE && m.queue.isEmpty()) {
+        event_complete(m);
+    }
+    if (m.event && m.event.who === m.me.id && m.event.what === constants.CONSTRICT && getDef(m.queue.task_count, constants.CONSTRICT, 5) === 0 && getDef(m.queue.task_count, constants.SCOUT, 1) === 0 && msg === 0) {
+        m.log('SENT CONSTRICTION GROUP');
+        m.signal(encode16("start"), 100);
         event_complete(m);
     }
     return result;
@@ -311,6 +317,10 @@ function new_event(m) {
                 }
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 2, m.event.where));
                 break;
+            case constants.CONSTRICT:
+                m.queue.push(Unit(SPECS.PILGRIM, constants.SCOUT, constants.EMERGENCY_PRIORITY - 1))
+                for (let i = 0; i < 4; i++)
+                    m.queue.push(Unit(SPECS.PROPHET, constants.CONSTRICT, constants.EMERGENCY_PRIORITY - 2))
             case constants.CLEAR_QUEUE:
                 break;
             default:

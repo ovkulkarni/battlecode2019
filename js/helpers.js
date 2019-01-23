@@ -188,10 +188,18 @@ export function dis_opp_side(m, x, y) {
 
 export function in_enemy_range(m, x, y) {
     for (let r of m.scary_enemies) {
-        let r_stats = SPECS.UNITS[r.unit];   
+        let r_stats = SPECS.UNITS[r.unit];
         let dist = dis(r.x, r.y, x, y);
         if (dist <= r_stats.ATTACK_RADIUS[1])
             return true;
     }
     return false;
+}
+
+export function edge_attacker(m) {
+    let enemies = m.scary_enemies;
+    if (enemies.length > 0) {
+        enemies.sort((a, b) => (a.dist - SPECS.UNITS[a.unit].ATTACK_RADIUS[1]) - (b.dist - SPECS.UNITS[b.unit].ATTACK_RADIUS[1]))
+        return enemies[0];
+    }
 }

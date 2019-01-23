@@ -46,7 +46,7 @@ export class Pathfinder {
         }
         let result = this.path.pop();
         //m.log("NEXT MOVE: " + result);
-        if(result === undefined) {
+        if (result === undefined) {
             o.fail = true;
             return o;
         }
