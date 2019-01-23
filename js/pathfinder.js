@@ -1,4 +1,5 @@
-import { open_neighbors, idx, dis } from './helpers.js';
+import { SPECS } from 'battlecode';
+import { open_neighbors, idx, dis, in_enemy_range } from './helpers.js';
 
 export class Pathfinder {
     constructor(m, goal, speed = undefined) {
@@ -25,7 +26,9 @@ export class Pathfinder {
             return o;
         }
         let occupied = idx(m.visible_map, ...next);
-        if (occupied >= 1) {
+        let attackable = in_enemy_range(m, ...next);
+        if (occupied >= 1 || (m.me.unit === SPECS.PILGRIM && attackable)) {
+            if (m.me.unit === SPECS.PILGRIM && attackable)
             if (wait) {
                 o.wait = true;
                 return o;
