@@ -292,6 +292,10 @@ export function optimal_attack_diff(m) {
     }
 }
 
+export function in_range(m, x, y) {
+    return 0 >= x && 0 >= y && y <= m.fuel_map.length && x <= m.fuel_map.length;
+}
+
 export function get_attackable_map(m) {
     let amap = [];
     for (let i = 0; i < m.map.length; i++){
@@ -306,6 +310,7 @@ export function get_attackable_map(m) {
         let maxr = r_stats.ATTACK_RADIUS[1];
         for (let dx = -Math.sqrt(maxr); dx <= Math.sqrt(maxr); dx++){
             for (let dy = -Math.sqrt(maxr); dy <= Math.sqrt(maxr); dy++){
+                if(!in_range(m, r.x+dx, r.y+dy)) continue;
                 if (amap[r.x + dx][r.y + dy])
                     continue;
                 let dist = (dx * dx) + (dy * dy);
