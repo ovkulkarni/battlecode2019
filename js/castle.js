@@ -115,7 +115,7 @@ function update_queue(m) {
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(m.me.turn / 50) * 1 + 3;
+    const desired_defenders = Math.floor(Math.floor(m.me.turn / 25) * 0.75 + 3);
     while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
         m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
     }
@@ -156,7 +156,7 @@ function handle_horde(m) {
         m.current_horde = 0;
 
         event_complete(m);
-        return true;
+        return true;    
     }
 }
 

@@ -21,10 +21,6 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
-        else if (this.past.length > Object.keys(m.friendly_castles).length + 1 && this.past.length % 4 === 1) {
-            event = constrict;
-            m.log("CONSTRICT V1");
-        }
         else {
             event = clear;
             //m.log("CLEARING");
@@ -65,6 +61,7 @@ export class EventHandler {
     next_church(m) {
         let where;
         let who;
+        let cur_dist;
         for (let group of m.resource_groups) {
             let too_close = false;
             let min_dist_castle_id;
@@ -101,18 +98,19 @@ export class EventHandler {
                     too_close = true;
             }
             if (too_close) continue;
-            let dis_curr;
+            let cur_cent;
             if (where !== undefined)
-                dis_curr = centricity(m, where.x, where.y);
-            let dis_cand = centricity(m, group.x, group.y);
+                cur_cent = centricity(m, where.x, where.y);
+            let cand_cent = centricity(m, group.x, group.y);
             //m.log(`${JSON.stringify(where)} ${JSON.stringify(group)}`);
             //m.log(`${dis_cand} ${dis_curr}`);
             if (where === undefined ||
-                dis_cand + 50 < dis_curr ||
-                (group.size > where.size && Math.abs(dis_cand - dis_curr) < 50)
+                (cand_cent <= 50 && (group.size > where.size || cur_cent > 50)) ||
+                (cur_cent > 50 && min_dist < cur_dist)
             ) {
                 where = group;
                 who = min_dist_castle_id;
+                cur_dist = min_dist;
             }
         }
         if (who !== undefined && where !== undefined) {

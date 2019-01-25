@@ -23,7 +23,7 @@ export function runProphet(m) {
             case constants.PROTECT:
                 break;
             default:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m), 2);
+                m.pathfinder = new Pathfinder(m, lattice_pred(m), 2);
                 break;
         }
     }

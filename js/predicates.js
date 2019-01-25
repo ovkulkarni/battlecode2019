@@ -112,10 +112,8 @@ export function def_pred(m) {
 }
 
 export function lattice_pred(m) {
-    let modulus = (m.spawn_castle.x + m.spawn_castle.y) % 2;
     return pand(
         no_depots(m),
-        ((x, y) => (x + y) % 2 === modulus)
+        ((x, y) => (x + y) % 2 === 1)
     );
-    //return pand(no_depots(m), prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
 }
