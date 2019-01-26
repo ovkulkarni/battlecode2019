@@ -107,6 +107,7 @@ export function get_start_pathfinder(m) {
             m.castleTalk(encode8("watch_me"));
             //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
+            m.pathfinder.pilgrim_kys = true;
             break;
         case constants.GATHER_FUEL:
             m.pathfinder = new Pathfinder(m, fuel_pred(m));

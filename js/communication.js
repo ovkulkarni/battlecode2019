@@ -3,11 +3,13 @@ export let encode8, decode8, encode16, decode16;
 const commands8 = [
     command("castle_coord", [6]),
     command("event_complete", []),
+    command("event_failed", []),
     command("castle_killed", [2]),
     command("came_back", []),
     command("watch_me", []),
     command("pause", []),
-    command("unpause", [])
+    command("unpause", []),
+    command("church_built", [])
 ]
 
 const commands16 = [

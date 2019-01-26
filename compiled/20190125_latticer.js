@@ -320,11 +320,13 @@ let encode8, decode8, encode16, decode16;
 const commands8 = [
     command("castle_coord", [6]),
     command("event_complete", []),
+    command("event_failed", []),
     command("castle_killed", [2]),
     command("came_back", []),
     command("watch_me", []),
     command("pause", []),
-    command("unpause", [])
+    command("unpause", []),
+    command("church_built", [])
 ];
 
 const commands16 = [
@@ -618,6 +620,8 @@ class Pathfinder {
         this.goal = goal;
         this.passed_speed = speed;
         this.speed = speed || m.stats.SPEED;
+        this.pilgrim_kys = false;
+        this.recalculate_points = [];
         this.recalculate(m);
     }
     next_loc(m, wait = false) {
@@ -638,16 +642,37 @@ class Pathfinder {
             return o;
         }
         let occupied = idx(m.visible_map, ...next);
-        if (occupied >= 1 || (m.me.unit === SPECS$1.PILGRIM && m.attackable_map[next[0]][next[1]])) {
+        let attackable = m.me.unit === SPECS$1.PILGRIM && m.attackable_map[next[0]][next[1]];
+        if (occupied >= 1 || attackable) {
             if (wait) {
                 o.wait = true;
                 return o;
             }
-            this.recalculate(m);
-            if (this.path === undefined) {
-                o.fail = true;
-                return o;
+            
+            let old_path = this.path;
+
+            let back_and_forth = false;
+            for (let rp of this.recalculate_points) {
+                if (dis(...rp, m.me.x, m.me.y) < 8) {
+                    m.log("I'm just moving back and forth!");
+                    back_and_forth = true;
+                    this.path = undefined;
+                }
             }
+            this.recalculate_points.push([m.me.x, m.me.y]); 
+            
+            if (!back_and_forth)
+                this.recalculate(m);
+            if (this.path === undefined) {
+                if (attackable && this.pilgrim_kys) {
+                    m.log("Intentionally die!");
+                    this.path = old_path;
+                } else {
+                    o.fail = true;
+                    return o;
+                }
+            }
+            next = this.path[this.path.length - 1];
         }
         if (dis(...next, m.me.x, m.me.y) > this.speed) {
             this.recalculate(m);
@@ -655,6 +680,7 @@ class Pathfinder {
                 o.fail = true;
                 return o;
             }
+            next = this.path[this.path.length - 1];
         }
         let result = this.path.pop();
         //m.log("NEXT MOVE: " + result);
@@ -1096,7 +1122,7 @@ function optimal_attack_diff(m) {
 }
 
 function in_range(m, x, y) {
-    return 0 >= x && 0 >= y && y <= m.fuel_map.length && x <= m.fuel_map.length;
+    return x >= 0 && y >= 0 && y < m.map.length && x < m.map.length;
 }
 
 function get_attackable_map(m) {
@@ -1134,6 +1160,7 @@ const right = i => (i + 1) << 1;
 class PriorityQueue {
   constructor(comparator = (a, b) => a > b) {
     this.task_count = new Map();
+    this.emergency_task_count = new Map();
     this.unit_count = new Map();
     this._heap = [];
     this._comparator = comparator;
@@ -1154,6 +1181,11 @@ class PriorityQueue {
         this.task_count.set(value.task, 0);
       this.task_count.set(value.task, 1 + this.task_count.get(value.task));
 
+      if (!this.emergency_task_count.has(value.task))
+        this.emergency_task_count.set(value.task, 0);
+      if(value.priority >= constants.EMERGENCY_PRIORITY)
+        this.emergency_task_count.set(value.task, 1 + this.emergency_task_count.get(value.task));
+
       if (!this.unit_count.has(value.unit))
         this.unit_count.set(value.unit, 0);
       this.unit_count.set(value.unit, 1 + this.unit_count.get(value.unit));
@@ -1171,8 +1203,12 @@ class PriorityQueue {
     }
     this._heap.pop();
     this._siftDown();
+
     this.task_count.set(poppedValue.task, this.task_count.get(poppedValue.task) - 1);
     this.unit_count.set(poppedValue.unit, this.unit_count.get(poppedValue.unit) - 1);
+    if(poppedValue.priority >= constants.EMERGENCY_PRIORITY)
+      this.emergency_task_count.set(poppedValue.task, this.emergency_task_count.get(poppedValue.task) - 1);
+    
     return poppedValue;
   }
   replace(value) {
@@ -1216,8 +1252,12 @@ class EventHandler {
         this.m_z = (987654321 - seed) & mask;
         this.past = [];
         this.last_clear = {};
+        this.church_fails = {};
     }
-    next_event(m) {
+    next_event(m, failed = false) {
+        if (failed) {
+            this.handle_failure(m);
+        }
         let clear = this.next_clear(m);
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
@@ -1269,6 +1309,8 @@ class EventHandler {
         let who;
         let cur_dist;
         for (let group of m.resource_groups) {
+            if (this.church_fails[[group.x, group.y]] !== undefined)
+                continue;
             let too_close = false;
             let min_dist_castle_id;
             let min_dist;
@@ -1324,6 +1366,16 @@ class EventHandler {
         }
         return;
     }
+    handle_failure(m) {
+        let prev_event = this.past[this.past.length - 1];
+        switch (prev_event.what) {
+            case constants.BUILD_CHURCH:
+                if (this.church_fails[prev_event.where] === undefined)
+                    this.church_fails[prev_event.where] = 0;
+                this.church_fails[prev_event.where]++;
+                break;
+        }
+    }
     closest_to_enemy(m, random_factor) {
         let best_a_id;
         let min_distance = 64 * 64 + 1;
@@ -1362,12 +1414,18 @@ function runCastle(m) {
         set_globals(m);
     }
 
+    m.no_event_completing = false;
     if (m.new_event_available) {
+        new_event(m, m.failed_last_event);
         m.new_event_available = false;
-        new_event(m);
+        m.failed_last_event = false;
     }
     handle_castle_talk(m);
     send_castle_coord(m);
+    if (m.event_complete_waiting) {
+        m.event_complete_waiting = false;
+        event_complete(m, m.failed_waiting);
+    }
 
     if (m.me.turn === 3) {
         m.resource_groups = find_optimal_churches(m);
@@ -1398,7 +1456,6 @@ function runCastle(m) {
         if (!m.paused &&
             build_opts.length > 0 &&
             leftover_k >= 0 && leftover_f >= 0 &&
-            !(m.mission === constants.DEFEND && unit.task !== constants.DEFEND) &&
             (m.event === undefined || (m.event.who === m.me.id && leftover_k >= m.event.blocking)
                 || leftover_k >= (m.event.blocking + current_stash(m))
                 || unit.priority >= constants.EMERGENCY_PRIORITY)
@@ -1443,31 +1500,34 @@ function pick_unit(m) {
 }
 
 function update_queue(m) {
-    if (m.mission === constants.DEFEND) {
-        //m.log("DEFENDING");
-        const defenders = [SPECS$1.PREACHER, SPECS$1.PROPHET];
-        for (let d of defenders) {
-            if (m.karbonite >= unit_cost(d)[0]) {
-                m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
-                break;
-            }
-        }
-    }
     // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS$1.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
-    //m.log("VISIBLE: " + (visible_pilgrims+getDef(m.queue.unit_count, SPECS.PILGRIM, 0)) + " DESIRED: " + desired_pilgrims);
-    //if(visible_pilgrims === 0) initialize_queue(m);
-    //else
     while (getDef(m.queue.unit_count, SPECS$1.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS$1.PILGRIM, constants.GATHER, 4));
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    const desired_defenders = Math.floor(Math.floor(m.me.turn / 25) * 0.75 + 3);
-    while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
-        m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
+    let desired_defenders = Math.floor(Math.floor(m.me.turn / 25) * 0.75 + 3);
+        
+    if (m.mission === constants.DEFEND) {
+        desired_defenders += Math.ceil(m.visible_enemies.length * constants.DEFENSE_RATIO);
+        if (getDef(m.queue.emergency_task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
+            // add an emergency defender to the queue
+            const defenders = [SPECS$1.PREACHER, SPECS$1.PROPHET];
+            for (let d of defenders) {
+                if (m.karbonite >= unit_cost(d)[0]) {
+                    m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+                    break;
+                }
+            }
+        } 
+    } else {
+        while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
+            m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
+        }
     }
+    
 }
 
 function initialize_queue(m) {
@@ -1505,7 +1565,7 @@ function handle_horde(m) {
         m.current_horde = 0;
 
         event_complete(m);
-        return true;    
+        return true;
     }
 }
 
@@ -1517,6 +1577,7 @@ function determine_mission(m) {
             m.log(`I'm under attack! (${m.me.turn})`);
             m.my_pause = true;
             m.castleTalk(encode8("pause"));
+            m.no_event_completing = true;
         }
     }
     else {
@@ -1531,6 +1592,7 @@ function determine_mission(m) {
         }
         if (m.my_pause) {
             m.castleTalk(encode8("unpause"));
+            m.no_event_completing = true;
             m.my_pause = false;
         }
     }
@@ -1547,12 +1609,20 @@ function handle_castle_talk(m) {
             switch (message.command) {
                 case "castle_coord":
                     handle_castle_coord(m, r, message); break;
+                case "church_built":
+                    if (m.watch_me !== undefined) {
+                        m.watch_me = r.id;
+                    }
+                    m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
+                    break;
                 case "event_complete":
                     event_complete_flag = true;
-                    if (m.friendly_castles[r.id] === undefined) {
-                        m.log("CHURCH LOCATED  EVENT: " + JSON.stringify(m.event));
-                        m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
-                    }
+                    m.no_event_completing = true;
+                    break;
+                case "event_failed":
+                    event_complete_flag = true;
+                    event_failed_flag = true;
+                    m.no_event_completing = true;
                     break;
                 case "castle_killed":
                     let c_id = m.friendly_ids[message.args[0]];
@@ -1635,18 +1705,56 @@ function handle_castle_talk(m) {
 }
 
 function event_complete(m, failed = false) {
-    if (m.event !== undefined) {
-        if (m.event.who === m.me.id && !(m.event.what === constants.BUILD_CHURCH && !failed)) {
-            m.log("Sending event_complete");
-            m.castleTalk(encode8("event_complete"));
-        }
+    // first ever event!
+    if (m.event === undefined) {
+        new_event(m, failed);
+        return;
     }
-    m.new_event_available = true;
+    // already sent the complete message
+    if (m.event.complete_sent) {
+        //m.log("Already sent");
+        return;
+    }
+    // send castle-talk messages
+    if (m.event.who === m.me.id) {
+        let message;
+        if (!failed && m.event.what !== constants.BUILD_CHURCH) {
+            message = encode8("event_complete");
+        } else if (failed) {
+            message = encode8("event_failed");
+        }
+        if (message !== undefined) {
+            if (m.no_event_completing) {
+                m.log("Holding back from completing my event");
+                m.event_complete_waiting = true;
+                m.failed_waiting = failed;
+                return;
+            }
+            m.castleTalk(message);
+            m.event.complete_sent = true;
+
+            if (failed) m.log(`[${m.me.turn}] Sending event_failed`);
+            else m.log(`[${m.me.turn}] Sending event_complete`);
+        }
+        
+    }
+    // decide when to recieve the new event
+    if ((m.event.what === constants.BUILD_CHURCH && !failed) ||
+        (m.event.who !== m.me.id && !m.castle_earlier[m.event.who])
+    ) {
+        new_event(m, failed);
+    } else {
+        //m.log(`DELAY NEW EVENT ${JSON.stringify(m.castle_earlier)}`);
+        m.new_event_available = true;
+        m.failed_last_event = failed;
+    }
+
 }
 
-function new_event(m) {
+function new_event(m, failed) {
+    //m.log("" + m.me.turn);
     // load new event
-    m.event = m.event_handler.next_event(m);
+    m.event = m.event_handler.next_event(m, failed);
     //m.log(`NEW EVENT ${JSON.stringify(m.event)}`);
     // clear watch_me
     m.watch_me = undefined;
@@ -1684,12 +1792,14 @@ function send_castle_coord(m) {
         let msg = encode8("castle_coord", m.me.x);
         //m.log(`Sending ${msg} as x-coordinate`);
         m.castleTalk(msg);
+        m.no_event_completing = true;
     }
     else if (m.sent_y_coord === undefined) {
         m.sent_y_coord = true;
         let msg = encode8("castle_coord", m.me.y);
         //m.log(`Sending ${msg} as y-coordinate`);
         m.castleTalk(msg);
+        m.no_event_completing = true;
     }
 }
 
@@ -1697,8 +1807,13 @@ function handle_castle_coord(m, r, message) {
     if (m.friendly_castles[r.id] === undefined) {
         m.friendly_castles[r.id] = {};
     }
-    if (m.friendly_castles[r.id].x === undefined)
+    if (m.friendly_castles[r.id].x === undefined) {
+        if (m.sent_x_coord === undefined)
+            m.castle_earlier[r.id] = true;
+        else
+            m.castle_earlier[r.id] = false;
         m.friendly_castles[r.id].x = message.args[0];
+    }
     else if (m.friendly_castles[r.id].y === undefined) {
         m.friendly_castles[r.id].y = message.args[0];
         let x = m.friendly_castles[r.id].x;
@@ -1719,6 +1834,7 @@ function create_event_handler(m) {
 function set_globals(m) {
     m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
 
+    m.castle_earlier = {};
     m.friendly_castles = {};
     m.friendly_churches = {};
     m.friendly_castles[m.me.id] = { x: m.me.x, y: m.me.y };
@@ -1734,6 +1850,7 @@ function set_globals(m) {
     m.ultimate_horde_size = Math.ceil(Math.max(m.map.length, m.map[0].length) / 4);
     m.current_horde = 0;
     m.friendly_ids = [`${m.me.id}`];
+    m.no_event_completing = false;
 }
 
 function check_horde$1(m) {
@@ -1871,6 +1988,8 @@ function runChurch(m) {
     //m.log(`CHURCH: (${m.me.x}, ${m.me.y})`);
 
     if (m.me.turn === 1) {
+        m.log("[CHURCH] Sending Church_built");
+        m.castleTalk(encode8("church_built"));
         set_globals$1(m);
     }
 
@@ -1893,8 +2012,7 @@ function runChurch(m) {
         let leftover_f = m.fuel - unit_cost$1(unit.unit)[1];
         if (
             build_opts.length > 0 &&
-            leftover_k >= 0 && leftover_f >= 0 &&
-            !(m.mission === constants.DEFEND && unit.task !== constants.DEFEND)
+            leftover_k >= 0 && leftover_f >= 0
         ) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
@@ -1919,19 +2037,27 @@ function pick_unit$1(m) {
 }
 
 function update_queue$1(m) {
-    if (m.mission === constants.DEFEND) {
-        const defenders = [SPECS$1.PREACHER, SPECS$1.PROPHET];
-        for (let d of defenders) {
-            if (m.karbonite >= unit_cost$1(d)[0]) {
-                m.queue.push(Unit$1(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
-                break;
-            }
-        }
-    }
+    // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS$1.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS$1.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit$1(SPECS$1.PILGRIM, constants.GATHER, 2));
+    }
+    // restore defense
+    const current_defenders = visible_ally_attackers(m).length;
+    let desired_defenders = 0;
+    if (m.mission === constants.DEFEND) {
+        desired_defenders += Math.ceil(m.visible_enemies.length * constants.DEFENSE_RATIO);
+        if (getDef(m.queue.emergency_task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
+            // add an emergency defender to the queue
+            const defenders = [SPECS$1.PREACHER, SPECS$1.PROPHET];
+            for (let d of defenders) {
+                if (m.karbonite >= unit_cost$1(d)[0]) {
+                    m.queue.push(Unit$1(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+                    break;
+                }
+            }
+        } 
     }
 }
 
@@ -1941,7 +2067,7 @@ function initialize_queue$1(m) {
 
 function determine_mission$1(m) {
     let prev_mission = m.mission;
-    if (m.visible_enemies.filter(r => r.unit !== SPECS$1.PILGRIM && r.unit !== SPECS$1.CHURCH && r.unit !== SPECS$1.CASTLE).length > 0) {
+    if (m.visible_enemies.filter(r => r.unit !== SPECS$1.CASTLE).length > 0) {
         m.mission = constants.DEFEND;
         if (prev_mission !== constants.DEFEND) {
             m.log("I'm under attack!");
@@ -2077,6 +2203,7 @@ function get_start_pathfinder(m) {
             m.castleTalk(encode8("watch_me"));
             //m.log("CHURCH PILGRIM   CHURCH: " + m.church);
             m.pathfinder = new Pathfinder(m, exact_pred(...m.church));
+            m.pathfinder.pilgrim_kys = true;
             break;
         case constants.GATHER_FUEL:
             m.pathfinder = new Pathfinder(m, fuel_pred(m));
@@ -2244,7 +2371,7 @@ function runPreacher(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
             case constants.DEFEND:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                m.pathfinder = new Pathfinder(m, lattice_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));

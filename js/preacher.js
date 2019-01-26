@@ -1,5 +1,5 @@
 import { Pathfinder } from './pathfinder.js';
-import { attack_pred, around_pred, prophet_pred } from './predicates.js';
+import { attack_pred, around_pred, prophet_pred, lattice_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
 import { constants } from './constants.js';
 import { wander, compact_horde, optimal_attack_diff } from './analyzemap.js';
@@ -17,7 +17,7 @@ export function runPreacher(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] }
                 break;
             case constants.DEFEND:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                m.pathfinder = new Pathfinder(m, lattice_pred(m, m.spawn_castle.x, m.spawn_castle.y));
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));

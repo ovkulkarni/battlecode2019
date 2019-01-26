@@ -10,8 +10,12 @@ export class EventHandler {
         this.m_z = (987654321 - seed) & mask;
         this.past = [];
         this.last_clear = {};
+        this.church_fails = {};
     }
-    next_event(m) {
+    next_event(m, failed = false) {
+        if (failed) {
+            this.handle_failure(m);
+        }
         let clear = this.next_clear(m);
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
@@ -63,6 +67,8 @@ export class EventHandler {
         let who;
         let cur_dist;
         for (let group of m.resource_groups) {
+            if (this.church_fails[[group.x, group.y]] !== undefined)
+                continue;
             let too_close = false;
             let min_dist_castle_id;
             let min_dist;
@@ -117,6 +123,16 @@ export class EventHandler {
             return Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
         }
         return;
+    }
+    handle_failure(m) {
+        let prev_event = this.past[this.past.length - 1];
+        switch (prev_event.what) {
+            case constants.BUILD_CHURCH:
+                if (this.church_fails[prev_event.where] === undefined)
+                    this.church_fails[prev_event.where] = 0
+                this.church_fails[prev_event.where]++;
+                break;
+        }
     }
     closest_to_enemy(m, random_factor) {
         let best_a_id;

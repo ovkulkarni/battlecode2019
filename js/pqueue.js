@@ -1,3 +1,5 @@
+import { constants } from "./constants.js";
+
 const top = 0;
 const parent = i => ((i + 1) >>> 1) - 1;
 const left = i => (i << 1) + 1;
@@ -6,6 +8,7 @@ const right = i => (i + 1) << 1;
 export class PriorityQueue {
   constructor(comparator = (a, b) => a > b) {
     this.task_count = new Map();
+    this.emergency_task_count = new Map();
     this.unit_count = new Map();
     this._heap = [];
     this._comparator = comparator;
@@ -26,6 +29,11 @@ export class PriorityQueue {
         this.task_count.set(value.task, 0);
       this.task_count.set(value.task, 1 + this.task_count.get(value.task));
 
+      if (!this.emergency_task_count.has(value.task))
+        this.emergency_task_count.set(value.task, 0);
+      if(value.priority >= constants.EMERGENCY_PRIORITY)
+        this.emergency_task_count.set(value.task, 1 + this.emergency_task_count.get(value.task));
+
       if (!this.unit_count.has(value.unit))
         this.unit_count.set(value.unit, 0);
       this.unit_count.set(value.unit, 1 + this.unit_count.get(value.unit));
@@ -43,8 +51,12 @@ export class PriorityQueue {
     }
     this._heap.pop();
     this._siftDown();
+
     this.task_count.set(poppedValue.task, this.task_count.get(poppedValue.task) - 1);
     this.unit_count.set(poppedValue.unit, this.unit_count.get(poppedValue.unit) - 1);
+    if(poppedValue.priority >= constants.EMERGENCY_PRIORITY)
+      this.emergency_task_count.set(poppedValue.task, this.emergency_task_count.get(poppedValue.task) - 1);
+    
     return poppedValue;
   }
   replace(value) {

@@ -9,6 +9,8 @@ export function runChurch(m) {
     //m.log(`CHURCH: (${m.me.x}, ${m.me.y})`);
 
     if (m.me.turn === 1) {
+        m.log("[CHURCH] Sending Church_built");
+        m.castleTalk(encode8("church_built"));
         set_globals(m);
     }
 
@@ -31,8 +33,7 @@ export function runChurch(m) {
         let leftover_f = m.fuel - unit_cost(unit.unit)[1];
         if (
             build_opts.length > 0 &&
-            leftover_k >= 0 && leftover_f >= 0 &&
-            !(m.mission === constants.DEFEND && unit.task !== constants.DEFEND)
+            leftover_k >= 0 && leftover_f >= 0
         ) {
             let build_loc = most_central_loc(m, build_opts);
             //m.log(`BUILD UNIT ${unit.unit} AT (${build_loc[0] + m.me.x}, ${build_loc[1] + m.me.y})`);
@@ -57,19 +58,27 @@ export function pick_unit(m) {
 }
 
 function update_queue(m) {
-    if (m.mission === constants.DEFEND) {
-        const defenders = [SPECS.PREACHER, SPECS.PROPHET];
-        for (let d of defenders) {
-            if (m.karbonite >= unit_cost(d)[0]) {
-                m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
-                break;
-            }
-        }
-    }
+    // restore pilgrims
     const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 2));
+    }
+    // restore defense
+    const current_defenders = visible_ally_attackers(m).length;
+    let desired_defenders = 0;
+    if (m.mission === constants.DEFEND) {
+        desired_defenders += Math.ceil(m.visible_enemies.length * constants.DEFENSE_RATIO);
+        if (getDef(m.queue.emergency_task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
+            // add an emergency defender to the queue
+            const defenders = [SPECS.PREACHER, SPECS.PROPHET];
+            for (let d of defenders) {
+                if (m.karbonite >= unit_cost(d)[0]) {
+                    m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
+                    break;
+                }
+            }
+        } 
     }
 }
 
@@ -79,7 +88,7 @@ function initialize_queue(m) {
 
 function determine_mission(m) {
     let prev_mission = m.mission;
-    if (m.visible_enemies.filter(r => r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH && r.unit !== SPECS.CASTLE).length > 0) {
+    if (m.visible_enemies.filter(r => r.unit !== SPECS.CASTLE).length > 0) {
         m.mission = constants.DEFEND;
         if (prev_mission !== constants.DEFEND) {
             m.log("I'm under attack!");

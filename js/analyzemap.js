@@ -293,7 +293,7 @@ export function optimal_attack_diff(m) {
 }
 
 export function in_range(m, x, y) {
-    return 0 >= x && 0 >= y && y <= m.fuel_map.length && x <= m.fuel_map.length;
+    return x >= 0 && y >= 0 && y < m.map.length && x < m.map.length;
 }
 
 export function get_attackable_map(m) {

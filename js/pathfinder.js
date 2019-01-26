@@ -6,6 +6,8 @@ export class Pathfinder {
         this.goal = goal;
         this.passed_speed = speed;
         this.speed = speed || m.stats.SPEED;
+        this.pilgrim_kys = false
+        this.recalculate_points = [];
         this.recalculate(m);
     }
     next_loc(m, wait = false) {
@@ -26,16 +28,37 @@ export class Pathfinder {
             return o;
         }
         let occupied = idx(m.visible_map, ...next);
-        if (occupied >= 1 || (m.me.unit === SPECS.PILGRIM && m.attackable_map[next[0]][next[1]])) {
+        let attackable = m.me.unit === SPECS.PILGRIM && m.attackable_map[next[0]][next[1]]
+        if (occupied >= 1 || attackable) {
             if (wait) {
                 o.wait = true;
                 return o;
             }
-            this.recalculate(m);
-            if (this.path === undefined) {
-                o.fail = true;
-                return o;
+            
+            let old_path = this.path;
+
+            let back_and_forth = false;
+            for (let rp of this.recalculate_points) {
+                if (dis(...rp, m.me.x, m.me.y) < 8) {
+                    m.log("I'm just moving back and forth!");
+                    back_and_forth = true;
+                    this.path = undefined;
+                }
             }
+            this.recalculate_points.push([m.me.x, m.me.y]); 
+            
+            if (!back_and_forth)
+                this.recalculate(m);
+            if (this.path === undefined) {
+                if (attackable && this.pilgrim_kys) {
+                    m.log("Intentionally die!");
+                    this.path = old_path;
+                } else {
+                    o.fail = true;
+                    return o;
+                }
+            }
+            next = this.path[this.path.length - 1];
         }
         if (dis(...next, m.me.x, m.me.y) > this.speed) {
             this.recalculate(m);
@@ -43,6 +66,7 @@ export class Pathfinder {
                 o.fail = true;
                 return o;
             }
+            next = this.path[this.path.length - 1];
         }
         let result = this.path.pop();
         //m.log("NEXT MOVE: " + result);
