@@ -52,23 +52,26 @@ export class EventHandler {
                 nc = id;
         }
         if (first_flag) {
-            return Event(this.closest_to_enemy(m, -1), constants.CLEAR_QUEUE, undefined, 0);
+            return this.Event(this.closest_to_enemy(m, -1), constants.CLEAR_QUEUE, undefined, 0);
         }
-        return Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
+        return this.Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
     }
     next_constrict(m) {
-        return Event(this.closest_to_enemy(m, 0.5), constants.CONSTRICT, undefined, 0);
+        return this.Event(this.closest_to_enemy(m, 0.5), constants.CONSTRICT, undefined, 0);
     }
     next_horde(m, random_factor) {
-        return Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
+        return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
     }
     next_church(m) {
         let where;
         let who;
-        let cur_dist;
         for (let group of m.resource_groups) {
-            if (this.church_fails[[group.x, group.y]] !== undefined)
+            if (this.church_fails[[group.x, group.y]] === undefined)
+                this.church_fails[[group.x, group.y]] = 0;
+            if (this.church_fails[[group.x, group.y]] >= 2)
                 continue;
+            
+            let fails = this.church_fails[[group.x, group.y]];
             let too_close = false;
             let min_dist_castle_id;
             let min_dist;
@@ -104,23 +107,28 @@ export class EventHandler {
                     too_close = true;
             }
             if (too_close) continue;
-            let cur_cent;
-            if (where !== undefined)
-                cur_cent = centricity(m, where.x, where.y);
+
             let cand_cent = centricity(m, group.x, group.y);
             //m.log(`${JSON.stringify(where)} ${JSON.stringify(group)}`);
             //m.log(`${dis_cand} ${dis_curr}`);
             if (where === undefined ||
-                (cand_cent <= 50 && (group.size > where.size || cur_cent > 50)) ||
-                (cur_cent > 50 && min_dist < cur_dist)
+                (cand_cent <= 50 && (group.size > where.size || where.cent > 50) && fails <= where.fails) ||
+                (where.cent > 50 && min_dist < where.dist)
             ) {
                 where = group;
+                where.fails = fails;
+                where.dist = min_dist;
+                where.cent = cand_cent;
                 who = min_dist_castle_id;
-                cur_dist = min_dist;
             }
         }
         if (who !== undefined && where !== undefined) {
-            return Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
+            let event = this.Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
+            if (where.fails !== 0) {
+                event.defenders = where.fails * 3;
+                return; //COMMENT THIS LINE OUT TO REINSTATE RAIDING
+            }
+            return event;
         }
         return;
     }
@@ -159,8 +167,7 @@ export class EventHandler {
         result /= 4294967296;
         return result;
     }
-}
-
-function Event(who, what, where, blocking) {
-    return { who: who, what: what, where: where, blocking: blocking };
+    Event(who, what, where, blocking) {
+        return { id: this.past.length+1, who: who, what: what, where: where, blocking: blocking };
+    }
 }

@@ -108,7 +108,7 @@ function update_queue(m) {
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
     let desired_defenders = Math.floor(Math.floor(m.me.turn / 25) * 0.75 + 3);
-        
+
     if (m.mission === constants.DEFEND) {
         desired_defenders += Math.ceil(m.visible_enemies.length * constants.DEFENSE_RATIO);
         if (getDef(m.queue.emergency_task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
@@ -120,13 +120,13 @@ function update_queue(m) {
                     break;
                 }
             }
-        } 
+        }
     } else {
         while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
             m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
         }
     }
-    
+
 }
 
 function initialize_queue(m) {
@@ -136,36 +136,6 @@ function initialize_queue(m) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
     for (let i = 0; i < 3; i++)
         m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
-}
-
-function handle_horde(m) {
-    if (check_horde(m) && m.event.who === m.me.id) {
-        let best_e_loc;
-        let best_e_id;
-        let min_distance = 64 * 64 + 1;
-        for (let e_id in m.enemy_castles) {
-            let distance = dis(
-                m.me.x, m.me.y,
-                m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
-            );
-            if (distance < min_distance) {
-                min_distance = distance;
-                best_e_loc = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
-                best_e_id = e_id;
-            }
-        }
-        m.log(`SENDING HORDE TO ${JSON.stringify(best_e_loc)} opposite ${best_e_id} (${JSON.stringify(m.friendly_ids)}`);
-
-        //todo only send as far as u have to
-        m.log("SENDING HORDE OF SIZE: " + m.current_horde);
-        m.signal(encode16("send_horde", ...best_e_loc, m.friendly_ids.indexOf(`${best_e_id}`)), 20 * 20);
-        if (m.max_horde_size < m.ultimate_horde_size)
-            m.max_horde_size += 2
-        m.current_horde = 0;
-
-        event_complete(m);
-        return true;
-    }
 }
 
 function determine_mission(m) {
@@ -212,7 +182,11 @@ function handle_castle_talk(m) {
                     if (m.watch_me !== undefined) {
                         m.watch_me = r.id;
                     }
-                    m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
+                    // todo improve this
+                    if (m.event.what === constants.BUILD_CHURCH)
+                        m.friendly_churches[r.id] = { x: m.event.where[0], y: m.event.where[1] };
+                    else
+                        m.friendly_churches[r.id] = { x: m.me.x, y: m.me.y };
                     break;
                 case "event_complete":
                     event_complete_flag = true;
@@ -335,7 +309,7 @@ function event_complete(m, failed = false) {
             if (failed) m.log(`[${m.me.turn}] Sending event_failed`);
             else m.log(`[${m.me.turn}] Sending event_complete`);
         }
-        
+
     }
     // decide when to recieve the new event
     if ((m.event.what === constants.BUILD_CHURCH && !failed) ||
@@ -369,7 +343,7 @@ function new_event(m, failed) {
             case constants.BUILD_CHURCH:
                 m.watch_out = true;
                 for (let i = 0; i < m.event.defenders; i++) {
-                    m.queue.push(Unit(SPECS.PROPHET, constants.PROTECT, constants.EMERGENCY_PRIORITY - 1, m.event.where))
+                    m.queue.push(Unit(SPECS.PROPHET, constants.HORDE, constants.EMERGENCY_PRIORITY - 1));
                 }
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 2, m.event.where));
                 break;
@@ -382,6 +356,53 @@ function new_event(m, failed) {
             default:
                 m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);
         }
+    }
+}
+
+function handle_horde(m) {
+    if (check_horde(m) && m.event.who === m.me.id) {
+        let location;
+        let id;
+        // decide location and "horde id"
+        switch (m.event.what) {
+            case constants.ATTACK:
+                let min_distance = 64 * 64 + 1;
+                for (let e_id in m.enemy_castles) {
+                    let distance = dis(
+                        m.me.x, m.me.y,
+                        m.enemy_castles[e_id].x, m.enemy_castles[e_id].y
+                    );
+                    if (distance < min_distance) {
+                        min_distance = distance;
+                        location = [m.enemy_castles[e_id].x, m.enemy_castles[e_id].y];
+                        id = m.friendly_ids.indexOf(`${e_id}`);
+                    }
+                }
+                break;
+            case constants.BUILD_CHURCH:
+                location = m.event.where;
+                id = 3;
+                break;
+        }
+
+        m.log(`SENDING HORDE TO ${JSON.stringify(location)} with id ${id}`);
+        m.log("SENDING HORDE OF SIZE: " + m.current_horde);
+
+        m.signal(encode16("send_horde", ...location, id), 20 * 20);
+        m.current_horde = 0;
+
+        // post-processing
+        switch (m.event.what) {
+            case constants.ATTACK:
+                if (m.max_horde_size < m.ultimate_horde_size)
+                    m.max_horde_size += 2;
+                event_complete(m);
+                break;
+            case constants.BUILD_CHURCH:
+                break;
+        }
+
+        return true;
     }
 }
 
@@ -456,11 +477,18 @@ function set_globals(m) {
 }
 
 export function check_horde(m) {
-    return m.current_horde >= m.max_horde_size;
+    if (m.event === undefined)
+        return false;
+    switch (m.event.what) {
+        case constants.ATTACK:
+            return m.current_horde >= m.max_horde_size;
+        case constants.BUILD_CHURCH:
+            return m.current_horde >= m.event.defenders;
+    }
 }
 
-function Unit(unit, task, priority, loc) {
-    return { unit: unit, task: task, priority: priority, loc: loc }
+function Unit(unit, task, priority, loc, event_id) {
+    return { unit: unit, task: task, priority: priority, loc: loc, event_id: event_id };
 }
 
 export function unit_cost(b) {

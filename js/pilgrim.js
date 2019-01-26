@@ -179,6 +179,7 @@ export function build_church(m) {
     if (m.karbonite >= unit_cost(SPECS.CHURCH)[0] && m.fuel >= unit_cost(SPECS.CHURCH)[1]) {
         m.mission = constants.GATHER;
         m.deposit_loc = { x: dr[0], y: dr[1] };
+        m.signal(encode16("task", constants.EVENT), 2);
         return m.buildUnit(SPECS.CHURCH, ...m.diff_church_loc);
     }
     m.church_loc = undefined;

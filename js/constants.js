@@ -37,6 +37,9 @@ let task_constant_bins = [
         "PROTECT",
         "CONSTRICT"
     ],
+    [// CHURCH
+        "EVENT"
+    ]
 ]
 
 export let max_task = 0;

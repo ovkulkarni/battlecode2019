@@ -40,9 +40,10 @@ export class Pathfinder {
             let back_and_forth = false;
             for (let rp of this.recalculate_points) {
                 if (dis(...rp, m.me.x, m.me.y) < 8) {
-                    m.log("I'm just moving back and forth!");
+                    //m.log("I'm just moving back and forth!");
                     back_and_forth = true;
                     this.path = undefined;
+                    break;
                 }
             }
             this.recalculate_points.push([m.me.x, m.me.y]); 

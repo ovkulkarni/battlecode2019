@@ -13,6 +13,7 @@ export function runChurch(m) {
         m.castleTalk(encode8("church_built"));
         set_globals(m);
     }
+    handle_signal(m);
 
     determine_mission(m);
     if (m.me.turn === 1) {
@@ -20,10 +21,10 @@ export function runChurch(m) {
     }
 
     // first turn logic
-    if (!m.send_complete && (m.queue.isEmpty() || m.spawned_units === 5)) {
+    if (m.require_send_complete && (m.queue.isEmpty() || m.spawned_units === 5)) {
         m.log("[CHURCH] Sending Event_complete");
         m.castleTalk(encode8("event_complete"));
-        m.send_complete = true;
+        m.require_send_complete = false;
     }
 
     let build_opts = open_neighbors_diff(m, m.me.x, m.me.y);
@@ -103,6 +104,18 @@ function determine_mission(m) {
 
             } else {
                 break;
+            }
+        }
+    }
+}
+
+function handle_signal(m) {
+    for (let r of m.visible_allies) {
+        if (r.signal !== -1) {
+            let message = decode16(r.signal);
+            // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
+            if (message.command === "task" && message.args[0] === constants.EVENT && m.me.turn <= 2) {
+                m.require_send_complete = true;
             }
         }
     }

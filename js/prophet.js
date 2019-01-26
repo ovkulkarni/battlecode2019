@@ -73,15 +73,19 @@ export function runProphet(m) {
         }
     }
     let next = m.pathfinder.next_loc(m);
-    if (next.fail || next.wait)
+    if (next.fail || next.wait) {
         return;
+    }
     else if (next.fin) {
         if (next.fin) {
             switch (m.mission) {
                 case constants.HORDE:
                     if (m.on_intermediate) {
                         m.on_intermediate = false;
-                        m.pathfinder = new Pathfinder(m, attack_pred(m, m.horde_loc.x, m.horde_loc.y));
+                        if (m.sending_castle < 3)
+                            m.pathfinder = new Pathfinder(m, attack_pred(m, m.horde_loc.x, m.horde_loc.y));
+                        else
+                            m.pathfinder = new Pathfinder(m, around_pred(m.horde_loc.x, m.horde_loc.y, 1, 3));
                         return;
                     } else {
                         if (m.sending_castle < 3) {
