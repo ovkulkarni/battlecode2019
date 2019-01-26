@@ -363,7 +363,7 @@ function new_event(m, failed) {
                 m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);
         }
     } else {
-        m.log(`[${m.me.turn}] NEW EVENT ${JSON.stringify(m.event)}`);
+        //m.log(`[${m.me.turn}] NEW EVENT ${JSON.stringify(m.event)}`);
     }
 }
 

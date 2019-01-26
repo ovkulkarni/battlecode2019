@@ -73,7 +73,9 @@ export class EventHandler {
         for (let group of m.resource_groups) {
             if (this.church_fails[[group.x, group.y]] === undefined)
                 this.church_fails[[group.x, group.y]] = 0;
-            if (this.church_fails[[group.x, group.y]] >= 2)
+            
+            //CAHNGE THIS IF STATEMENT TO REINSTATE RAIDING
+            if (this.church_fails[[group.x, group.y]] >= 1)
                 continue;
 
             let fails = this.church_fails[[group.x, group.y]];
@@ -132,7 +134,6 @@ export class EventHandler {
             let event = this.Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
             if (where.fails !== 0) {
                 event.defenders = where.fails * 3;
-                return; //COMMENT THIS LINE OUT TO REINSTATE RAIDING
             }
             return event;
         }

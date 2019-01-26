@@ -91,7 +91,8 @@ export function runPilgrim(m) {
         return;
     }
     else if (next.fail) {
-        m.pathfinder.recalculate(m);
+        if (m.me.turn % 5 === 0)
+            m.pathfinder.recalculate(m);
         return;
     }
     else {

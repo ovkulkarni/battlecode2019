@@ -90,7 +90,7 @@ function update_queue(m) {
         while (getDef(m.queue.task_count, constants.DEFEND_RESOURCES, 0) + current_defenders < resource_defenders) {
             m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND_RESOURCES, 1));
         }
-        if (current_defenders >= resource_defenders) {
+        if (current_defenders > desired_pilgrims) {
             while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
                 m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 1));
             }
