@@ -5,7 +5,7 @@ import { constants } from './constants.js';
 import { unit_cost } from './castle.js';
 //import { get_symmetry } from './analyzemap.js';
 import { encode8, encode16, decode16 } from './communication.js';
-import { open_neighbors2, idx, calcOpposite, dis, edge_attacker } from './helpers.js';
+import { open_neighbors2, idx, calcOpposite, dis, edge_attacker, visible_ally_attackers } from './helpers.js';
 
 export function runPilgrim(m) {
     //if (m.me.turn === 1)
@@ -36,16 +36,27 @@ export function runPilgrim(m) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
-            if (m.mission === constants.SCOUT && message.command === "start")
+            if (m.mission === constants.SCOUT && message.command === "start_pilgrim") {
                 m.started = true;
+            }
         }
     }
     let edge = edge_attacker(m);
     if (edge && m.mission === constants.SCOUT) {
-        if (!m.signaled_for[`${edge.x},${edge.y}`]) {
-            m.signaled_for[`${edge.x},${edge.y}`] = true;
-            m.signal(encode16("stop", edge.x, edge.y, (edge.unit === 0 ? 0 : edge.unit - 2)), dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) + 25);
+        let msg;
+        for (let r of m.visible_allies) {
+            if (!m.signaled_for[`${edge.x},${edge.y}`])
+                m.signaled_for[`${edge.x},${edge.y}`] = new Set();
+            if (r.dist <= 49 && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET) && !m.signaled_for[`${edge.x},${edge.y}`].has(r.id)) {
+                m.signaled_for[`${edge.x},${edge.y}`].add(r.id)
+                msg = encode16("stop", edge.x, edge.y, (edge.unit === 0 ? 0 : edge.unit - 2));
+            }
         }
+        if (!msg && m.scary_enemies.length * 2 < visible_ally_attackers(m)) {
+            msg = encode16("step", edge.x, edge.y);
+        }
+        if (msg)
+            m.signal(msg, 49);
         return;
     }
     if (m.mission === constants.SCOUT && !m.started)
@@ -84,6 +95,13 @@ export function runPilgrim(m) {
         return;
     }
     else {
+        if (m.mission === constants.SCOUT && !m.signaled_started) {
+            let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
+            if (dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) > 25) {
+                m.signal(encode16("start"), dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) + 100);
+                m.signaled_started = true;
+            }
+        }
         return m.move(...next.diff);
     }
 }
@@ -115,8 +133,7 @@ export function get_start_pathfinder(m) {
             m.initial_mission = m.mission;
             break;
         case constants.SCOUT:
-            let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y)
-            m.pathfinder = new Pathfinder(m, around_pred(...opp, 10, 11))
+            m.pathfinder = new Pathfinder(m, around_pred(...m.constrict_loc, 10, 11))
             break;
         default:
             m.log("ERROR SHOULDNT HAPPEN");

@@ -1,3 +1,4 @@
+import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
 import { attack_pred, around_pred, prophet_pred, lattice_pred } from './predicates.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';

@@ -120,6 +120,10 @@ export function get_mission(m) {
                 m.church = message.args;
                 return constants.CHURCH;
             }
+            if (message.command === "constrict") {
+                m.constrict_loc = message.args;
+                return m.me.unit === SPECS.PILGRIM ? constants.SCOUT : constants.CONSTRICT;
+            }
             if (message.command === "send_horde") {
                 return constants.PROTECT;
             }
