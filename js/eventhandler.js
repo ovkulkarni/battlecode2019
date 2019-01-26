@@ -25,7 +25,7 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
-        else if (this.past.length > 4 && this.past.length % 4 == 1) {
+        else if (false && this.past.length > 4 && this.past.length % 4 == 1) {
             event = constrict;
         }
         else {
@@ -75,7 +75,7 @@ export class EventHandler {
                 this.church_fails[[group.x, group.y]] = 0;
             if (this.church_fails[[group.x, group.y]] >= 2)
                 continue;
-            
+
             let fails = this.church_fails[[group.x, group.y]];
             let too_close = false;
             let min_dist_castle_id;
@@ -116,9 +116,10 @@ export class EventHandler {
             let cand_cent = centricity(m, group.x, group.y);
             //m.log(`${JSON.stringify(where)} ${JSON.stringify(group)}`);
             //m.log(`${dis_cand} ${dis_curr}`);
+            const C_CUT = 9;
             if (where === undefined ||
-                (cand_cent <= 50 && (group.size > where.size || where.cent > 50) && fails <= where.fails) ||
-                (where.cent > 50 && min_dist < where.dist)
+                (cand_cent <= C_CUT && (group.size > where.size || where.cent > C_CUT) && fails <= where.fails) ||
+                (where.cent > C_CUT && (min_dist / group.size) < (where.dist / where.size))
             ) {
                 where = group;
                 where.fails = fails;
@@ -173,6 +174,6 @@ export class EventHandler {
         return result;
     }
     Event(who, what, where, blocking) {
-        return { id: this.past.length+1, who: who, what: what, where: where, blocking: blocking };
+        return { id: this.past.length + 1, who: who, what: what, where: where, blocking: blocking };
     }
 }

@@ -35,7 +35,8 @@ let task_constant_bins = [
         "HORDE",
         "RETURN",
         "PROTECT",
-        "CONSTRICT"
+        "CONSTRICT",
+        "DEFEND_RESOURCES"
     ],
     [// CHURCH
         "EVENT"

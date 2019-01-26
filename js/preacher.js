@@ -18,7 +18,7 @@ export function runPreacher(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] }
                 break;
             case constants.DEFEND:
-                m.pathfinder = new Pathfinder(m, lattice_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                m.pathfinder = new Pathfinder(m, lattice_pred(m));
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, attack_pred(m, m.spawn_castle.x, m.spawn_castle.y));
@@ -67,12 +67,9 @@ export function runPreacher(m) {
     if (m.pathfinder === undefined)
         return;
     let next = m.pathfinder.next_loc(m);
-    if (next.fail) {
-        //m.log("FAILED");
-        return;
-    }
-    if (next.wait) {
-        //m.log("WAITING");
+    if (next.fail || next.wait) {
+        if (m.me.turn % 5 === 0)
+            m.pathfinder.recalculate(m);
         return;
     }
     if (next.fin) {
@@ -106,7 +103,7 @@ export function runPreacher(m) {
                 delete m.sending_castle;
                 return;
             case constants.DEFEND:
-                return;
+                return true;
             default:
                 m.mission = constants.NEUTRAL;
                 //m.log("WANDERING");

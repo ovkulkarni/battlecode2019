@@ -2,7 +2,7 @@ import { SPECS } from 'battlecode';
 import { open_neighbors_diff, most_central_loc, calcOpposite, dis, current_stash, visible_ally_attackers, getDef } from './helpers.js';
 import { encode8, decode8, encode16 } from "./communication.js";
 import { constants } from "./constants.js";
-import { best_fuel_locs, best_karb_locs, find_optimal_churches, optimal_attack_diff } from './analyzemap.js';
+import { best_fuel_locs, best_karb_locs, find_optimal_churches, optimal_attack_diff, get_visible_pilgrims, get_resource_radius } from './analyzemap.js';
 import { PriorityQueue } from './pqueue.js';
 import { EventHandler } from './eventhandler.js';
 
@@ -102,22 +102,25 @@ function pick_unit(m) {
 
 function update_queue(m) {
     // restore pilgrims
-    const visible_pilgrims = m.visible_allies.filter(r => r.unit === SPECS.PILGRIM).length;
+    const visible_pilgrims = get_visible_pilgrims(m).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER, 4));
     }
     // restore defense
     const current_defenders = visible_ally_attackers(m).length - m.current_horde;
-    let desired_defenders = Math.floor(Math.floor(m.me.turn / 25) * 0.75 + 3);
+    let desired_defenders = get_desired_defenders(m);
 
     if (m.mission === constants.DEFEND) {
         desired_defenders += Math.ceil(m.visible_enemies.length * constants.DEFENSE_RATIO);
         if (getDef(m.queue.emergency_task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
             // add an emergency defender to the queue
             const defenders = [SPECS.PREACHER, SPECS.PROPHET];
-            for (let d of defenders) {
+            for (let i = 0; i < defenders.length; i++) {
+                let d = defenders[i];
                 if (m.karbonite >= unit_cost(d)[0]) {
+                    if (i !== defenders.length - 1 && Math.random() > 0.5)
+                        continue;
                     m.queue.push(Unit(d, constants.DEFEND, constants.EMERGENCY_PRIORITY + 1));
                     break;
                 }
@@ -125,7 +128,7 @@ function update_queue(m) {
         }
     } else {
         while (getDef(m.queue.task_count, constants.DEFEND, 0) + current_defenders < desired_defenders) {
-            m.queue.push(Unit(random_defender(m), constants.DEFEND, 5));
+            m.queue.push(Unit(random_defender(m), constants.DEFEND, 3));
         }
     }
 
@@ -135,9 +138,9 @@ function initialize_queue(m) {
     for (let i = 0; i < m.karb_locs.length; i++)
         m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_KARB, 6));
     for (let i = 0; i < m.fuel_locs.length; i++)
-        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 3));
+        m.queue.push(Unit(SPECS.PILGRIM, constants.GATHER_FUEL, 4));
     for (let i = 0; i < 3; i++)
-        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 4));
+        m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, 5));
 }
 
 function determine_mission(m) {
@@ -334,7 +337,7 @@ function new_event(m, failed) {
     m.watch_me = undefined;
     // initial reaction to event
     if (m.event.who === m.me.id) {
-        m.log(`[${m.me.turn}] NEW EVENT ${JSON.stringify(m.event)}`);
+        m.log(`[${m.me.turn}] MY NEW EVENT ${JSON.stringify(m.event)}`);
         switch (m.event.what) {
             case constants.ATTACK:
                 for (let i = 0; i < m.max_horde_size; i++) {
@@ -359,6 +362,8 @@ function new_event(m, failed) {
             default:
                 m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);
         }
+    } else {
+        m.log(`[${m.me.turn}] NEW EVENT ${JSON.stringify(m.event)}`);
     }
 }
 
@@ -457,6 +462,22 @@ function create_event_handler(m) {
     new_event(m);
 }
 
+function get_desired_defenders(m) {
+    let defenders = 3;
+    let stages = [
+        { stop: 100, rate: 0.75 },
+        { stop: 1001, rate: 1.5 }
+    ]
+    let prev_stop = 0;
+    for (let o of stages) {
+        let turns = Math.min(m.me.turn, o.stop) - prev_stop;
+        if (turns <= 0) continue;
+        defenders += Math.floor(Math.floor(turns / 25) * o.rate);
+        prev_stop = o.stop;
+    }
+    return defenders;
+}
+
 function set_globals(m) {
     m.queue = new PriorityQueue((a, b) => a.priority > b.priority);
 
@@ -477,6 +498,8 @@ function set_globals(m) {
     m.current_horde = 0;
     m.friendly_ids = [`${m.me.id}`];
     m.no_event_completing = false;
+
+    m.resource_radius = get_resource_radius(m);
 }
 
 export function check_horde(m) {

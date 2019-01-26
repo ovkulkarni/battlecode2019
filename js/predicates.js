@@ -1,4 +1,4 @@
-import { idx, dis, calcOpposite } from './helpers.js';
+import { idx, dis, calcOpposite, all_neighbors2 } from './helpers.js';
 import { constants } from './constants.js';
 
 // predicate combinators
@@ -115,5 +115,19 @@ export function lattice_pred(m) {
     return pand(
         no_depots(m),
         ((x, y) => (x + y) % 2 === 1)
+    );
+}
+
+export function lattice_outside_pred(m, cx, cy, r) {
+    return pand(
+        lattice_pred(m),
+        ((x, y) => dis(cx, cy, x, y) >= r)
+    );
+}
+
+export function defend_resources_pred(m, map) {
+    return pand(
+        no_depots(m),
+        ((x, y) => map[x][y])
     );
 }

@@ -52,6 +52,10 @@ function setup(bits, cs) {
         name_header.set(c.name, header);
         name_header_len.set(c.name, c.header_len);
     }
+    /*console.log();
+    for (let key of name_header.keys()) {
+        console.log(`${key} -> ${name_header.get(key).toString(2)}, ${name_header_len.get(key)}`);
+    }*/
 
     // generate partial encode and decode functions
     let e_funcs = {}

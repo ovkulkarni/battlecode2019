@@ -39,13 +39,17 @@ export function on_ally_side(m, xx, yy, x, y) {
     }
 }
 
-export function best_fuel_locs(m) {
+export function best_fuel_locs(m, x, y) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
     let max_dist = 50; // pilgrim.FUEL_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let fuel_locs = [];
-    let init = [m.me.x, m.me.y];
+    let init;
+    if (x === undefined || y === undefined)
+        init = [m.me.x, m.me.y];
+    else
+        init = [x, y];
     let vis = new Set([init.toString()]);
     let stk = [init];
     while (stk.length > 0) {
@@ -62,14 +66,18 @@ export function best_fuel_locs(m) {
     return fuel_locs.sort((a, b) => dis(...a, ...init) - dis(...b, ...init));
 }
 
-export function best_karb_locs(m) {
+export function best_karb_locs(m, x, y) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
     let max_dist = 50; //3 * pilgrim.KARBONITE_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
     // m.log("MAX DIST: " + max_dist);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let karbonite_locs = [];
-    let init = [m.me.x, m.me.y];
+    let init;
+    if (x === undefined || y === undefined)
+        init = [m.me.x, m.me.y];
+    else
+        init = [x, y];
     let vis = new Set([init.toString()]);
     let stk = [init];
     while (stk.length > 0) {
@@ -87,10 +95,18 @@ export function best_karb_locs(m) {
 }
 
 export function get_visible_base(m) {
-    for (let robot of m.visible_robots) {
-        if (robot.unit === SPECS.CASTLE || robot.unit === SPECS.CHURCH)
-            return robot;
+    let min_dist;
+    let base;
+    for (let robot of m.visible_allies) {
+        if (robot.unit === SPECS.CASTLE || robot.unit === SPECS.CHURCH) {
+            let dist = dis(robot.x, robot.y, m.me.x, m.me.y);
+            if (min_dist === undefined || dist < min_dist) {
+                base = robot;
+                min_dist = dist;
+            }
+        }
     }
+    return base;
 }
 
 export function find_optimal_churches(m) {
@@ -324,4 +340,24 @@ export function get_attackable_map(m) {
         }
     }
     return amap;
+}
+
+export function get_resource_radius(m) {
+    let max_radius = 0;
+    for (let a of m.fuel_locs) {
+        let dist = dis(m.me.x, m.me.y, a[0], a[1]);
+        if (dist > max_radius)
+            max_radius = dist;
+    }
+    for (let a of m.karb_locs) {
+        let dist = dis(m.me.x, m.me.y, a[0], a[1]);
+        if (dist > max_radius)
+            max_radius = dist;
+    }
+    return max_radius;
+}
+
+export function get_visible_pilgrims(m) {
+    return m.visible_allies.filter(r => r.unit === SPECS.PILGRIM)
+        .filter(r => dis(r.x, r.y, m.me.x, m.me.y) < m.resource_radius + 9);
 }

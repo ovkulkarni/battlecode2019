@@ -1,10 +1,10 @@
 import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { prophet_pred, attack_pred, around_pred, lattice_pred } from "./predicates.js";
+import { prophet_pred, attack_pred, around_pred, lattice_pred, lattice_outside_pred, defend_resources_pred } from "./predicates.js";
 import { constants } from './constants.js';
-import { calcOpposite, dis, create_augmented_obj, idx, passable_loc } from './helpers.js';
+import { calcOpposite, dis, create_augmented_obj, idx, passable_loc, all_neighbors2 } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
-import { compact_horde, optimal_attack_diff } from './analyzemap.js';
+import { compact_horde, optimal_attack_diff, best_fuel_locs, best_karb_locs } from './analyzemap.js';
 
 export function runProphet(m) {
     //m.log(`PROPHET: (${m.me.x}, ${m.me.y})`);
@@ -21,6 +21,12 @@ export function runProphet(m) {
                 m.horde_loc = { x: opp[0], y: opp[1] };
                 break;
             case constants.PROTECT:
+                break;
+            case constants.DEFEND_RESOURCES:
+                m.resource_locs = best_fuel_locs(m, m.spawn_castle.x, m.spawn_castle.y);
+                m.resource_locs.push(...best_karb_locs(m, m.spawn_castle.x, m.spawn_castle.y));
+                let good_outpost_map = get_good_outpost_map(m);
+                m.pathfinder = new Pathfinder(m, defend_resources_pred(m, good_outpost_map));
                 break;
             default:
                 m.pathfinder = new Pathfinder(m, lattice_pred(m));
@@ -82,6 +88,8 @@ export function runProphet(m) {
     }
     let next = m.pathfinder.next_loc(m);
     if (next.fail || next.wait) {
+        if (m.me.turn % 5 === 0)
+            m.pathfinder.recalculate(m);
         return;
     }
     else if (next.fin) {
@@ -143,4 +151,31 @@ export function runProphet(m) {
     if (idx(m.visible_map, ...next.res) >= 1 || !passable_loc(m, ...next.res))
         return;
     return m.move(...next.diff);
+}
+
+function get_good_outpost_map(m) {
+    let amap = [];
+    for (let i = 0; i < m.map.length; i++) {
+        amap.push([]);
+        for (let j = 0; j < m.map.length; j++) {
+            amap[i][j] = false;
+        }
+    }
+    for (let rloc of m.resource_locs) {
+        let neighbors = all_neighbors2(m, ...rloc);
+        let max_dist = -1;
+        let max_loc = undefined;
+        for (let loc of neighbors) {
+            if (idx(m.karbonite_map, ...loc) || idx(m.fuel_map, ...loc))
+                continue;
+            let dist = dis(m.spawn_castle.x, m.spawn_castle.y, ...loc);
+            if (dist > max_dist) {
+                max_loc = loc;
+                max_dist = dist;
+            }
+        }
+        if (max_loc !== undefined)
+            amap[max_loc[0]][max_loc[1]] = true;
+    }
+    return amap;
 }
