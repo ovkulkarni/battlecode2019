@@ -70,7 +70,7 @@ function neighbor_score(m, x, y) {
     for (let loc of all_neighbors2(m, x, y)) {
         let dist = dis(x, y, loc[0], loc[1]);
         let at = idx(m.visible_map, ...loc);
-        if (dist === 1 && at > 0 && at !== m.me.id) {
+        if (dist === 2 && at > 0 && at !== m.me.id) {
             count++;
             if (m.getRobot(at).unit === SPECS.PILGRIM && dis(m.spawn_castle.x, m.spawn_castle.y) > 9)
                 count--;
