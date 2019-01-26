@@ -25,6 +25,9 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
+        else if (this.past.length > 4 && this.past.length % 4 == 1) {
+            event = constrict;
+        }
         else {
             event = clear;
             //m.log("CLEARING");
@@ -57,7 +60,9 @@ export class EventHandler {
         return this.Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
     }
     next_constrict(m) {
-        return this.Event(this.closest_to_enemy(m, 0.5), constants.CONSTRICT, undefined, 0);
+        let id = this.closest_to_enemy(m, 0.5);
+        let opp = [m.enemy_castles[id].x, m.enemy_castles[id].y]
+        return this.Event(id, constants.CONSTRICT, opp, 0);
     }
     next_horde(m, random_factor) {
         return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);

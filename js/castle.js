@@ -70,6 +70,8 @@ export function runCastle(m) {
                 msg = encode16("build_church", ...unit.loc);
             else if (unit.task === constants.PROTECT)
                 msg = encode16("send_horde", ...unit.loc, 3);
+            else if (unit.task === constants.CONSTRICT || unit.task === constants.SCOUT)
+                msg = encode16("constrict", ...unit.loc)
             else
                 msg = encode16("task", unit.task);
             if (msg !== 0)
@@ -83,9 +85,9 @@ export function runCastle(m) {
     if (m.event && m.event.who === m.me.id && m.event.what === constants.CLEAR_QUEUE && m.queue.isEmpty()) {
         event_complete(m);
     }
-    if (m.event && m.event.who === m.me.id && m.event.what === constants.CONSTRICT && getDef(m.queue.task_count, constants.CONSTRICT, 5) === 0 && getDef(m.queue.task_count, constants.SCOUT, 1) === 0 && msg === 0) {
+    if (m.event && m.event.who === m.me.id && m.event.what === constants.CONSTRICT && getDef(m.queue.task_count, constants.CONSTRICT, 5) === 0 && getDef(m.queue.task_count, constants.SCOUT, 1) === 0) {
         m.log('SENT CONSTRICTION GROUP');
-        m.signal(encode16("start"), 100);
+        m.signal(encode16("start_pilgrim"), 100);
         event_complete(m);
     }
     return result;
@@ -309,7 +311,6 @@ function event_complete(m, failed = false) {
             if (failed) m.log(`[${m.me.turn}] Sending event_failed`);
             else m.log(`[${m.me.turn}] Sending event_complete`);
         }
-
     }
     // decide when to recieve the new event
     if ((m.event.what === constants.BUILD_CHURCH && !failed) ||
@@ -348,9 +349,11 @@ function new_event(m, failed) {
                 m.queue.push(Unit(SPECS.PILGRIM, constants.CHURCH, constants.EMERGENCY_PRIORITY - 2, m.event.where));
                 break;
             case constants.CONSTRICT:
-                m.queue.push(Unit(SPECS.PILGRIM, constants.SCOUT, constants.EMERGENCY_PRIORITY - 1))
-                for (let i = 0; i < 4; i++)
-                    m.queue.push(Unit(SPECS.PROPHET, constants.CONSTRICT, constants.EMERGENCY_PRIORITY - 2))
+                m.queue.push(Unit(SPECS.PILGRIM, constants.SCOUT, constants.EMERGENCY_PRIORITY - 1, m.event.where))
+                for (let i = 0; i < 5; i++) {
+                    m.queue.push(Unit(SPECS.PROPHET, constants.CONSTRICT, constants.EMERGENCY_PRIORITY - 2, m.event.where))
+                }
+                break;
             case constants.CLEAR_QUEUE:
                 break;
             default:

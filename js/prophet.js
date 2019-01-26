@@ -15,7 +15,7 @@ export function runProphet(m) {
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
                 break;
             case constants.CONSTRICT:
-                m.pathfinder = new Pathfinder(m, around_pred(...opp, 10, 11))
+                m.pathfinder = new Pathfinder(m, around_pred(...m.constrict_loc, 10, 11))
                 break;
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] };
@@ -27,7 +27,7 @@ export function runProphet(m) {
                 break;
         }
     }
-    for (let r of m.visible_allies) {
+    for (let r of (m.mission === constants.CONSTRICT ? m.visible_robots : m.visible_allies)) {
         if (r.signal !== -1) {
             let message = decode16(r.signal);
             // m.log(`GOT COMMAND ${message.command} (${message.args}) FROM ${r.id}`);
@@ -39,18 +39,26 @@ export function runProphet(m) {
                 m.begin_horde = true;
             } else if (message.command === "update_task") {
                 m.mission = message.args[0];
-            } else if (message.command === "stop") {
+            } else if (message.command === "start" && m.mission === constants.CONSTRICT) {
                 m.started_constricting = true;
+            } else if (message.command === "stop") {
                 let r = SPECS.UNITS[(message.args[2] === 0 ? 0 : message.args[2] + 2)].ATTACK_RADIUS[1];
-                m.pathfinder = new Pathfinder(m, around_pred(message.args[0], message.args[1], r + 4, r + 9));
+                m.log(`MIN RADIUS: ${r + 25} FROM ${JSON.stringify(message.args)}`);
+                m.pathfinder = new Pathfinder(m, around_pred(message.args[0], message.args[1], r + 25, r + 64));
+            } else if (message.command === "step") {
+                let next = new Pathfinder(m, exact_pred(...message.args)).next_loc();
+                if (next.fail || next.wait || next.fin)
+                    continue;
+                return m.move(...next.diff);
             }
         }
     }
     let att = optimal_attack_diff(m);
     if (att)
         return m.attack(...att);
-    if (m.mission === constants.CONSTRICT && !m.started_constricting)
+    if (m.mission === constants.CONSTRICT && !m.started_constricting) {
         return;
+    }
     if (m.mission === constants.HORDE || m.mission === constants.PROTECT) {
         if (m.begin_horde) {
             if (m.intermediate_point === undefined) {
@@ -123,6 +131,8 @@ export function runProphet(m) {
                     m.mission = constants.HORDE;
                     m.castleTalk(encode8("came_back"));
                     return;
+                case constants.CONSTRICT:
+                    return true;
                 default:
                     m.mission = constants.DEFEND;
                     return true;

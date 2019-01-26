@@ -41,7 +41,7 @@ export function on_ally_side(m, xx, yy, x, y) {
 
 export function best_fuel_locs(m) {
     let pilgrim = SPECS.UNITS[SPECS.PILGRIM];
-    let max_dist =  50; // pilgrim.FUEL_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
+    let max_dist = 50; // pilgrim.FUEL_CAPACITY / (2 * pilgrim.FUEL_PER_MOVE * pilgrim.SPEED);
     const adjs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
     let fuel_locs = [];
@@ -245,7 +245,7 @@ export function compact_horde(m, next) {
 
 export function optimal_attack_diff(m) {
     if (m.visible_enemies.length === 0) return;
-    switch (m.unit) {
+    switch (m.me.unit) {
         case SPECS.PREACHER:
             let castles = m.visible_enemies.filter(r => r.unit === SPECS.CASTLE);
             if (castles.length > 0 && m.stats.ATTACK_RADIUS[0] <= castles[0].dist && castles[0].dist <= m.stats.ATTACK_RADIUS[1]) {
@@ -257,7 +257,7 @@ export function optimal_attack_diff(m) {
                 for (let y = m.me.y - m.stats.ATTACK_RADIUS[1]; y < m.me.y + m.stats.ATTACK_RADIUS[1]; y++) {
                     let d = dis(x, y, m.me.x, m.me.y);
                     let diff = 0;
-                    if (m.stats.ATTACK_RADIUS[0] > d || m.stats.ATTACK_RADIUS[1] < d)
+                    if (m.stats.ATTACK_RADIUS[0] >= d || m.stats.ATTACK_RADIUS[1] <= d)
                         continue;
                     for (let i = -1; i <= 1; i++) {
                         for (let j = -1; j <= 1; j++) {
@@ -268,7 +268,7 @@ export function optimal_attack_diff(m) {
                                         diff--;
                                     }
                                     else {
-                                        diff++
+                                        diff++;
                                     }
                                 }
                             }
@@ -280,7 +280,10 @@ export function optimal_attack_diff(m) {
                     }
                 }
             }
-            return [optimal.x - m.me.x, optimal.y - m.me.y];
+            if (max_diff > 0) {
+                return [optimal.x - m.me.x, optimal.y - m.me.y];
+            }
+            break;
         default:
             let castles_in_vision = m.visible_enemies.filter(r => r.unit === SPECS.CASTLE);
             if (castles_in_vision.length > 0 && m.stats.ATTACK_RADIUS[0] <= castles_in_vision[0].dist && castles_in_vision[0].dist <= m.stats.ATTACK_RADIUS[1]) {
@@ -298,7 +301,7 @@ export function in_range(m, x, y) {
 
 export function get_attackable_map(m) {
     let amap = [];
-    for (let i = 0; i < m.map.length; i++){
+    for (let i = 0; i < m.map.length; i++) {
         amap.push([]);
         for (let j = 0; j < m.map.length; j++) {
             amap[i][j] = false;
@@ -308,9 +311,9 @@ export function get_attackable_map(m) {
         let r_stats = SPECS.UNITS[r.unit];
         let minr = r_stats.ATTACK_RADIUS[0];
         let maxr = r_stats.ATTACK_RADIUS[1];
-        for (let dx = -Math.sqrt(maxr); dx <= Math.sqrt(maxr); dx++){
-            for (let dy = -Math.sqrt(maxr); dy <= Math.sqrt(maxr); dy++){
-                if(!in_range(m, r.x+dx, r.y+dy)) continue;
+        for (let dx = -Math.sqrt(maxr); dx <= Math.sqrt(maxr); dx++) {
+            for (let dy = -Math.sqrt(maxr); dy <= Math.sqrt(maxr); dy++) {
+                if (!in_range(m, r.x + dx, r.y + dy)) continue;
                 if (amap[r.x + dx][r.y + dy])
                     continue;
                 let dist = (dx * dx) + (dy * dy);
