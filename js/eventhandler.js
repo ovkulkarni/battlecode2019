@@ -1,5 +1,6 @@
+import { SPECS } from 'battlecode';
 import { constants } from "./constants.js";
-import { dis, idx, dis_opp_side, centricity } from "./helpers.js";
+import { dis, centricity } from "./helpers.js";
 
 export var mask = 0xffffffff;
 
@@ -25,7 +26,7 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
-        else if (false && this.past.length > 4 && this.past.length % 4 == 1) {
+        else if (m.me.turn < 900 && this.past.length > 4 && this.past.length % 8 === 3) {
             event = constrict;
         }
         else {
@@ -60,9 +61,12 @@ export class EventHandler {
         return this.Event(nc - 0, constants.CLEAR_QUEUE, undefined, 0);
     }
     next_constrict(m) {
-        let id = this.closest_to_enemy(m, 0.5);
+        let id = Object.keys(m.friendly_castles)[Math.floor(this.random() * Object.keys(m.friendly_castles).length)] - 0;
         let opp = [m.enemy_castles[id].x, m.enemy_castles[id].y]
-        return this.Event(id, constants.CONSTRICT, opp, 0);
+        let ev = this.Event(id, constants.CONSTRICT, opp, 0);
+        ev.attackers = 7;
+        ev.blocking = SPECS.UNITS[SPECS.PROPHET].CONSTRUCTION_KARBONITE * ev.attackers + SPECS.UNITS[SPECS.PILGRIM].CONSTRUCTION_KARBONITE;
+        return ev;
     }
     next_horde(m, random_factor) {
         return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
@@ -73,7 +77,7 @@ export class EventHandler {
         for (let group of m.resource_groups) {
             if (this.church_fails[[group.x, group.y]] === undefined)
                 this.church_fails[[group.x, group.y]] = 0;
-            
+
             //CAHNGE THIS IF STATEMENT TO REINSTATE RAIDING
             if (this.church_fails[[group.x, group.y]] >= 1)
                 continue;

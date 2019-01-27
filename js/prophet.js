@@ -29,7 +29,7 @@ export function runProphet(m) {
                 m.pathfinder = new Pathfinder(m, defend_resources_pred(m, good_outpost_map));
                 break;
             default:
-                m.pathfinder = new Pathfinder(m, lattice_pred(m));
+                m.pathfinder = new Pathfinder(m, lattice_outside_pred(m, m.spawn_castle.x, m.spawn_castle.y, 9));
                 break;
         }
     }
@@ -47,14 +47,14 @@ export function runProphet(m) {
                 m.mission = message.args[0];
             } else if (message.command === "start" && m.mission === constants.CONSTRICT) {
                 m.started_constricting = true;
-            } else if (message.command === "stop") {
+            } else if (message.command === "stop" && m.mission === constants.CONSTRICT) {
                 let r = SPECS.UNITS[(message.args[2] === 0 ? 0 : message.args[2] + 2)].ATTACK_RADIUS[1];
-                m.log(`MIN RADIUS: ${r + 25} FROM ${JSON.stringify(message.args)}`);
                 m.pathfinder = new Pathfinder(m, around_pred(message.args[0], message.args[1], r + 25, r + 64));
-            } else if (message.command === "step") {
+            } else if (message.command === "step" && m.mission === constants.CONSTRICT) {
                 let next = new Pathfinder(m, exact_pred(...message.args)).next_loc();
                 if (next.fail || next.wait || next.fin)
                     continue;
+                m.log(`stepping towards ${JSON.stringify(message.args)}`);
                 return m.move(...next.diff);
             }
         }
@@ -140,6 +140,7 @@ export function runProphet(m) {
                     m.castleTalk(encode8("came_back"));
                     return;
                 case constants.CONSTRICT:
+                    delete m.started_constricting;
                     return true;
                 default:
                     m.mission = constants.DEFEND;

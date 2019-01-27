@@ -353,7 +353,7 @@ function new_event(m, failed) {
                 break;
             case constants.CONSTRICT:
                 m.queue.push(Unit(SPECS.PILGRIM, constants.SCOUT, constants.EMERGENCY_PRIORITY - 1, m.event.where))
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < m.event.attackers; i++) {
                     m.queue.push(Unit(SPECS.PROPHET, constants.CONSTRICT, constants.EMERGENCY_PRIORITY - 2, m.event.where))
                 }
                 break;

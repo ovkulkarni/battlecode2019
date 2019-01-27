@@ -47,16 +47,18 @@ export function runPilgrim(m) {
         for (let r of m.visible_allies) {
             if (!m.signaled_for[`${edge.x},${edge.y}`])
                 m.signaled_for[`${edge.x},${edge.y}`] = new Set();
-            if (r.dist <= 49 && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET) && !m.signaled_for[`${edge.x},${edge.y}`].has(r.id)) {
+            if (r.dist <= 100 && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET) && !m.signaled_for[`${edge.x},${edge.y}`].has(r.id)) {
                 m.signaled_for[`${edge.x},${edge.y}`].add(r.id)
                 msg = encode16("stop", edge.x, edge.y, (edge.unit === 0 ? 0 : edge.unit - 2));
             }
         }
         if (!msg && m.scary_enemies.length * 2 < visible_ally_attackers(m)) {
             msg = encode16("step", edge.x, edge.y);
+            m.signaled_started = false;
+            m.log('sending step');
         }
         if (msg)
-            m.signal(msg, 49);
+            m.signal(msg, 100);
         return;
     }
     if (m.mission === constants.SCOUT && !m.started)
@@ -97,9 +99,8 @@ export function runPilgrim(m) {
     }
     else {
         if (m.mission === constants.SCOUT && !m.signaled_started) {
-            let opp = calcOpposite(m, m.spawn_castle.x, m.spawn_castle.y);
             if (dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) > 25) {
-                m.signal(encode16("start"), dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) + 100);
+                m.signal(encode16("start"), 20 * 20);
                 m.signaled_started = true;
             }
         }
