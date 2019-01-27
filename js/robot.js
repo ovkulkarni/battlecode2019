@@ -82,7 +82,7 @@ function neighbor_score(m, x, y) {
 function diffuse(m) {
     if (m.me.unit === SPECS.PILGRIM) return;
     let diff = undefined;
-
+    
     let min_allies = neighbor_score(m, m.me.x, m.me.y);
     for (let opt of open_neighbors(m, m.me.x, m.me.y).filter(opt => !idx(m.karbonite_map, opt[0], opt[1]) && !idx(m.fuel_map, opt[0], opt[1]))) {
         let count = neighbor_score(m, ...opt);

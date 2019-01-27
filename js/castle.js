@@ -102,6 +102,10 @@ function pick_unit(m) {
 
 function update_queue(m) {
     // restore pilgrims
+    if (m.event !== undefined && m.event.what === constants.DEFEND && m.event.who === m.me.id) {
+      m.queue.push(Unit(SPECS.CRUSADERS, constants.DEFEND, constants.EMERGENCY_PRIORITY-2));
+      return;
+    }
     const visible_pilgrims = get_visible_pilgrims(m).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
     while (getDef(m.queue.unit_count, SPECS.PILGRIM, 0) + visible_pilgrims < desired_pilgrims) {
@@ -131,10 +135,6 @@ function update_queue(m) {
             m.queue.push(Unit(random_defender(m), constants.DEFEND, 3));
         }
     }
-    if (m.event != undefined && m.event.what === constants.DEFEND) {
-      m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY-2));
-    }
-
 }
 
 function initialize_queue(m) {
@@ -277,6 +277,7 @@ function handle_castle_talk(m) {
         m.watch_me = undefined;
         event_complete_flag = true;
         event_failed_flag = true;
+        m.log("WATCHED DIED");
     }
 
     // complete the event!

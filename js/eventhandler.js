@@ -23,8 +23,8 @@ export class EventHandler {
         let constrict = this.next_constrict(m);
         let preacher = this.next_preacher_defend(m, 0.2);
         let event;
-        if (m.me.turn >= 400) {
-          event = preacher;
+        if (m.me.turn >= 800) {
+            event = preacher;
         }
         else if (this.past.length % 4 === 0 && church !== undefined) {
             event = church;
