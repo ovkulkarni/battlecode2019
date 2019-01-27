@@ -29,7 +29,8 @@ export class Pathfinder {
             return o;
         }
         let occupied = idx(m.visible_map, ...next);
-        let attackable = m.me.unit === SPECS.PILGRIM && m.attackable_map[next[0]][next[1]]
+        let attackable = m.me.unit === SPECS.PILGRIM && m.attackable_map[next[0]][next[1]];
+        attackable = false;
         if (occupied >= 1 || attackable) {
             if (wait) {
                 o.wait = true;
@@ -41,7 +42,7 @@ export class Pathfinder {
             let back_and_forth = false;
             for (let rp of this.recalculate_points) {
                 if (dis(...rp, m.me.x, m.me.y) < 8) {
-                    //m.log("I'm just moving back and forth!");
+                    m.log("I'm just moving back and forth!");
                     back_and_forth = true;
                     this.path = undefined;
                     break;

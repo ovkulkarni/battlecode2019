@@ -11,6 +11,7 @@ export function runPilgrim(m) {
     //if (m.me.turn === 1)
     //    m.log(`PILGRIM: (${m.me.x}, ${m.me.y})`);
     //m.log("INITIAL MISSION: " + m.mission);
+    //m.log("PILGRIM: " + JSON.stringify(m.pathfinder) + " " + m.me.x + " " + m.me.y);
     if (m.deposit_loc === undefined) {
         m.deposit_loc = m.spawn_castle;
     }
