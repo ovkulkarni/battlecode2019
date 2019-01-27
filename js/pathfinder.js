@@ -9,6 +9,7 @@ export class Pathfinder {
         this.pilgrim_kys = false
         this.recalculate_points = [];
         this.recalculate(m);
+        this.numTurn = 0;
     }
     next_loc(m, wait = false) {
         let o = {};
@@ -34,7 +35,7 @@ export class Pathfinder {
                 o.wait = true;
                 return o;
             }
-            
+
             let old_path = this.path;
 
             let back_and_forth = false;
@@ -46,8 +47,8 @@ export class Pathfinder {
                     break;
                 }
             }
-            this.recalculate_points.push([m.me.x, m.me.y]); 
-            
+            this.recalculate_points.push([m.me.x, m.me.y]);
+
             if (!back_and_forth)
                 this.recalculate(m);
             if (this.path === undefined) {
@@ -77,6 +78,7 @@ export class Pathfinder {
         }
         o.res = result;
         o.diff = [o.res[0] - m.me.x, o.res[1] - m.me.y];
+        this.numTurn += 1;
         return o;
     }
     recalculate(m) {
