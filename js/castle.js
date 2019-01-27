@@ -103,8 +103,8 @@ function pick_unit(m) {
 function update_queue(m) {
     // restore pilgrims
     if (m.event !== undefined && m.event.what === constants.DEFEND && m.event.who === m.me.id) {
-      m.queue.push(Unit(SPECS.CRUSADERS, constants.DEFEND, constants.EMERGENCY_PRIORITY-2));
-      return;
+        m.queue.push(Unit(SPECS.CRUSADER, constants.DEFEND, constants.EMERGENCY_PRIORITY - 2));
+        return;
     }
     const visible_pilgrims = get_visible_pilgrims(m).length;
     const desired_pilgrims = m.fuel_locs.length + m.karb_locs.length;
@@ -362,9 +362,9 @@ function new_event(m, failed) {
                 }
                 break;
             case constants.DEFEND:
-              for (let i = 0; i < 5; i++) {
-                m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY - 2));
-              }
+                for (let i = 0; i < 5; i++) {
+                    m.queue.push(Unit(SPECS.CRUSADER, constants.DEFEND, constants.EMERGENCY_PRIORITY - 2));
+                }
             case constants.CLEAR_QUEUE:
                 break;
             default:
