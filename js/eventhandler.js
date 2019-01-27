@@ -21,8 +21,12 @@ export class EventHandler {
         let church = this.next_church(m);
         let horde = this.next_horde(m, 0.2);
         let constrict = this.next_constrict(m);
+        let preacher = this.next_preacher_defend(m, 0.2);
         let event;
-        if (this.past.length % 4 === 0 && church !== undefined) {
+        if (m.me.turn >= 400) {
+          event = preacher;
+        }
+        else if (this.past.length % 4 === 0 && church !== undefined) {
             event = church;
             //m.log("CHURCH");
         }
@@ -70,6 +74,9 @@ export class EventHandler {
     }
     next_horde(m, random_factor) {
         return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
+    }
+    next_preacher_defend(m, random_factor) {
+      return this.Event(this.closest_to_enemy(m, random_factor), constants.DEFEND, undefined, 0);
     }
     next_church(m) {
         let where;

@@ -131,6 +131,9 @@ function update_queue(m) {
             m.queue.push(Unit(random_defender(m), constants.DEFEND, 3));
         }
     }
+    if (m.event != undefined && m.event.what === constants.DEFEND) {
+      m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY-2));
+    }
 
 }
 
@@ -357,6 +360,10 @@ function new_event(m, failed) {
                     m.queue.push(Unit(SPECS.PROPHET, constants.CONSTRICT, constants.EMERGENCY_PRIORITY - 2, m.event.where))
                 }
                 break;
+            case constants.DEFEND:
+              for (let i = 0; i < 5; i++) {
+                m.queue.push(Unit(SPECS.PREACHER, constants.DEFEND, constants.EMERGENCY_PRIORITY - 2));
+              }
             case constants.CLEAR_QUEUE:
                 break;
             default:
