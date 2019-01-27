@@ -12,6 +12,7 @@ export class EventHandler {
         this.past = [];
         this.last_clear = {};
         this.church_fails = {};
+        this.constrict_sent = {};
     }
     next_event(m, failed = false) {
         if (failed) {
@@ -30,7 +31,7 @@ export class EventHandler {
             event = church;
             //m.log("CHURCH");
         }
-        else if (m.me.turn < 900 && this.past.length > 4 && this.past.length % 8 === 3) {
+        else if (m.me.turn < 900 && ((m.me.turn < 150 && this.past.length % 12 === 3) || this.past.length % 40 === 3)) {
             event = constrict;
         }
         else {
@@ -85,9 +86,6 @@ export class EventHandler {
             if (this.church_fails[[group.x, group.y]] === undefined)
                 this.church_fails[[group.x, group.y]] = 0;
 
-            //CAHNGE THIS IF STATEMENT TO REINSTATE RAIDING
-            if (this.church_fails[[group.x, group.y]] >= 1)
-                continue;
 
             let fails = this.church_fails[[group.x, group.y]];
             let too_close = false;
@@ -124,6 +122,9 @@ export class EventHandler {
                 if (dist <= 120)
                     too_close = true;
             }
+            if (this.constrict_sent[[group.x, group.y]]) {
+                too_close = true;
+            }
             if (too_close) continue;
 
             let cand_cent = centricity(m, group.x, group.y);
@@ -144,7 +145,10 @@ export class EventHandler {
         if (who !== undefined && where !== undefined) {
             let event = this.Event(who - 0, constants.BUILD_CHURCH, [where.x, where.y], 50);
             if (where.fails !== 0) {
-                event.defenders = where.fails * 3;
+                event = this.next_constrict(m);
+                event.where = [where.x, where.y];
+                if (this.past.length % 4 === 0)
+                    this.constrict_sent[[where.x, where.y]] = true;
             }
             return event;
         }

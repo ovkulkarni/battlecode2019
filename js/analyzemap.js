@@ -270,7 +270,11 @@ export function optimal_attack_diff(m) {
             let max_diff = 0;
             let optimal;
             for (let x = m.me.x - m.stats.ATTACK_RADIUS[1]; x < m.me.x + m.stats.ATTACK_RADIUS[1]; x++) {
+                if (x < 0 || x >= m.karbonite_map.length)
+                    continue;
                 for (let y = m.me.y - m.stats.ATTACK_RADIUS[1]; y < m.me.y + m.stats.ATTACK_RADIUS[1]; y++) {
+                    if (y < 0 || y >= m.karbonite_map.length)
+                        continue;
                     let d = dis(x, y, m.me.x, m.me.y);
                     let diff = 0;
                     if (m.stats.ATTACK_RADIUS[0] >= d || m.stats.ATTACK_RADIUS[1] <= d)

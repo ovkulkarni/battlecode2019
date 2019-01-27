@@ -1,6 +1,6 @@
 import { SPECS } from 'battlecode';
 import { Pathfinder } from './pathfinder.js';
-import { prophet_pred, attack_pred, around_pred, lattice_pred, lattice_outside_pred, defend_resources_pred } from "./predicates.js";
+import { prophet_pred, attack_pred, around_pred, lattice_pred, lattice_outside_pred, defend_resources_pred, exact_pred } from "./predicates.js";
 import { constants } from './constants.js';
 import { calcOpposite, dis, create_augmented_obj, idx, passable_loc, all_neighbors2 } from './helpers.js';
 import { decode16, encode8 } from './communication.js';
@@ -51,10 +51,9 @@ export function runProphet(m) {
                 let r = SPECS.UNITS[(message.args[2] === 0 ? 0 : message.args[2] + 2)].ATTACK_RADIUS[1];
                 m.pathfinder = new Pathfinder(m, around_pred(message.args[0], message.args[1], r + 25, r + 64));
             } else if (message.command === "step" && m.mission === constants.CONSTRICT) {
-                let next = new Pathfinder(m, exact_pred(...message.args)).next_loc();
+                let next = new Pathfinder(m, exact_pred(...message.args)).next_loc(m);
                 if (next.fail || next.wait || next.fin)
                     continue;
-                m.log(`stepping towards ${JSON.stringify(message.args)}`);
                 return m.move(...next.diff);
             }
         }

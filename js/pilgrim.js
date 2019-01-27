@@ -52,10 +52,8 @@ export function runPilgrim(m) {
                 msg = encode16("stop", edge.x, edge.y, (edge.unit === 0 ? 0 : edge.unit - 2));
             }
         }
-        if (!msg && m.scary_enemies.length * 2 < visible_ally_attackers(m)) {
+        if (msg === undefined && m.scary_enemies.length * 2 < visible_ally_attackers(m).length) {
             msg = encode16("step", edge.x, edge.y);
-            m.signaled_started = false;
-            m.log('sending step');
         }
         if (msg)
             m.signal(msg, 100);
@@ -99,7 +97,7 @@ export function runPilgrim(m) {
     }
     else {
         if (m.mission === constants.SCOUT && !m.signaled_started) {
-            if (dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) > 25) {
+            if (dis(m.me.x, m.me.y, m.spawn_castle.x, m.spawn_castle.y) > 50) {
                 m.signal(encode16("start"), 20 * 20);
                 m.signaled_started = true;
             }
