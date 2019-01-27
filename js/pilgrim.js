@@ -54,7 +54,7 @@ export function runPilgrim(m) {
             }
         }
         if (msg === undefined && m.scary_enemies.length * 2 < visible_ally_attackers(m).length) {
-            msg = encode16("step", edge.x, edge.y);
+            // msg = encode16("step", edge.x, edge.y);
         }
         if (msg)
             m.signal(msg, 100);
