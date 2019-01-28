@@ -45,6 +45,11 @@ export function runPilgrim(m) {
     let edge = edge_attacker(m);
     if (edge && m.mission === constants.SCOUT) {
         let msg;
+        if (!m.signaled_started) {
+            m.signal(encode16("start"), 20 * 20);
+            m.signaled_started = true;
+            return;
+        }
         for (let r of m.visible_allies) {
             if (!m.signaled_for[`${edge.x},${edge.y}`])
                 m.signaled_for[`${edge.x},${edge.y}`] = new Set();

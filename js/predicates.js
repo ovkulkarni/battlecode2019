@@ -114,7 +114,7 @@ export function def_pred(m) {
 export function lattice_pred(m) {
     return pand(
         no_depots(m),
-        ((x, y) => (x + y) % 2 === 1 || x % 2 === 1)
+        ((x, y) => (x + y) % 2 === 1)
     );
 }
 
