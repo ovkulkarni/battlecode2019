@@ -895,6 +895,13 @@ function lattice_outside_pred(m, cx, cy, r) {
     );
 }
 
+function crusader_pred(m, cx, cy, r) {
+    return pand(
+        no_depots(m),
+        ((x, y) => (x % 2 === 1 && dis(cx, cy, x, y) >= r))
+    );
+}
+
 function defend_resources_pred(m, map) {
     return pand(
         no_depots(m),
@@ -1394,7 +1401,7 @@ class EventHandler {
         return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
     }
     next_preacher_defend(m, random_factor) {
-      return this.Event(this.closest_to_enemy(m, random_factor), constants.DEFEND, undefined, 0);
+        return this.Event(this.closest_to_enemy(m, random_factor), constants.DEFEND, undefined, 0);
     }
     next_church(m) {
         let where;
@@ -2046,7 +2053,7 @@ function runCrusader(m) {
                 m.pathfinder = new Pathfinder(m, attack_pred(m, ...opp));
                 break;
             case constants.DEFEND:
-                m.pathfinder = new Pathfinder(m, prophet_pred(m, m.spawn_castle.x, m.spawn_castle.y));
+                m.pathfinder = new Pathfinder(m, crusader_pred(m, m.spawn_castle.x, m.spawn_castle.y, 25));
                 break;
             case constants.HORDE:
                 m.horde_loc = { x: opp[0], y: opp[1] };
@@ -2134,7 +2141,7 @@ function runCrusader(m) {
                 delete m.sending_castle;
                 return;
             case constants.DEFEND:
-                return;
+                return true;
             default:
                 m.mission = constants.NEUTRAL;
                 //m.log("WANDERING");
