@@ -77,7 +77,7 @@ export class EventHandler {
         return this.Event(this.closest_to_enemy(m, random_factor), constants.ATTACK, undefined, 0);
     }
     next_preacher_defend(m, random_factor) {
-      return this.Event(this.closest_to_enemy(m, random_factor), constants.DEFEND, undefined, 0);
+        return this.Event(this.closest_to_enemy(m, random_factor), constants.DEFEND, undefined, 0);
     }
     next_church(m) {
         let where;

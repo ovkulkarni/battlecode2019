@@ -125,6 +125,13 @@ export function lattice_outside_pred(m, cx, cy, r) {
     );
 }
 
+export function crusader_pred(m, cx, cy, r) {
+    return pand(
+        no_depots(m),
+        ((x, y) => (x % 2 === 1 && dis(cx, cy, x, y) >= r))
+    );
+}
+
 export function defend_resources_pred(m, map) {
     return pand(
         no_depots(m),
