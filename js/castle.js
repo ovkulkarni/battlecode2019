@@ -366,6 +366,8 @@ function new_event(m, failed) {
                     m.queue.push(Unit(SPECS.CRUSADER, constants.DEFEND, constants.EMERGENCY_PRIORITY - 2));
                 }
             case constants.CLEAR_QUEUE:
+                if(m.karbonite > 800 || m.fuel > 1500) for(let i = 0; i < 5; i++) m.queue.push(Unit(SPECS.PROPHET, constants.DEFEND, constants.EMERGENCY_PRIORITY-1));
+
                 break;
             default:
                 m.log(`SWITCH STATEMENT ERROR ${m.event.what}`);

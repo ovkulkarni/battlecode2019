@@ -163,7 +163,7 @@ export function find_optimal_churches(m) {
     m.log("FINISHED PRINTING CHURCH LOCATIONS");
     */
     let patches = [];
-    for (let a of answer.filter(a => a.length > 1)) {
+    for (let a of answer.filter(a => a.length >= 1)) {
         let cx = 0;
         let cy = 0;
         let size = a.length;
@@ -173,7 +173,7 @@ export function find_optimal_churches(m) {
         }
         cx = Math.floor(cx / size);
         cy = Math.floor(cy / size);
-        patches.push({ x: cx, y: cy, size: size });
+        patches.push({ x: a[0][0], y: a[0][1], size: size });
     }
     //m.log(patches);
     return patches;

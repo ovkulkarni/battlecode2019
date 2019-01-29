@@ -24,14 +24,14 @@ export class EventHandler {
         let constrict = this.next_constrict(m);
         let preacher = this.next_preacher_defend(m, 0.2);
         let event;
-        if (m.me.turn >= 800) {
+        if (m.me.turn >= 750) {
             event = preacher;
         }
         else if (this.past.length % 4 === 0 && church !== undefined) {
             event = church;
             //m.log("CHURCH");
         }
-        else if (m.me.turn < 900 && ((m.me.turn < 150 && this.past.length % 12 === 3) || this.past.length % 40 === 3)) {
+        else if ((m.me.turn < 150 && this.past.length % 12 === 3) || this.past.length % 40 === 3) {
             event = constrict;
         }
         else {
