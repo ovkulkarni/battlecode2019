@@ -1,2 +1,7 @@
 **.bc19
 node_modules/
+.vscode/
+yarn.lock
+package.json
+package-lock.json
+js2/
